@@ -4,5 +4,5 @@ export default function Home() {
     <div className="flex-center min-h-screen">
       
     </div>
-  );
+  )
 }
