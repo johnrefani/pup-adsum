@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #ECEEF2;
+  --color-white: #FFFFFF;
+  --color-black: #030213;
+
+  --color-maroon-50: #ffeeee;
+  --color-maroon-100: #ffdada;
+  --color-maroon-200: #ffbbbb;
+  --color-maroon-300: #ff8b8b;
+  --color-maroon-400: #ff4949;
+  --color-maroon-500: #ff1111;
+  --color-maroon-600: #ff0000;
+  --color-maroon-700: #e70000;
+  --color-maroon-800: #be0000;
+  --color-maroon-900: #800000;
+  --color-maroon-950: #560000;
+
+  --color-gold-50: #ffffe7;
+  --color-gold-100: #feffc1;
+  --color-gold-200: #fffd86;
+  --color-gold-300: #fff441;
+  --color-gold-400: #ffe60d;
+  --color-gold-500: #ffd700;
+  --color-gold-600: #d19e00;
+  --color-gold-700: #a67102;
+  --color-gold-800: #89580a;
+  --color-gold-900: #74480f;
+  --color-gold-950: #442604;
+
+  --color-emerald-50: #f1fcf3;
+  --color-emerald-100: #dff9e5;
+  --color-emerald-200: #c0f2cc;
+  --color-emerald-300: #8fe6a4;
+  --color-emerald-400: #57d175;
+  --color-emerald-500: #34c759;
+  --color-emerald-600: #22973f;
+  --color-emerald-700: #1e7735;
+  --color-emerald-800: #1d5e2e;
+  --color-emerald-900: #194e28;
+  --color-emerald-950: #082b13;
+
+  --background: var(--color-bg);
+  --foreground: var(--color-black);
+
+  --font-sans: "Poppins", sans-serif;
+
+  --spacing-sm: 1rem; /* 16px */
+  --spacing-md: 3.75rem; /* 60px */
+  --spacing-lg: 7.5rem; /* 120px */
+}
+
+
+@layer utilities {
+  .flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
