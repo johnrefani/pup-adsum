@@ -13,3 +13,7 @@ export interface ButtonProps {
   type?: "button" | "submit" | "reset";
   ref?: React.ForwardedRef<HTMLButtonElement>;
 }
+
+export interface TabsProps {
+  tabs?: "member" | "admin";
+}
