@@ -17,3 +17,7 @@ export interface ButtonProps {
 export interface TabsProps {
   tabs?: "member" | "admin";
 }
+
+export interface HeaderProps {
+  isAdmin: boolean;
+}
