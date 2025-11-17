@@ -21,3 +21,27 @@ export interface TabsProps {
 export interface HeaderProps {
   isAdmin: boolean;
 }
+
+export interface InputFieldProps {
+  name?: string;
+  label?: string;
+  placeholder?: string;
+  type?: string;
+  value?: string;
+  onChange?: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => void;
+  maxLength?: number;
+  min?: number;
+  icon?: React.ReactNode;
+  className?: string;
+  inputClassName?: string;
+  state?: "editable" | "disabled" | "readonly" | "error";
+  error?: string;
+  isInvalid?: boolean;
+  undertext?: string;
+  showPasswordToggle?: boolean;
+  colorClass?: string;
+  disabled?: boolean;
+}
+
