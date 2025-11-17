@@ -5,3 +5,7 @@ export { CgMenuRight as Menu } from "react-icons/cg";
 export { LuSwitchCamera as Picture } from "react-icons/lu";
 export { RiDeleteBinLine as Delete } from "react-icons/ri";
 export { IoClose as Close } from "react-icons/io5";
+export {  
+    FiEye as Eye,
+    FiEyeOff as EyeOff, 
+} from "react-icons/fi";
