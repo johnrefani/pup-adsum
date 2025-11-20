@@ -14,14 +14,15 @@ if (!cached) {
   cached = (global as any).mongoose = { conn: null, promise: null };
 }
 
-async function dbConnect() {
+async function connectToDatabase() {
   if (cached.conn) {
-    return cached.conn;
+    return { db: cached.conn.connection.db };
   }
 
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      dbName: 'pup_db',
     };
 
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
@@ -36,7 +37,7 @@ async function dbConnect() {
     throw e;
   }
 
-  return cached.conn;
+  return { db: cached.conn.connection.db };
 }
 
-export default dbConnect;
+export { connectToDatabase };
