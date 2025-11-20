@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import Image from "next/image";
 import { User, Password } from "@/lib/icons";
@@ -16,14 +15,11 @@ const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     if (!username.trim() || !password.trim()) {
       setError("Please fill in all fields");
       return;
     }
-
     setLoading(true);
-
     try {
       const response = await fetch("/api/login", {
         method: "POST",
@@ -32,11 +28,9 @@ const LoginForm = () => {
         },
         body: JSON.stringify({ username, password }),
       });
-
       const data = await response.json();
-
       if (data.success) {
-        if (data.username === "admin") {
+        if (data.role === "admin") {
           router.push("/admin");
         } else {
           router.push("/dashboard");
@@ -70,7 +64,7 @@ const LoginForm = () => {
           <InputField
             label="Username"
             placeholder="Enter your username"
-            icon={<Password />}
+            icon={<User />}
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             type="text"
@@ -78,7 +72,7 @@ const LoginForm = () => {
           <InputField
             label="Password"
             placeholder="Enter your password"
-            icon={<User />}
+            icon={<Password />}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             type="password"
