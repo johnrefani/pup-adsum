@@ -45,3 +45,101 @@ export interface InputFieldProps {
   disabled?: boolean;
 }
 
+export interface SuccessPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+}
+
+export interface TimeInPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  timeIn: () => void;
+  item: string;
+}
+
+
+export interface CoursePopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  department: Array<{ id: number; acronym: string; name: string }>;
+  isEdit?: boolean;
+  initialData?: {
+    id: number;
+    acronym: string;
+    completeName: string;
+    department: string;
+  };
+  onSubmit: (acronym: string, completeName: string, department: string, id?: number) => Promise<void>;
+}
+
+export interface SearchableSelectFieldProps {
+  label?: string;
+  name: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>) => void;
+  options: string[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+  error?: string;
+  isInvalid?: boolean;
+}
+
+export interface DepartmentPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isEdit?: boolean;
+  initialData?: {
+    id: number;
+    acronym: string;
+    name: string;
+  };
+  onSubmit: (acronym: string, name: string, id?: number) => Promise<void>;
+}
+
+
+export interface ManageAdminProps {
+  isOpen: boolean;
+  onClose: () => void;
+  departments: Array<{ id: number; acronym: string; name: string }>;
+  isEdit?: boolean;
+  initialData?: {
+    id: number;
+    fullname: string;
+    username: string;
+    password?: string;
+    departmentName: string;
+  };
+  onSubmit: (fullname: string, username: string, password: string, departmentName: string, id?: number) => Promise<void>;
+}
+
+
+export interface ManageMemberProps {
+  isOpen: boolean;
+  onClose: () => void;
+  departments: Array<{ id: number; acronym: string; name: string }>;
+  courses: Array<{ id: number; acronym: string; name: string; department: string }>;
+  isEdit?: boolean;
+  initialData?: {
+    id: number;
+    fullname: string;
+    idNumber: string;
+    username: string;
+    password?: string;
+    department: string;
+    course: string;
+    yearLevel: string;
+  };
+  onSubmit: (fullname: string, idNumber: string, username: string, password: string, department: string, course: string, yearLevel: string, id?: number) => Promise<void>;
+}
+
+
+export interface DeletePopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  deleteItem: () => Promise<void>;
+  itemName: string;
+  itemType: string; // "Department", "Admin", "Member"
+}

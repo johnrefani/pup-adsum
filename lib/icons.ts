@@ -7,5 +7,6 @@ export { RiDeleteBinLine as Delete } from "react-icons/ri";
 export { IoClose as Close } from "react-icons/io5";
 export {  
     FiEye as Eye,
-    FiEyeOff as EyeOff, 
+    FiEyeOff as EyeOff,
+    FiCheck as Check,
 } from "react-icons/fi";
