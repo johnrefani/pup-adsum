@@ -17,6 +17,7 @@ export { default as Tabs } from '@/components/atoms/Tabs';
 export { default as InputField } from '@/components/atoms/InputField';
 export { default as CountStat } from '@/components/atoms/CountStat';
 export { SearchableSelectField } from '@/components/atoms/SearchableSelectField';
+export { default as Status } from '@/components/atoms/Status';
 
 
 //Data

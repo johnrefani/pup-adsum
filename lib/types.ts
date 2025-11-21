@@ -150,3 +150,7 @@ export interface CountStatProps {
     textColor: string;
     text: string;
 }
+
+export interface StatusProps {
+    isPresent: boolean;
+}
