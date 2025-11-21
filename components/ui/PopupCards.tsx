@@ -4,7 +4,7 @@ import { Button, InputField } from "@/lib/imports";
 import { SuccessPopupProps, TimeInPopupProps, CoursePopupProps, DepartmentPopupProps, ManageAdminProps, ManageMemberProps, DeletePopupProps } from "@/lib/types";
 import { Check, Close } from "@/lib/icons";
 import { useState, useEffect } from "react";
-import { SearchableSelectField } from "../atoms/SearchableSelectField";
+import { SearchableSelectField } from "@/lib/imports";
 
 const textBaseClass = "text-sm md:text-base";
 const headingClass = "text-base md:text-[20px] font-bold";

@@ -143,3 +143,10 @@ export interface DeletePopupProps {
   itemName: string;
   itemType: string; // "Department", "Admin", "Member"
 }
+
+export interface CountStatProps {
+    count: string;
+    ringColor: string;
+    textColor: string;
+    text: string;
+}
