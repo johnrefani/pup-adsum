@@ -1,3 +1,6 @@
+//Main Components
+export { default as AdminDashboard } from '@/components/AdminDashboard';
+
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';

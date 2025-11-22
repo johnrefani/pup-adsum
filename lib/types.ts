@@ -154,3 +154,8 @@ export interface CountStatProps {
 export interface StatusProps {
     isPresent: boolean;
 }
+
+
+export interface AdminDashboardProps {
+    username: string;
+}
