@@ -1,5 +1,6 @@
 //Main Components
 export { default as AdminDashboard } from '@/components/AdminDashboard';
+export { default as MemberDashboard } from '@/components/MemberDashboard';
 
 
 //UI Components
