@@ -5,7 +5,6 @@ import { Button } from "@/lib/imports";
 import { useRouter } from "next/navigation";
 
 
-
 const MemberDashboard = ({username}: MemberDashboardProps) => {
   const router = useRouter();
 
@@ -29,16 +28,8 @@ const MemberDashboard = ({username}: MemberDashboardProps) => {
               <div className="flex flex-wrap gap-1 md:gap-2 lg:gap-3">
                 <Button 
                   textColor="text-white"
-                  text="Scan QR"
-                  backgroundColor="bg-maroon-900"
-                  onClick={() => {
-                    router.push("/scan-qr")
-                  }}
-                />
-                <Button 
-                  textColor="text-gold-600"
                   text="My Attendance"
-                  backgroundColor="bg-white border border-gold-600"
+                  backgroundColor="bg-maroon-900"
                   onClick={() => {
                     router.push("/my-attendance")
                   }}
