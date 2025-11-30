@@ -1,8 +1,6 @@
 //Main Components
 export { default as AdminDashboard } from '@/components/AdminDashboard';
 export { default as MemberDashboard } from '@/components/MemberDashboard';
-export { default as ScanQR } from '@/components/ScanQR';
-
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';
@@ -15,7 +13,6 @@ export { SuccessPopup,
     ManageMember,
     DeletePopup,
 } from '@/components/ui/PopupCards';
-export { default as Scanner } from '@/components/ui/Scanner';
 
 //Atoms
 export { default as Button } from '@/components/atoms/Button';

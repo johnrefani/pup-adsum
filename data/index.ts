@@ -7,9 +7,8 @@ export const adminLinks = [
 
 export const memberLinks = [
   { id: 1, title: "Dashboard", href: "/dashboard" },
-  { id: 2, title: "Scan QR", href: "/scan-qr" },
-  { id: 3, title: "My Attendance", href: "/my-attendance" },
-  { id: 4, title: "My Account", href: "/my-account" },
+  { id: 2, title: "My Attendance", href: "/my-attendance" },
+  { id: 3, title: "My Account", href: "/my-account" },
 ];
 
 
