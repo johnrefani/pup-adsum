@@ -1,6 +1,6 @@
-// File: SessionInformation.tsx
+'use client'
 import React from 'react';
-import { Button, InputField } from '@/lib/imports';    // Adjust path as needed 
+import { Button, InputField, SearchableSelectField } from '@/lib/imports';    // Adjust path as needed 
 
 export type SessionMode = 'create' | 'edit' | 'view';
 
@@ -95,11 +95,15 @@ const SessionInformation: React.FC<SessionInformationProps> = ({ mode }) => {
 
             {/* Department */}
             <div>
-              <InputField
-                label="Department"
-                placeholder={isEditable ? "Enter department" : ""}
-                type="text"
-                state={isEditable ? "editable" : "readonly"}
+              <SearchableSelectField
+                  label="Department"
+                  placeholder="Select session..."
+                  options={['BSED', 'BEED', 'BSIT', 'BSCRIM', 'BSHM']}
+                  value=""
+                  name={''} 
+                  onChange={function (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
+                      throw new Error('Function not implemented.');
+                  } }            
               />
             </div>
           </div>
