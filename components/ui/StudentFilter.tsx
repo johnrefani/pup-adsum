@@ -6,7 +6,7 @@ import { Filter } from '@/lib/icons';
 
 const StudentFilter: React.FC = () => {
   return (
-    <div className="min-h-screen  flex items-center justify-center p-4">
+    <div className="">
       <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6 flex items-center gap-3 text-lg md:text-xl lg:text-2xl">

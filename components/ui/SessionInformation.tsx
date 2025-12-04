@@ -12,7 +12,7 @@ const SessionInformation: React.FC<SessionInformationProps> = ({ mode }) => {
   const isEditable = mode === 'create' || mode === 'edit';
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
+    <div className="">
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6">
@@ -116,13 +116,11 @@ const SessionInformation: React.FC<SessionInformationProps> = ({ mode }) => {
                   text="Cancel"
                   textColor="text-white"
                   backgroundColor="bg-gray-500"
-                  size="lg"
                 />
                 <Button
                   text={mode === 'create' ? 'Generate QR Code' : 'Update Information'}
                   textColor="text-white"
                   backgroundColor="bg-maroon-800"
-                  size="lg"
                 />
               </>
             ) : (
@@ -131,13 +129,11 @@ const SessionInformation: React.FC<SessionInformationProps> = ({ mode }) => {
                   text="Edit"
                   textColor="text-white"
                   backgroundColor="bg-amber-600"
-                  size="lg"
                 />
                 <Button
                   text="Print QR"
                   textColor="text-black"
                   backgroundColor="bg-yellow-500"
-                  size="lg"
                 />
               </>
             )}
