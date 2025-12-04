@@ -1,6 +1,8 @@
 //Main Components
 export { default as AdminDashboard } from '@/components/AdminDashboard';
 export { default as MemberDashboard } from '@/components/MemberDashboard';
+export { default as AdminSessions } from '@/components/AdminSessions';
+export { default as AttendanceRecords } from '@/components/AttendanceRecords';
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';
@@ -13,6 +15,11 @@ export { SuccessPopup,
     ManageMember,
     DeletePopup,
 } from '@/components/ui/PopupCards';
+export { default as GeneratedQR } from '@/components/ui/GeneratedQR';
+export { default as SessionInformation } from '@/components/ui/SessionInformation';
+export { default as SessionList } from '@/components/ui/SessionList';
+export { default as StudentFilter } from '@/components/ui/StudentFilter';
+export { default as StudentList } from '@/components/ui/StudentList';
 
 //Atoms
 export { default as Button } from '@/components/atoms/Button';

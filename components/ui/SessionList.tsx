@@ -24,7 +24,7 @@ const SessionList: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="">
       <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-4 py-5 md:px-6 md:py-5 ">

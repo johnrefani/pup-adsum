@@ -2,8 +2,8 @@ import { Button } from "@/lib/imports"
 
 const GeneratedQr = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-       <div className="w-full max-w-[380px] md:max-w-[560px] lg:max-w-[580px] bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-10 lg:p-12 text-center">
+    <div className="w-full">
+       <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-10 lg:p-12 text-center">
     <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-red-700 mb-8 lg:mb-12">
       Generated QR Code
     </h1>
