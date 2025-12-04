@@ -9,4 +9,6 @@ export {
     FiEye as Eye,
     FiEyeOff as EyeOff,
     FiCheck as Check,
+    FiEdit as Editing,
+    FiTrash as Trash,
 } from "react-icons/fi";

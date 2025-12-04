@@ -3,6 +3,7 @@ export { default as AdminDashboard } from '@/components/AdminDashboard';
 export { default as MemberDashboard } from '@/components/MemberDashboard';
 export { default as AdminSessions } from '@/components/AdminSessions';
 export { default as AttendanceRecords } from '@/components/AttendanceRecords';
+export { default as UserManagement } from '@/components/UserManagement';
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';
@@ -20,6 +21,8 @@ export { default as SessionInformation } from '@/components/ui/SessionInformatio
 export { default as SessionList } from '@/components/ui/SessionList';
 export { default as StudentFilter } from '@/components/ui/StudentFilter';
 export { default as StudentList } from '@/components/ui/StudentList';
+export { default as StudentData } from '@/components/ui/StudentData';
+export { default as UserFilter } from '@/components/ui/UserFilter';
 
 //Atoms
 export { default as Button } from '@/components/atoms/Button';
