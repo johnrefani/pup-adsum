@@ -10,11 +10,11 @@ const CourseList: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="flex items-center justify-center p-4">
+      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5">
-          <h2 className="text-xl sm:text-2xl font-bold text-red-800">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+          <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Courses List
           </h2>
           <p className="text-sm text-amber-600 mt-1">Manage courses</p>
@@ -25,13 +25,13 @@ const CourseList: React.FC = () => {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="text-left  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                   Courses
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                <th className="text-left  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
                   Department
                 </th>
-                <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="text-center  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                   Controls
                 </th>
               </tr>
@@ -39,21 +39,21 @@ const CourseList: React.FC = () => {
             <tbody className="divide-y divide-gray-200">
               {courses.map((course) => (
                 <tr key={course.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-5">
+                  <td className=" px-4 py-2 md:px-6 md:py-4">
                     <div className="flex flex-col">
                       <span className="text-base font-medium text-gray-900">
                         {course.code}
                       </span>
-                      <span className="text-sm text-gray-500 sm:hidden">
+                      <span className="text-sm text-gray-500 md:flex hidden">
                         {course.department}
                       </span>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-gray-700 hidden sm:table-cell">
+                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden sm:table-cell">
                     {course.department}
                   </td>
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-center gap-3">
+                  <td className=" px-4 py-2 md:px-6 md:py-4">
+                    <div className="flex items-center justify-center gap-1 lg:gap-3">
                       <Button
                         leftIcon={<Editing className="w-4 h-4" />}
                         backgroundColor="bg-blue-500"
@@ -75,7 +75,7 @@ const CourseList: React.FC = () => {
         </div>
 
         {/* Add New Course Button */}
-        <div className="flex justify-end pt-6">
+        <div className="flex justify-end p-6">
           <Button
             text="Add New Course"
             

@@ -13,11 +13,11 @@ const AdminList: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="flex items-center justify-center p-4">
+      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-red-800">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+          <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Admin List
           </h2>
           <p className="text-sm text-amber-600 mt-1">
@@ -31,19 +31,19 @@ const AdminList: React.FC = () => {
             {/* Table Header */}
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                   Full Name
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden md:table-cell">
+                <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden md:table-cell">
                   Username
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">
+                <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
                   Password
                 </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">
                   Department
                 </th>
-                <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                <th className="text-center px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                   Controls
                 </th>
               </tr>
@@ -66,10 +66,10 @@ const AdminList: React.FC = () => {
                         <div>
                           <span className="font-medium">Username:</span> {admin.username}
                         </div>
-                        <div className="lg:hidden">
+                        <div className='flex'>
                           <span className="font-medium">Password:</span> {admin.password}
                         </div>
-                        <div className="sm:hidden">
+                        <div className="hidden md:flex">
                           <span className="font-medium">Dept:</span> {admin.department}
                         </div>
                       </div>
@@ -77,23 +77,23 @@ const AdminList: React.FC = () => {
                   </td>
 
                   {/* Username - Hidden on mobile */}
-                  <td className="px-6 py-5 text-gray-700 hidden md:table-cell">
+                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden md:table-cell">
                     {admin.username}
                   </td>
 
                   {/* Password - Hidden on < lg */}
-                  <td className="px-6 py-5 text-gray-700 hidden lg:table-cell">
+                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden md:table-cell">
                     {admin.password}
                   </td>
 
                   {/* Department - Hidden on < sm */}
-                  <td className="px-6 py-5 text-gray-700 font-medium hidden sm:table-cell">
+                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 font-medium hidden lg:table-cell">
                     {admin.department}
                   </td>
 
                   {/* Action Buttons */}
-                  <td className="px-6 py-5">
-                    <div className="flex items-center justify-center gap-3">
+                  <td className=" px-4 py-2 md:px-6 md:py-4">
+                    <div className="flex items-center justify-center gap-1 lg:gap-3">
                       {/* Edit Button */}
                       <Button
                         leftIcon={<Editing className="w-4 h-4" />}
@@ -118,7 +118,7 @@ const AdminList: React.FC = () => {
         </div>
 
         {/* Add New Admin Button */}
-        <div className="flex justify-end pt-6">
+        <div className="flex justify-end p-6">
           <Button
             text="Add New Admin"
             textColor="text-white"
