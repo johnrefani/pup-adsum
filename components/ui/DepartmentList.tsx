@@ -10,11 +10,11 @@ const DepartmentList: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="flex items-center justify-center p-4">
+      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5">
-          <h2 className="text-xl sm:text-2xl font-bold text-red-800">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+          <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Department List
           </h2>
           <p className="text-sm text-amber-600 mt-1">Manage departments</p>
@@ -62,7 +62,7 @@ const DepartmentList: React.FC = () => {
         </div>
 
         {/* Add New Department Button */}
-       <div className="flex justify-end pt-6">
+       <div className="flex justify-end p-6">
           <Button
             text="Add New Department"
             
