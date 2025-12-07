@@ -1,159 +1,113 @@
-'use client';
+// components/ui/SearchableSelectField.tsx
+"use client";
 
 import { useState, useEffect, useRef } from "react";
-import { SearchableSelectFieldProps } from "@/lib/types";
 
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface SearchableSelectFieldProps {
+  label?: string;
+  options: Option[];
+  value?: string;
+  onChange?: (value: string) => void;
+  placeholder?: string;
+  error?: string;
+  disabled?: boolean;
+}
 
 export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
   label,
   options = [],
-  name,
-  value,
+  value = "",
   onChange,
-  placeholder,
-  disabled = false,
-  className = "",
+  placeholder = "Select an option...",
   error,
-  isInvalid = false,
+  disabled = false,
 }) => {
-  const [inputValue, setInputValue] = useState(value || "");
+  const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const [filteredOptions, setFilteredOptions] = useState(options);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setInputValue(value || "");
-  }, [value]);
+    const selected = options.find((opt) => opt.value === value);
+    setQuery(selected?.label ?? "");
+  }, [value, options]);
+
+  const filteredOptions = options.filter((opt) => {
+    const label = opt?.label ?? "";
+    return label.toLowerCase().includes(query.toLowerCase());
+  });
 
   useEffect(() => {
-    if (!inputValue) {
-      setFilteredOptions(options);
-    } else {
-      setFilteredOptions(
-        options.filter((opt) =>
-          opt.toLowerCase().includes(inputValue.toLowerCase())
-        )
-      );
-    }
-  }, [inputValue, options]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    setInputValue(val);
-    setIsOpen(true);
-  };
-
-  const handleSelectOption = (opt: string) => {
-    setInputValue(opt);
+  const handleSelect = (option: Option) => {
+    setQuery(option.label ?? "");
+    onChange?.(option.value);
     setIsOpen(false);
-
-    const syntheticEvent = {
-      target: { name, value: opt },
-    } as React.ChangeEvent<HTMLSelectElement>;
-
-    onChange(syntheticEvent);
   };
-
-  const handleFocus = () => {
-    if (!disabled) {
-      setIsOpen(true);
-    }
-  };
-
-  const handleBlur = () => {
-    setTimeout(() => {
-      if (!disabled) {
-        setIsOpen(false);
-      }
-    }, 150);
-  };
-
-  const baseClasses =
-    "w-full h-[32px] md:h-[36px] lg:h-[42px] rounded-xl border font-medium transition duration-150 ease-in-out focus:outline-none";
-  const responsiveSpacing = "pl-3 md:pl-4 lg:pl-5 pr-3";
-  const responsiveText = "text-sm md:text-base lg:text-lg";
-
-  const borderColor = disabled
-    ? "border-gray-200"
-    : isInvalid
-    ? "border-red-500 focus:ring-2 focus:ring-red-400"
-    : "border-gray-300 focus:ring-2 focus:ring-orange-400 hover:border-orange-400";
-
-  const stateClasses = disabled
-    ? "bg-gray-100 border-gray-200 cursor-not-allowed text-gray-500 placeholder-gray-400"
-    : "bg-white text-gray-800 shadow-sm";
-
-  const inputId =
-    name ||
-    `searchable-select-${
-      label?.replace(/\s/g, "-") ?? Math.random().toString(36).slice(2, 9)
-    }`;
 
   return (
-    <div className={`space-y-2 w-full relative ${className}`}>
+    <div ref={containerRef} className="space-y-2">
       {label && (
-        <label
-          htmlFor={inputId}
-          className={`block font-medium text-black text-xs md:text-sm lg:text-base ${
-            disabled ? "opacity-75" : "opacity-100"
-          }`}
-        >
+        <label className="block text-sm font-medium text-gray-700">
           {label}
         </label>
       )}
 
-      <div className="relative w-full" ref={containerRef}>
+      <div className="relative">
         <input
-          id={inputId}
-          name={name}
           type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsOpen(true);
+          }}
+          onFocus={() => !disabled && setIsOpen(true)}
           placeholder={placeholder}
           disabled={disabled}
-          className={`${baseClasses} ${stateClasses} ${borderColor} ${responsiveText} ${responsiveSpacing} appearance-none align-middle`}
-          autoComplete="off"
+          className={`
+            w-full px-4 py-3 rounded-xl border transition-all text-sm md:text-base
+            focus:outline-none focus:ring-2 focus:ring-red-500
+            ${error ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"}
+            ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
+          `}
         />
 
-        {isOpen && filteredOptions.length > 0 && (
-          <ul className="absolute z-50 w-full bg-white border border-gray-300 rounded-xl mt-1 max-h-48 overflow-auto shadow-lg">
-            {filteredOptions.map((option, idx) => (
-              <li
-                key={idx}
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelectOption(option);
-                }}
-              >
-                <div className="text-sm">{option}</div>
+        {/* Dropdown */}
+        {isOpen && (
+          <ul className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-xl max-h-60 overflow-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => (
+                <li
+                  key={opt.value}
+                  onMouseDown={(e) => e.preventDefault()} // prevents input blur
+                  onClick={() => handleSelect(opt)}
+                  className="px-4 py-3 hover:bg-red-50 cursor-pointer text-sm transition"
+                >
+                  {opt.label}
+                </li>
+              ))
+            ) : (
+              <li className="px-4 py-3 text-gray-500 text-sm text-center">
+                No options found
               </li>
-            ))}
+            )}
           </ul>
         )}
       </div>
 
-      {error && !disabled && (
-        <p className="text-red-500 text-xs mt-1">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
     </div>
   );
 };

@@ -1,147 +1,112 @@
-'use client'
-import React from 'react';
-import { Button, InputField, SearchableSelectField } from '@/lib/imports';    // Adjust path as needed 
+'use client';
 
-export type SessionMode = 'create' | 'edit' | 'view';
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import toast, { Toaster } from 'react-hot-toast';
+import InputField from '@/components/atoms/InputField';
+import { SearchableSelectField } from '@/components/atoms/SearchableSelectField';
+import { Button } from '@/lib/imports';
 
-interface SessionInformationProps {
-  mode: SessionMode;
+interface Department {
+  _id: string;
+  acronym: string;
+  name: string;
 }
 
-const SessionInformation: React.FC<SessionInformationProps> = ({ mode }) => {
-  const isEditable = mode === 'create' || mode === 'edit';
+interface FormData {
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  description?: string;
+  department: string;
+}
+
+export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>();
+  const selectedDept = watch("department");
+
+  useEffect(() => {
+    fetch('/api/departments')
+      .then(r => r.json())
+      .then(d => setDepartments(d.departments || []))
+      .catch(() => toast.error("Failed to load departments"));
+  }, []);
+
+  const onSubmit = async (data: FormData) => {
+    const toastId = toast.loading("Generating QR Code...");
+
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) throw new Error(result.error || "Failed to create session");
+
+      toast.success("QR Code Generated Successfully!", { id: toastId });
+
+      // THIS IS THE KEY: Dispatch correct data structure
+      window.dispatchEvent(new CustomEvent('session-created', {
+        detail: {
+          qrImageUrl: result.qrImageUrl,
+          session: result.session
+        }
+      }));
+
+      reset(); // Clear form
+    } catch (err: any) {
+      toast.error(err.message || "Something went wrong", { id: toastId });
+    }
+  };
+
+  if (mode !== 'create') {
+    return <div className="text-center py-20 text-gray-500">Select a session to edit</div>;
+  }
 
   return (
-    <div className="">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6">
-          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800">
-            Session Information
-          </h2>
-          <p className="text-sm md:text-base lg:text-lg text-gray-600 mt-1">
-            {mode === 'create' && 'Enter details to generate QR code'}
-            {mode === 'edit' && 'Update session information'}
-            {mode === 'view' && 'Session details and QR code'}
-          </p>
-        </div>
+    <>
+      <Toaster position="top-right" />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <div className="bg-white rounded-2xl shadow-xl border p-8">
+          <h2 className="text-3xl font-bold text-red-800 mb-8">Create New Session</h2>
 
-        <div className="p-6 sm:p-8 lg:p-10 space-y-10">
-          {/* QR Code Placeholder - Shown in View & Edit modes */}
-          {(mode === 'view' || mode === 'edit') && (
-            <div className="flex justify-center">
-              <div className="w-64 h-64 sm:w-72 sm:h-72 lg:w-80 lg:h-80 bg-gray-100 border-4 border-dashed border-gray-300 rounded-2xl flex items-center justify-center shadow-inner">
-                <div className="text-center">
-                  <div className="w-32 h-32 mx-auto bg-gray-300 border-2 border-dashed border-gray-500 rounded-xl mb-4" />
-                  <p className="text-gray-500 font-medium">QR Code Preview</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {mode === 'view' ? 'Generated QR will appear here' : 'Will be generated after saving'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Form Fields */}
-          <div className="space-y-7">
-            {/* Title & Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <InputField
-                label="Session Title"
-                placeholder={isEditable ? "Enter session title" : ""}
-                type="text"
-                state={isEditable ? "editable" : "readonly"}
-              />
-
-              <InputField
-                label="Session Date"
-                type="date"
-                state={isEditable ? "editable" : "readonly"}
-              />
-            </div>
-
-            {/* Start & End Time */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <InputField
-                label="Start Time"
-                type="time"
-                state={isEditable ? "editable" : "readonly"}
-              />
-
-              <InputField
-                label="End Time"
-                type="time"
-                state={isEditable ? "editable" : "readonly"}
-              />
-            </div>
-
-            {/* Session Description (kept as textarea as requested) */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Session Description
-              </label>
-              <textarea
-                rows={3}
-                placeholder={isEditable ? "Enter description" : ""}
-                disabled={!isEditable}
-                readOnly={!isEditable}
-                className={`w-full px-4 py-3.5 rounded-xl border resize-none transition-all ${
-                  isEditable
-                    ? 'border-gray-300 focus:ring-2 focus:ring-red-600 bg-white placeholder-gray-400'
-                    : 'border-gray-200 bg-gray-50 text-gray-800 cursor-default'
-                }`}
-              />
-            </div>
-
-            {/* Department */}
-            <div>
-              <SearchableSelectField
-                  label="Department"
-                  placeholder="Select session..."
-                  options={['BSED', 'BEED', 'BSIT', 'BSCRIM', 'BSHM']}
-                  value=""
-                  name={''} 
-                  onChange={function (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
-                      throw new Error('Function not implemented.');
-                  } }            
-              />
-            </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <InputField label="Session Title" placeholder="e.g. Web Programming" {...register('title', { required: 'Required' })} error={errors.title?.message} />
+            <InputField label="Date" type="date" {...register('date', { required: 'Required' })} error={errors.date?.message} />
           </div>
 
-          {/* Action Buttons - Using Your Custom Button Component */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-end pt-8">
-            {isEditable ? (
-              <>
-                <Button
-                  text="Cancel"
-                  textColor="text-white"
-                  backgroundColor="bg-gray-500"
-                />
-                <Button
-                  text={mode === 'create' ? 'Generate QR Code' : 'Update Information'}
-                  textColor="text-white"
-                  backgroundColor="bg-maroon-800"
-                />
-              </>
-            ) : (
-              <>
-                <Button
-                  text="Edit"
-                  textColor="text-white"
-                  backgroundColor="bg-amber-600"
-                />
-                <Button
-                  text="Print QR"
-                  textColor="text-black"
-                  backgroundColor="bg-yellow-500"
-                />
-              </>
-            )}
+          <div className="grid md:grid-cols-2 gap-6 mt-6">
+            <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
+            <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
+          </div>
+
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+            <textarea rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500" {...register('description')} />
+          </div>
+
+          <div className="mt-6">
+            <SearchableSelectField
+              label="Department"
+              options={departments.map(d => ({ value: d._id, label: `${d.acronym} - ${d.name}` }))}
+              value={selectedDept}
+              onChange={(val) => setValue('department', val)}
+              error={errors.department?.message}
+            />
+            <input type="hidden" {...register('department', { required: 'Department required' })} />
+          </div>
+
+          <div className="flex justify-end gap-4 mt-10">
+            <Button type="button" text="Cancel" backgroundColor="bg-gray-500" textColor="text-white" onClick={() => reset()} />
+            <Button type="submit" text="Generate QR Code" backgroundColor="bg-maroon-800" textColor="text-white" />
           </div>
         </div>
-      </div>
-    </div>
+      </form>
+    </>
   );
-};
-
-export default SessionInformation;
+}
