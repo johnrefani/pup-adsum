@@ -32,11 +32,10 @@ const MyAttendance = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-red-800">
+        <div className="flex flex-col md:flex-row items-center sm:justify-between gap-4 mb-8">
+          <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             My Records for the Month
           </h1>
           <MonthFilter
@@ -50,14 +49,14 @@ const MyAttendance = () => {
         </div>
 
         {/* Desktop: Table View */}
-        <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className="hidden md:block overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b">
+            <thead className="border-b">
               <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Session</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Date</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Time-In</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Status</th>
+                <th className="text-left px-6 py-4 text-sm md:text-base lg:text-lg font-semibold text-gray-700">Session</th>
+                <th className="text-left px-6 py-4 text-sm md:text-base lg:text-lg font-semibold text-gray-700">Date</th>
+                <th className="text-left px-6 py-4 text-sm md:text-base lg:text-lg font-semibold text-gray-700">Time-In</th>
+                <th className="text-left px-6 py-4 text-sm md:text-base lg:text-lg font-semibold text-gray-700">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -70,9 +69,9 @@ const MyAttendance = () => {
               ) : (
                 filteredData.map((record, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50 transition">
-                    <td className="px-6 py-5 text-sm text-gray-900 font-medium">{record.session}</td>
-                    <td className="px-6 py-5 text-sm text-gray-700">{record.date}</td>
-                    <td className="px-6 py-5 text-sm text-gray-700">
+                    <td className="px-6 py-5 text-sm md:text-base lg:text-lg text-gray-900 font-medium">{record.session}</td>
+                    <td className="px-6 py-5 text-sm md:text-base lg:text-lg text-gray-700">{record.date}</td>
+                    <td className="px-6 py-5 text-sm md:text-base lg:text-lg text-gray-700">
                       {record.timeIn === "Not Attended" ? "—" : record.timeIn}
                     </td>
                     <td className="px-6 py-5">
@@ -119,7 +118,6 @@ const MyAttendance = () => {
           )}
         </div>
       </div>
-    </div>
   );
 };
 
