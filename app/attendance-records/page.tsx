@@ -2,6 +2,7 @@ import { Header } from '@/lib/imports';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
+import { AttendanceRecords } from '@/lib/imports';
 
 export default async function AdminPage() {
   const cookieStore = await cookies();
@@ -27,11 +28,11 @@ export default async function AdminPage() {
   }
 
   return (
-    <>
+    <main>
       <Header isAdmin={true} />
-      <div className="h-screen flex items-center justify-center text-3xl">
-        This is attendance records
+      <div className="min-h-screen mx-sm md:mx-md lg:mx-lg">
+        <AttendanceRecords />
       </div>
-    </>
+    </main>
   );
 }
