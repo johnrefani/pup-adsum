@@ -2,6 +2,7 @@ import { Header } from '@/lib/imports';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
+import UserAccount from '@/components/UserAccount';
 
 export default async function AdminPage() {
   const cookieStore = await cookies();
@@ -29,8 +30,8 @@ export default async function AdminPage() {
   return (
     <>
       <Header isAdmin={false} />
-      <div className="h-screen flex items-center justify-center text-3xl">
-        This is member account management
+      <div className="min-h-screen mx-sm md:mx-md lg:mx-lg">
+        <UserAccount/>
       </div>
     </>
   );
