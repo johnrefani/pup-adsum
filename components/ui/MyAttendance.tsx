@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import Status from "../atoms/Status";
-import MonthFilter from "../atoms/MonthFilter";
+import { MonthFilter } from '@/lib/imports';
 
 interface AttendanceRecord {
   session: string;

@@ -5,6 +5,9 @@ import {
   StudentData,
   Tabs,
   UserFilter,
+  AdminList,
+  CourseList,
+  DepartmentList,
 } from "@/lib/imports";
 
 const UserManagement = () => {
@@ -38,16 +41,20 @@ const UserManagement = () => {
         
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+      <div className="">
         {activeTab === "member" ? (
-          <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
             <UserFilter />
             <StudentData />
-          </>
+          </div>
         ) : (
-          <>
-            
-          </>
+          <div className="grid grid-rows-2 md:grid-rows-2 gap-4 md:gap-6 lg:gap-8">
+            <AdminList />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
+              <CourseList />
+              <DepartmentList />
+            </div>
+          </div>
         )}
       </div>
     </section>

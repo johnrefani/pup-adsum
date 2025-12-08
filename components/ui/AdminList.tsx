@@ -13,8 +13,8 @@ const AdminList: React.FC = () => {
   ];
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="">
+      <div className="w-full h-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
