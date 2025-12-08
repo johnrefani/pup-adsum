@@ -129,7 +129,7 @@ export const TimeInPopup = ({
 
 
 
-//For Editing and Adding Course
+// For Editing and Adding Course
 export const CoursePopup = ({ 
   isOpen, 
   onClose, 
@@ -196,6 +196,12 @@ export const CoursePopup = ({
   const buttonBg = isEdit ? "bg-gold-500" : "bg-maroon-900";
   const buttonTextColor = isEdit ? "text-maroon-800" : "text-white";
 
+  // Convert department names to Option[] format
+const departmentOptions = department.map((p) => ({
+  value: p.name,
+  label: p.name,
+}));
+
   return (
     <PopupWrapper>
       <div className="flex justify-between items-center">
@@ -238,12 +244,14 @@ export const CoursePopup = ({
           disabled={isAdding}
         />
         <SearchableSelectField
-          name=""
           label="Select Department"
-          options={department.map((p) => p.name)}
+          options={department.map((p) => ({
+            value: p.name,
+            label: p.name,
+          }))}
           placeholder="Select a department"
           value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
+          onChange={(value) => setSelectedDepartment(value)}
           error={selectedDepartment.trim().length === 0 ? "Department is required" : ""}
           disabled={isAdding}
         />
@@ -402,7 +410,7 @@ export const DepartmentPopup = ({
 
 
 
-//For Editing and Adding Admin Account
+// For Editing and Adding Admin Account
 export const ManageAdmin = ({ 
   isOpen, 
   onClose, 
@@ -439,12 +447,13 @@ export const ManageAdmin = ({
   }, [isOpen, isEdit, initialData, departments]);
 
   useEffect(() => {
-    setIsValid(
+    const valid = 
       fullname.trim().length > 0 &&
       username.trim().length > 0 &&
       password.trim().length > 0 &&
-      selectedDepartment.trim().length > 0
-    );
+      selectedDepartment.trim().length > 0;
+
+    setIsValid(valid);
   }, [fullname, username, password, selectedDepartment]);
 
   const handleSubmit = async () => {
@@ -455,7 +464,13 @@ export const ManageAdmin = ({
       if (!dept) {
         throw new Error("Invalid department selected");
       }
-      await onSubmit(fullname.trim(), username.trim(), password.trim(), selectedDepartment.trim(), adminId);
+      await onSubmit(
+        fullname.trim(),
+        username.trim(),
+        password.trim(),
+        selectedDepartment.trim(),
+        adminId
+      );
     } catch (error) {
       console.error(`Error ${isEdit ? "updating" : "adding"} admin:`, error);
       alert(`Failed to ${isEdit ? "update" : "add"} admin`);
@@ -505,6 +520,7 @@ export const ManageAdmin = ({
           error={fullname.trim().length === 0 ? "Full name is required" : ""}
           disabled={isAdding}
         />
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField
             label="Username"
@@ -526,13 +542,16 @@ export const ManageAdmin = ({
             disabled={isAdding}
           />
         </div>
+
         <SearchableSelectField
-          name=""
           label="Department"
-          options={departments.map((d) => d.name)}
+          options={departments.map((d) => ({
+            value: d.name,
+            label: d.name,
+          }))}
           placeholder="Select a department"
           value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
+          onChange={setSelectedDepartment} // Direct function reference
           error={selectedDepartment.trim().length === 0 ? "Department is required" : ""}
           disabled={isAdding}
         />
@@ -564,7 +583,7 @@ export const ManageAdmin = ({
 
 
 
-//For Editing and Adding Member Account
+// For Editing and Adding Member Account
 export const ManageMember = ({ 
   isOpen, 
   onClose, 
@@ -613,15 +632,16 @@ export const ManageMember = ({
   }, [isOpen, isEdit, initialData, departments, courses]);
 
   useEffect(() => {
-    setIsValid(
+    const valid =
       fullname.trim().length > 0 &&
       idNumber.trim().length > 0 &&
       username.trim().length > 0 &&
       password.trim().length > 0 &&
       selectedDepartment.trim().length > 0 &&
       selectedCourse.trim().length > 0 &&
-      selectedYearLevel.trim().length > 0
-    );
+      selectedYearLevel.trim().length > 0;
+
+    setIsValid(valid);
   }, [fullname, idNumber, username, password, selectedDepartment, selectedCourse, selectedYearLevel]);
 
   const handleSubmit = async () => {
@@ -681,28 +701,28 @@ export const ManageMember = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
             <InputField
-            label="Full Name"
-            placeholder="Enter full name"
-            value={fullname}
-            onChange={(e) => setFullname(e.target.value)}
-            isInvalid={fullname.trim().length === 0}
-            error={fullname.trim().length === 0 ? "Full name is required" : ""}
-            disabled={isAdding}
-          />
+              label="Full Name"
+              placeholder="Enter full name"
+              value={fullname}
+              onChange={(e) => setFullname(e.target.value)}
+              isInvalid={fullname.trim().length === 0}
+              error={fullname.trim().length === 0 ? "Full name is required" : ""}
+              disabled={isAdding}
+            />
           </div>
           <div className="md:col-span-1">
             <InputField
-            label="ID Number"
-            placeholder="Enter ID number"
-            value={idNumber}
-            onChange={(e) => setIdNumber(e.target.value)}
-            isInvalid={idNumber.trim().length === 0}
-            error={idNumber.trim().length === 0 ? "ID number is required" : ""}
-            disabled={isAdding}
-          />
+              label="ID Number"
+              placeholder="Enter ID number"
+              value={idNumber}
+              onChange={(e) => setIdNumber(e.target.value)}
+              isInvalid={idNumber.trim().length === 0}
+              error={idNumber.trim().length === 0 ? "ID number is required" : ""}
+              disabled={isAdding}
+            />
           </div>
-          
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField
             label="Username"
@@ -724,33 +744,44 @@ export const ManageMember = ({
             disabled={isAdding}
           />
         </div>
+
+        {/* Department */}
         <SearchableSelectField
-          name=""
           label="Select Department"
-          options={departments.map((d) => d.name)}
+          options={departments.map((d) => ({
+            value: d.name,
+            label: d.name,
+          }))}
           placeholder="Select a department"
           value={selectedDepartment}
-          onChange={(e) => setSelectedDepartment(e.target.value)}
+          onChange={setSelectedDepartment}
           error={selectedDepartment.trim().length === 0 ? "Department is required" : ""}
           disabled={isAdding}
         />
+
+        {/* Course */}
         <SearchableSelectField
-          name=""
           label="Select Course"
-          options={courses.map((c) => c.name)}
+          options={courses.map((c) => ({
+            value: c.acronym,                
+            label: `${c.acronym} - ${c.name}`, 
+          }))}
           placeholder="Select a course"
           value={selectedCourse}
-          onChange={(e) => setSelectedCourse(e.target.value)}
+          onChange={setSelectedCourse}
           error={selectedCourse.trim().length === 0 ? "Course is required" : ""}
           disabled={isAdding}
         />
+        {/* Year Level */}
         <SearchableSelectField
-          name=""
           label="Select Year Level"
-          options={yearLevels}
+          options={yearLevels.map((level) => ({
+            value: level,
+            label: level,
+          }))}
           placeholder="Select year level"
           value={selectedYearLevel}
-          onChange={(e) => setSelectedYearLevel(e.target.value)}
+          onChange={setSelectedYearLevel}
           error={selectedYearLevel.trim().length === 0 ? "Year level is required" : ""}
           disabled={isAdding}
         />

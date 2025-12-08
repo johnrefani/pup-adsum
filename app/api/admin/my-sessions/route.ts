@@ -1,10 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import mongoose from 'mongoose';
+import { cookies } from 'next/headers';
+
 import { connectToDatabase } from '@/lib/mongodb';
+
+// ✅ Explicit model imports (REQUIRED)
 import Session from '@/models/Session';
 import User from '@/models/User';
-import { cookies } from 'next/headers';
-import mongoose from 'mongoose';
-
+import Department from '@/models/Department';
 
 interface PopulatedSession {
   _id: mongoose.Types.ObjectId;
@@ -19,7 +22,6 @@ interface PopulatedSession {
     name: string;
   };
   qrImageUrl?: string;
-  createdAt: Date;
 }
 
 export async function GET() {
@@ -30,10 +32,16 @@ export async function GET() {
     const username = cookieStore.get('authUser')?.value;
 
     if (!username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const admin = await User.findOne({ username, role: 'admin' })
+    const admin = await User.findOne({
+      username,
+      role: 'admin',
+    })
       .select('department')
       .lean<{ department: mongoose.Types.ObjectId }>();
 
@@ -41,9 +49,15 @@ export async function GET() {
       return NextResponse.json({ sessions: [] });
     }
 
-    const sessions = await Session.find({ department: admin.department })
+    const sessions = await Session.find({
+      department: admin.department,
+    })
       .populate<{
-        department: { _id: mongoose.Types.ObjectId; acronym: string; name: string };
+        department: {
+          _id: mongoose.Types.ObjectId;
+          acronym: string;
+          name: string;
+        };
       }>('department', 'acronym name')
       .sort({ date: -1, createdAt: -1 })
       .lean<PopulatedSession[]>();
@@ -54,15 +68,18 @@ export async function GET() {
       date: s.date.toISOString().split('T')[0],
       startTime: s.startTime,
       endTime: s.endTime,
-      description: s.description || '',
+      description: s.description ?? '',
       department: s.department._id.toString(),
       departmentLabel: `${s.department.acronym} - ${s.department.name}`,
-      qrImageUrl: s.qrImageUrl || '',
+      qrImageUrl: s.qrImageUrl ?? '',
     }));
 
     return NextResponse.json({ sessions: formatted });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Failed to fetch admin sessions:', error);
-    return NextResponse.json({ error: 'Failed to load sessions' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to load sessions' },
+      { status: 500 }
+    );
   }
 }
