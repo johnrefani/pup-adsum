@@ -124,7 +124,7 @@ const LoginForm = ({ initialRedirectTo }: LoginProps) => {
           <Button
             text={loading ? "Signing in..." : "Login"}
             backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            textColor="text-white"
+            textColor="text-white w-full"
             type="submit"
             isDisabled={loading}
           />

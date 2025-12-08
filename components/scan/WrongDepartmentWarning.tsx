@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from '@/lib/icons';
 import { Button } from '@/lib/imports';
 import { useRouter } from 'next/navigation';
 

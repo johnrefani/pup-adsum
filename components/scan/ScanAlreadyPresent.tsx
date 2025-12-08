@@ -1,7 +1,7 @@
 "use client";
 
 
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from '@/lib/icons';
 import { SessionForClient } from '@/app/scan/[token]/page';
 import { Button } from '@/lib/imports';
 import { useRouter } from 'next/navigation';
