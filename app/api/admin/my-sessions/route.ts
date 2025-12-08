@@ -5,6 +5,7 @@ import User from '@/models/User';
 import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 
+
 interface PopulatedSession {
   _id: mongoose.Types.ObjectId;
   title: string;
