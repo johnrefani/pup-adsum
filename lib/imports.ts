@@ -24,6 +24,14 @@ export { default as StudentList } from '@/components/ui/StudentList';
 export { default as StudentData } from '@/components/ui/StudentData';
 export { default as UserFilter } from '@/components/ui/UserFilter';
 
+
+//Scans
+export { default as InvalidQRMessage } from '@/components/scan/InvalidQRMessage';
+export { default as ScanAlreadyPresent } from '@/components/scan/ScanAlreadyPresent';
+export { default as ScanSuccess } from '@/components/scan/ScanSuccess';
+export { default as SessionEndedMessage } from '@/components/scan/SessionEndedMessage';
+export { default as WrongDepartmentWarning } from '@/components/scan/WrongDepartmentWarning';
+
 //Atoms
 export { default as Button } from '@/components/atoms/Button';
 export { default as Tabs } from '@/components/atoms/Tabs';

@@ -2,10 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import toast, { Toaster } from 'react-hot-toast';
-import InputField from '@/components/atoms/InputField';
-import { SearchableSelectField } from '@/components/atoms/SearchableSelectField';
-import { Button } from '@/lib/imports';
+import { Button, InputField, SearchableSelectField } from '@/lib/imports';
 
 interface Department {
   _id: string;
@@ -24,6 +21,8 @@ interface FormData {
 
 export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>();
   const selectedDept = watch("department");
 
@@ -31,11 +30,11 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     fetch('/api/departments')
       .then(r => r.json())
       .then(d => setDepartments(d.departments || []))
-      .catch(() => toast.error("Failed to load departments"));
+      .catch(() => alert("Failed to load departments"));
   }, []);
 
   const onSubmit = async (data: FormData) => {
-    const toastId = toast.loading("Generating QR Code...");
+    setIsGenerating(true);
 
     try {
       const res = await fetch('/api/admin/sessions', {
@@ -48,9 +47,16 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
       if (!res.ok) throw new Error(result.error || "Failed to create session");
 
-      toast.success("QR Code Generated Successfully!", { id: toastId });
+      // Success: clear all fields by resetting to empty values
+      reset({
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        department: ''
+      });
 
-      // THIS IS THE KEY: Dispatch correct data structure
       window.dispatchEvent(new CustomEvent('session-created', {
         detail: {
           qrImageUrl: result.qrImageUrl,
@@ -58,10 +64,22 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         }
       }));
 
-      reset(); // Clear form
     } catch (err: any) {
-      toast.error(err.message || "Something went wrong", { id: toastId });
+      alert(err.message || "Something went wrong");
+    } finally {
+      setIsGenerating(false);
     }
+  };
+
+  const handleClear = () => {
+    reset({
+      title: '',
+      date: '',
+      startTime: '',
+      endTime: '',
+      description: '',
+      department: ''
+    });
   };
 
   if (mode !== 'create') {
@@ -70,7 +88,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
   return (
     <>
-      <Toaster position="top-right" />
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         <div className="bg-white rounded-2xl shadow-xl border p-8">
           <h2 className="text-3xl font-bold text-red-800 mb-8">Create New Session</h2>
@@ -102,8 +119,21 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
           </div>
 
           <div className="flex justify-end gap-4 mt-10">
-            <Button type="button" text="Cancel" backgroundColor="bg-gray-500" textColor="text-white" onClick={() => reset()} />
-            <Button type="submit" text="Generate QR Code" backgroundColor="bg-maroon-800" textColor="text-white" />
+            <Button
+              type="button"
+              text="Clear"
+              backgroundColor="bg-gray-500"
+              textColor="text-white"
+              onClick={handleClear}
+              isDisabled={isGenerating}
+            />
+            <Button
+              type="submit"
+              text={isGenerating ? "Generating QR Code..." : "Generate QR Code"}
+              backgroundColor="bg-maroon-800"
+              textColor="text-white"
+              isDisabled={isGenerating}
+            />
           </div>
         </div>
       </form>

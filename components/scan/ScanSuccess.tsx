@@ -1,6 +1,5 @@
 "use client"
 
-
 import { CheckCircle } from 'lucide-react';
 import { SessionForClient } from '@/app/scan/[token]/page';
 import { Button } from '@/lib/imports';

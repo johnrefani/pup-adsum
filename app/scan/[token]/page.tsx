@@ -5,12 +5,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import User from '@/models/User';
 import Attendance from '@/models/Attendance';
-
-import ScanSuccess from '@/components/scan/ScanSuccess';
-import ScanAlreadyPresent from '@/components/scan/ScanAlreadyPresent';
-import WrongDepartmentWarning from '@/components/scan/WrongDepartmentWarning';
-import SessionEndedMessage from '@/components/scan/SessionEndedMessage';
-import InvalidQRMessage from '@/components/scan/InvalidQRMessage';
+import { ScanSuccess, ScanAlreadyPresent, WrongDepartmentWarning, SessionEndedMessage, InvalidQRMessage } from '@/lib/imports';
 
 export const dynamic = 'force-dynamic';
 
