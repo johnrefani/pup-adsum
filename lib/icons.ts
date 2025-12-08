@@ -11,4 +11,6 @@ export {
     FiCheck as Check,
     FiEdit as Editing,
     FiTrash as Trash,
+    FiChevronDown as ChevronDown,
+    FiCamera as Camera
 } from "react-icons/fi";
