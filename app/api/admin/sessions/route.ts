@@ -68,6 +68,8 @@ export async function POST(request: NextRequest) {
         date: session.date.toISOString().split('T')[0],
         startTime: session.startTime,
         endTime: session.endTime,
+        description: session.description,
+        department: session.department.toString(),
       },
       qrImageUrl: uploadResult.secure_url,
     });

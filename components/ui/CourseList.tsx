@@ -11,7 +11,7 @@ const CourseList: React.FC = () => {
 
   return (
     <div className="">
-      <div className="w-full h-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
@@ -28,7 +28,7 @@ const CourseList: React.FC = () => {
                 <th className="text-left  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                   Courses
                 </th>
-                <th className="text-left  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
+                <th className="text-left  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">
                   Department
                 </th>
                 <th className="text-center  px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
@@ -49,7 +49,7 @@ const CourseList: React.FC = () => {
                       </span>
                     </div>
                   </td>
-                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden sm:table-cell">
+                  <td className=" px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden lg:table-cell">
                     {course.department}
                   </td>
                   <td className=" px-4 py-2 md:px-6 md:py-4">
@@ -78,11 +78,8 @@ const CourseList: React.FC = () => {
         <div className="flex justify-end p-6">
           <Button
             text="Add New Course"
-            
             textColor="text-white"
             backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            size="lg"
-           
           />
         </div>
       </div>

@@ -48,7 +48,7 @@ const UserManagement = () => {
             <StudentData />
           </div>
         ) : (
-          <div className="grid grid-rows-2 md:grid-rows-2 gap-4 md:gap-6 lg:gap-8">
+          <div className="flex flex-col md:grid-rows-2 gap-4 md:gap-6 lg:gap-8">
             <AdminList />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
               <CourseList />

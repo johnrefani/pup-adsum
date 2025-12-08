@@ -128,18 +128,33 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
   const handlePrint = () => {
     if (!selectedSession) return;
 
-    const printWindow = window.open('', '', 'height=600,width=800');
+    const printWindow = window.open('', '', `width=800,height=600,left=${(screen.availWidth - 800) / 2},top=${(screen.availHeight - 600) / 2},scrollbars=yes,resizable=yes`);
     if (!printWindow) return;
 
-    printWindow.document.write('<html><head><title>Print QR</title>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write(`<img src="${selectedSession.qrImageUrl}" style="width:300px;"/>`);
-    printWindow.document.write(`<h2>${selectedSession.title}</h2>`);
-    printWindow.document.write(`<p>Date: ${new Date(selectedSession.date).toLocaleDateString()}</p>`);
-    printWindow.document.write(`<p>Time: ${selectedSession.startTime} - ${selectedSession.endTime}</p>`);
-    printWindow.document.write(`<p>Description: ${selectedSession.description || 'N/A'}</p>`);
-    printWindow.document.write(`<p>Department: ${selectedSession.departmentLabel}</p>`);
-    printWindow.document.write('</body></html>');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print QR Session: ${selectedSession.title}</title>
+          <style>
+            body { font-family: 'Poppins', sans-serif; text-align: center; padding: 20px; }
+            img { width: 500px; margin: 20px auto; display: block; }
+            h2 { font-size: 64px; margin: 20px 0; color: #8B0000; }
+            .info { font-size: 32px; line-height: 1.6; }
+            .info strong { color: #333; }
+          </style>
+        </head>
+        <body>
+          <img src="${selectedSession.qrImageUrl}" alt="QR Code" />
+          <h2>${selectedSession.title}</h2>
+          <div class="info">
+            <p><strong>Department:</strong> ${selectedSession.departmentLabel || 'N/A'}</p>
+            <p><strong>Date:</strong> ${new Date(selectedSession.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${selectedSession.startTime} - ${selectedSession.endTime}</p>
+            <p><strong>Description:</strong> ${selectedSession.description || 'N/A'}</p>
+          </div>
+        </body>
+      </html>
+    `);
 
     printWindow.document.close();
     printWindow.print();
@@ -200,7 +215,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
               type="button"
               text="Print QR"
               backgroundColor="bg-yellow-500"
-              textColor="text-black"
+              textColor="text-white"
               onClick={handlePrint}
               isDisabled={isSubmitting}
             />
