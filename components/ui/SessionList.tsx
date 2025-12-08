@@ -1,99 +1,115 @@
-import React from 'react';
+"use client";
+
+import { useEffect, useState } from 'react';
+import { useSelectedSession } from '@/components/AdminSessions';
+
+interface Session {
+  _id: string;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  description: string;
+  department: string;
+  departmentLabel: string;
+  qrImageUrl?: string;
+}
 
 const SessionList: React.FC = () => {
-  // Dummy data — purely front-end
-  const sessions = [
-    {
-      id: 1,
-      name: 'Event 3',
-      date: 'November 3, 2025',
-      time: '3:00PM/5:00PM',
-    },
-    {
-      id: 2,
-      name: 'Event 2',
-      date: 'November 2, 2025',
-      time: '8:00AM/10:00AM',
-    },
-    {
-      id: 3,
-      name: 'Event 1',
-      date: 'November 1, 2025',
-      time: '1:00PM/3:00PM',
-    },
-  ];
+  const [sessions, setSessions] = useState<Session[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { selectedSession, setSelectedSession } = useSelectedSession();
+
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('/api/admin/my-sessions');
+      const data = await res.json();
+      if (data.error) {
+        console.error(data.error);
+        setSessions([]);
+      } else {
+        setSessions(data.sessions || []);
+      }
+    } catch (err) {
+      console.error('Failed to load sessions:', err);
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => fetchSessions();
+    window.addEventListener('session-updated', handler);
+    return () => window.removeEventListener('session-updated', handler);
+  }, []);
+
+  const handleRowClick = (session: Session) => {
+    setSelectedSession(session);
+  };
+
+  if (loading) {
+    return <div className="text-center py-20 text-gray-600">Loading your sessions...</div>;
+  }
 
   return (
-    <div className="">
-      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-gray-200 px-4 py-5 md:px-6 md:py-5 ">
-          <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-red-800">
-            Session List
-          </h2>
-          <p className="text-sm text-amber-600 mt-1">
-            Select and manage sessions.
-          </p>
-        </div>
+    <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="border-b border-gray-200 px-6 py-5">
+        <h2 className="text-2xl font-bold text-red-800">Your Sessions</h2>
+        <p className="text-sm text-amber-600 mt-1">Click a row to edit</p>
+      </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            {/* Table Header */}
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
-                  Session Name
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">
-                  Date
-                </th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
-                  Start/End Time
-                </th>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200 bg-gray-50">
+              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Session Name</th>
+              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
+              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Time</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {sessions.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="text-center py-12 text-gray-500">
+                  No sessions created yet.
+                </td>
               </tr>
-            </thead>
-
-            {/* Table Body */}
-            <tbody className="divide-y divide-gray-200">
-              {sessions.map((session) => (
+            ) : (
+              sessions.map((session) => (
                 <tr
-                  key={session.id}
-                  className="hover:bg-gray-50 transition cursor-pointer"
+                  key={session._id}
+                  onClick={() => handleRowClick(session)}
+                  className={`cursor-pointer transition-all hover:bg-gray-50 ${
+                    selectedSession?._id === session._id ? 'bg-blue-100 ring-2 ring-blue-400' : ''
+                  }`}
                 >
-                  {/* Session Name + Mobile Date */}
                   <td className="px-6 py-5">
-                    <div className="flex flex-col">
-                      <span className="text-sm md:text-base lg:text-lg font-medium text-gray-900">
-                        {session.name}
-                      </span>
-                      <span className="text-sm text-gray-500 sm:hidden">
-                        {session.date}
-                      </span>
+                    <div className="font-medium text-gray-900">{session.title}</div>
+                    <div className="text-sm text-gray-500 sm:hidden">
+                      {new Date(session.date).toLocaleDateString()}
                     </div>
                   </td>
-
-                  {/* Date - Hidden on mobile */}
-                  <td className="text-sm md:text-base lg:text-lg px-6 py-5 text-gray-700 hidden sm:table-cell">
-                    {session.date}
+                  <td className="px-6 py-5 text-gray-700 hidden sm:table-cell">
+                    {new Date(session.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
                   </td>
-
-                  {/* Time */}
-                  <td className="text-sm md:text-base lg:text-lg px-6 py-5 text-gray-700 font-medium">
-                    {session.time}
+                  <td className="px-6 py-5 text-gray-700 font-medium">
+                    {session.startTime} – {session.endTime}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Optional: Empty state (uncomment if needed) */}
-        {/* {sessions.length === 0 && (
-          <div className="text-center py-16 text-gray-500">
-            No sessions found.
-          </div>
-        )} */}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
