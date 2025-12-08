@@ -1,100 +1,154 @@
-"use client"
-import React from 'react';
-import { InputField, Button } from '@/lib/imports';
-import { SearchableSelectField } from '@/lib/imports';
+"use client";
+import React, { useState, useEffect } from 'react';
+import { InputField, SearchableSelectField } from '@/lib/imports';
 import { Filter } from '@/lib/icons';
 
-const StudentFilter: React.FC = () => {
+type Option = { value: string; label: string };
+
+type SessionInfo = {
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  departmentAcronym: string;
+};
+
+type StudentFilterProps = {
+  onFiltersChange: (filters: {
+    sessionId: string;
+    courseId: string;
+    yearLevel: string;
+    search: string;
+  }) => void;
+  onSessionChange?: (info: SessionInfo | null) => void;
+  onCourseChange?: (name: string) => void;
+};
+
+export default function StudentFilter({
+  onFiltersChange,
+  onSessionChange,
+  onCourseChange,
+}: StudentFilterProps) {
+  const [sessions, setSessions] = useState<Option[]>([]);
+  const [courses, setCourses] = useState<Option[]>([]);
+
+  const [sessionId, setSessionId] = useState('');
+  const [courseId, setCourseId] = useState('');
+  const [yearLevel, setYearLevel] = useState('');
+  const [search, setSearch] = useState('');
+
+  const yearLevelOptions: Option[] = [
+    { value: '1', label: '1st Year' },
+    { value: '2', label: '2nd Year' },
+    { value: '3', label: '3rd Year' },
+    { value: '4', label: '4th Year' },
+  ];
+
+  useEffect(() => {
+    fetch('/api/admin/my-sessions')
+      .then(r => r.json())
+      .then(data => {
+        const opts: Option[] = (data.sessions || []).map((s: any) => ({
+          value: s._id,
+          label: `${s.title} - ${s.date} (${s.startTime}-${s.endTime})`,
+        }));
+        setSessions(opts);
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/admin/courses')
+      .then(r => r.json())
+      .then(data => {
+        const opts: Option[] = data.courses || [];
+        setCourses(opts);
+      });
+  }, []);
+
+  useEffect(() => {
+    onFiltersChange({ sessionId, courseId, yearLevel, search });
+  }, [sessionId, courseId, yearLevel, search]);
+
+  const handleSessionChange = (value: string) => {
+    setSessionId(value);
+    const selected = sessions.find(s => s.value === value);
+    if (selected && onSessionChange) {
+      const match = selected.label.match(/^(.*?) - (\d{4}-\d{2}-\d{2}) \(([^)-]+)-([^\)]+)\)/);
+      if (match) {
+        const [, title, date, start, end] = match;
+        const dept = selected.label.match(/\(([^()]+)\)$/)?.[1] || 'DEPT';
+        onSessionChange({
+          title: title.trim(),
+          date,
+          startTime: start.trim(),
+          endTime: end.trim(),
+          departmentAcronym: dept,
+        });
+      } else {
+        onSessionChange(null);
+      }
+    } else {
+      onSessionChange?.(null);
+    }
+  };
+
+  const handleCourseChange = (value: string) => {
+    setCourseId(value);
+    const selected = courses.find(c => c.value === value);
+    onCourseChange?.(selected?.label || '');
+  };
+
   return (
-    <div className="">
-      <div className="w-full max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6 flex items-center gap-3 text-lg md:text-xl lg:text-2xl">
-          <Filter/>
-          <h2 className=" font-bold text-gray-800">
-            Filters
-          </h2>
+    <div className="w-full bg-white rounded-2xl shadow-xl">
+      <div className="border-b border-gray-200 px-6 py-5 sm:px-8 sm:py-6 flex items-center gap-3 text-lg md:text-xl lg:text-2xl">
+        <Filter />
+        <h2 className="font-bold text-gray-800">Filters</h2>
+      </div>
+
+      <div className="p-6 sm:p-8 lg:p-10 space-y-8">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">Session</label>
+          <SearchableSelectField
+            placeholder="Select session..."
+            options={sessions}
+            value={sessionId}
+            onChange={handleSessionChange}
+          />
         </div>
 
-        <div className="p-6 sm:p-8 lg:p-10 space-y-8">
-          {/* Session Select */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Session
-            </label>
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Course</label>
             <SearchableSelectField
-                label=""
-                placeholder="Select session..."
-                options={['Session 1', 'Session 2', 'Session 3', 'Final Exam', 'Midterm']}
-                value="Session 1" 
-                name={''} 
-                onChange={function (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
-                    throw new Error('Function not implemented.');
-                } }            
+              placeholder="Select course..."
+              options={courses}
+              value={courseId}
+              onChange={handleCourseChange}
             />
           </div>
 
-          {/* Course & Year Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Course */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Course
-              </label>
-              <SearchableSelectField
-                label=""
-                placeholder="Select course..."
-                options={['BEED', 'BSED', 'BSIT', 'BSCRIM', 'BSHM']}
-                value="BEED" 
-                name={''} 
-                onChange={function (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
-                    throw new Error('Function not implemented.');
-                } }              
-            />
-            </div>
-
-            {/* Year */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Year
-              </label>
-              <SearchableSelectField
-                label=""
-                placeholder="Select year..."
-                options={['1st Year', '2nd Year', '3rd Year', '4th Year']}
-                value="1st Year"name={''} 
-                onChange={function (e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
-                    throw new Error('Function not implemented.');
-                } }              
-            />  
-            </div>
-          </div>
-
-          {/* Search by Name */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Search
-            </label>
-            <InputField
-              placeholder="Search by name..."
-              type="text"
-              state="editable"
+            <label className="block text-sm font-semibold text-gray-700 mb-3">Year Level</label>
+            <SearchableSelectField
+              placeholder="Select year..."
+              options={yearLevelOptions}
+              value={yearLevel}
+              onChange={(v: string) => setYearLevel(v)}
             />
           </div>
+        </div>
 
-          {/* Save Record Button */}
-          <div className="flex justify-end pt-6">
-            <Button
-              text="Save Record"
-              textColor="text-black"
-              backgroundColor="bg-amber-400 hover:bg-amber-500"
-              size="lg"
-            />
-          </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-3">Search</label>
+          <InputField
+            placeholder="Search by name or ID..."
+            type="text"
+            state="editable"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
       </div>
     </div>
   );
-};
-
-export default StudentFilter;
+}
