@@ -48,7 +48,7 @@ export default function WrongDepartmentWarning({
           </div>
         </div>
 
-        <div className="place-self-center mt-8 ">
+        <div className="flex justify-center items-center mt-8 ">
         <Button 
             text="Go Home"
             textColor='text-white'

@@ -39,6 +39,7 @@ export { default as ScanAlreadyPresent } from '@/components/scan/ScanAlreadyPres
 export { default as ScanSuccess } from '@/components/scan/ScanSuccess';
 export { default as SessionEndedMessage } from '@/components/scan/SessionEndedMessage';
 export { default as WrongDepartmentWarning } from '@/components/scan/WrongDepartmentWarning';
+export { default as SessionNotStartedYet } from '@/components/scan/SessionNotStartedYet';
 
 //Atoms
 export { default as Button } from '@/components/atoms/Button';

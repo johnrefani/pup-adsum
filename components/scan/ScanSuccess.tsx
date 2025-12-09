@@ -74,7 +74,7 @@ export default function ScanSuccess({ session, timeIn, user }: Props) {
           You have been successfully marked as <strong>PRESENT</strong>
         </p>
 
-        <div className='mt-8 place-self-center'>
+        <div className='mt-8 flex justify-center items-center'>
           <Button 
             text="Go Home"
             textColor='text-white'
