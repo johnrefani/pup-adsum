@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Button, InputField } from "@/lib/imports";
-import { SuccessPopupProps, TimeInPopupProps, CoursePopupProps, DepartmentPopupProps, ManageAdminProps, ManageMemberProps, DeletePopupProps } from "@/lib/types";
+import { TimeInPopupProps, CoursePopupProps, DepartmentPopupProps, ManageAdminProps } from "@/lib/types";
 import { Check, Close } from "@/lib/icons";
 import { useState, useEffect } from "react";
 import { SearchableSelectField } from "@/lib/imports";
@@ -16,38 +16,6 @@ const PopupWrapper = ({ children }: { children: React.ReactNode }) => (
     </div>
   </div>
 );
-
-
-// For any successful process
-export const SuccessPopup = ({ isOpen, onClose, title, message }: SuccessPopupProps) => {
-  if (!isOpen) return null;
-  return (
-    <PopupWrapper>
-      <div className="flex flex-col gap-4 text-center">
-        <button
-          aria-label="Close Popup"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
-        >
-          <Close className="w-6 h-6" />
-        </button>
-        <div className="flex-center rounded-full bg-green-500 w-18 h-18 md:w-24 md:h-24 lg:w-28 lg:h-28 place-self-center">
-          <Check className="text-white text-4xl md:text-5xl lg:text-6xl" />
-        </div>
-        <h2 className={headingClass}>{title}</h2>
-        <p className={`text-black ${textBaseClass}`}>{message}</p>
-        <div className="flex justify-end">
-          <Button
-            text="Close"
-            textColor="text-black"
-            backgroundColor="border-1 border-black/25 bg-white"
-            onClick={onClose}
-          />
-        </div>
-      </div>
-    </PopupWrapper>
-  );
-};
 
 
 //For Timing In
@@ -581,236 +549,178 @@ export const ManageAdmin = ({
   );
 };
 
+interface Student {
+  id: string;
+  fullName: string;
+  idNumber: string;
+  username: string;
+  course: string;
+  courseId: string;
+  yearLevel: string;
+}
 
+interface ManageMemberProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  student?: Student | null;
+}
 
-// For Editing and Adding Member Account
-export const ManageMember = ({ 
-  isOpen, 
-  onClose, 
-  departments, 
-  courses, 
-  isEdit = false, 
-  initialData, 
-  onSubmit 
-}: ManageMemberProps) => {
+export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemberProps) => {
   const [fullname, setFullname] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYearLevel, setSelectedYearLevel] = useState("");
-  const [memberId, setMemberId] = useState<number | undefined>(undefined);
-  const [isValid, setIsValid] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [courses, setCourses] = useState<{ value: string; label: string }[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"];
+  const isEdit = !!student;
+  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
   useEffect(() => {
     if (isOpen) {
-      if (isEdit && initialData) {
-        setFullname(initialData.fullname || "");
-        setIdNumber(initialData.idNumber || "");
-        setUsername(initialData.username || "");
-        setPassword(initialData.password || "");
-        setSelectedDepartment(initialData.department || "");
-        setSelectedCourse(initialData.course || "");
-        setSelectedYearLevel(initialData.yearLevel || "");
-        setMemberId(initialData.id);
-      } else {
-        setFullname("");
-        setIdNumber("");
-        setUsername("");
-        setPassword("");
-        setSelectedDepartment("");
-        setSelectedCourse("");
-        setSelectedYearLevel("");
-        setMemberId(undefined);
-      }
-      setIsAdding(false);
+      fetch('/api/admin/courses')
+        .then(r => r.json())
+        .then(d => setCourses(d.courses || []));
     }
-  }, [isOpen, isEdit, initialData, departments, courses]);
+  }, [isOpen]);
 
   useEffect(() => {
-    const valid =
-      fullname.trim().length > 0 &&
-      idNumber.trim().length > 0 &&
-      username.trim().length > 0 &&
-      password.trim().length > 0 &&
-      selectedDepartment.trim().length > 0 &&
-      selectedCourse.trim().length > 0 &&
-      selectedYearLevel.trim().length > 0;
+    if (isOpen && student) {
+      setFullname(student.fullName);
+      setIdNumber(student.idNumber);
+      setUsername(student.username);
+      setPassword(""); 
+      setSelectedCourse(student.courseId); 
+      setSelectedYearLevel(student.yearLevel);
+    } else if (isOpen) {
+      setFullname(""); setIdNumber(""); setUsername(""); setPassword(""); setSelectedCourse(""); setSelectedYearLevel("");
+    }
+  }, [isOpen, student]);
 
-    setIsValid(valid);
-  }, [fullname, idNumber, username, password, selectedDepartment, selectedCourse, selectedYearLevel]);
+  const requiredFilled = fullname && idNumber && username && selectedCourse && selectedYearLevel;
+  const canSubmit = isEdit ? requiredFilled : requiredFilled && password;
 
   const handleSubmit = async () => {
-    if (!isValid || isAdding) return;
-    setIsAdding(true);
+    if (!canSubmit || loading) return;
+    setLoading(true);
+
+    const payload: any = {
+      fullName: fullname.trim(),
+      idNumber: idNumber.trim(),
+      username: username.trim(),
+      course: selectedCourse,
+      yearLevel: selectedYearLevel.replace(/(st|nd|rd|th) Year/, '').trim(),
+    };
+
+    if (isEdit) {
+      payload.id = student?.id;
+      if (password.trim()) payload.password = password.trim();
+    } else {
+      payload.password = password.trim();
+    }
+
     try {
-      await onSubmit(
-        fullname.trim(),
-        idNumber.trim(),
-        username.trim(),
-        password.trim(),
-        selectedDepartment.trim(),
-        selectedCourse.trim(),
-        selectedYearLevel.trim(),
-        memberId
-      );
-    } catch (error) {
-      console.error(`Error ${isEdit ? "updating" : "adding"} member:`, error);
-      alert(`Failed to ${isEdit ? "update" : "add"} member`);
+      const res = await fetch('/api/members', {
+        method: isEdit ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed');
+      }
+
+      onSuccess?.();
+    } catch (e: any) {
+      alert(e.message || 'Operation failed');
     } finally {
-      setIsAdding(false);
+      setLoading(false);
     }
   };
 
   if (!isOpen) return null;
 
-  const actionText = isEdit ? "Update" : "Add";
-  const actionIngText = isEdit ? "Updating" : "Adding";
-  const titleText = isEdit ? "Update Member" : "Add New Member";
-  const isActive = isValid && !isAdding;
-  const buttonBg = isEdit ? "bg-gold-600" : "bg-maroon-900";
-  const buttonTextColor = isEdit ? "text-maroon-900" : "text-white";
-
   return (
     <PopupWrapper>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className={headingClass}>{titleText}</h2>
-          </div>
-          <p className={`text-gray-600 ${textBaseClass}`}>
-            Input required information.
-          </p>
+          <h2 className={headingClass}>{isEdit ? 'Edit Member' : 'Add New Member'}</h2>
+          <p className={`text-gray-600 ${textBaseClass}`}>All fields with * are required.</p>
         </div>
-
-        <button
-          aria-label="Close Popup"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
-          disabled={isAdding}
-        >
+        <button aria-label="close" onClick={onClose} disabled={loading} className="text-gray-500 hover:text-gray-700">
           <Close className="w-6 h-6" />
         </button>
       </div>
 
-      <div className="flex flex-col gap-4 max-h-[50vh] overflow-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2">
-            <InputField
-              label="Full Name"
-              placeholder="Enter full name"
-              value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
-              isInvalid={fullname.trim().length === 0}
-              error={fullname.trim().length === 0 ? "Full name is required" : ""}
-              disabled={isAdding}
-            />
-          </div>
-          <div className="md:col-span-1">
-            <InputField
-              label="ID Number"
-              placeholder="Enter ID number"
-              value={idNumber}
-              onChange={(e) => setIdNumber(e.target.value)}
-              isInvalid={idNumber.trim().length === 0}
-              error={idNumber.trim().length === 0 ? "ID number is required" : ""}
-              disabled={isAdding}
-            />
-          </div>
+      <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField label="Full Name *" value={fullname} onChange={e => setFullname(e.target.value)} disabled={loading} />
+          <InputField label="ID Number *" value={idNumber} onChange={e => setIdNumber(e.target.value)} disabled={loading} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InputField label="Username *" value={username} onChange={e => setUsername(e.target.value)} disabled={loading} />
           <InputField
-            label="Username"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            isInvalid={username.trim().length === 0}
-            error={username.trim().length === 0 ? "Username is required" : ""}
-            disabled={isAdding}
-          />
-          <InputField
-            label="Password"
+            label={isEdit ? "New Password (optional)" : "Password *"}
             type="password"
-            placeholder="Enter password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            isInvalid={password.trim().length === 0}
-            error={password.trim().length === 0 ? "Password is required" : ""}
-            disabled={isAdding}
+            onChange={e => setPassword(e.target.value)}
+            disabled={loading}
           />
         </div>
 
-        {/* Department */}
         <SearchableSelectField
-          label="Select Department"
-          options={departments.map((d) => ({
-            value: d.name,
-            label: d.name,
-          }))}
-          placeholder="Select a department"
-          value={selectedDepartment}
-          onChange={setSelectedDepartment}
-          error={selectedDepartment.trim().length === 0 ? "Department is required" : ""}
-          disabled={isAdding}
-        />
-
-        {/* Course */}
-        <SearchableSelectField
-          label="Select Course"
-          options={courses.map((c) => ({
-            value: c.acronym,                
-            label: `${c.acronym} - ${c.name}`, 
-          }))}
-          placeholder="Select a course"
+          label="Course *"
+          placeholder="Select course"
+          options={courses}
           value={selectedCourse}
           onChange={setSelectedCourse}
-          error={selectedCourse.trim().length === 0 ? "Course is required" : ""}
-          disabled={isAdding}
+          disabled={loading}
         />
-        {/* Year Level */}
+
         <SearchableSelectField
-          label="Select Year Level"
-          options={yearLevels.map((level) => ({
-            value: level,
-            label: level,
-          }))}
-          placeholder="Select year level"
+          label="Year Level *"
+          placeholder="Select year"
+          options={yearLevels.map(y => ({ value: y, label: y }))}
           value={selectedYearLevel}
           onChange={setSelectedYearLevel}
-          error={selectedYearLevel.trim().length === 0 ? "Year level is required" : ""}
-          disabled={isAdding}
+          disabled={loading}
         />
       </div>
 
-      <div className="flex flex-col md:flex-row justify-end gap-3 w-full">
+      <div className="flex justify-end gap-3 mt-8">
         <Button
-          text={isAdding ? `${actionIngText} Member...` : `${actionText} Member`}
-          textColor={isActive ? buttonTextColor : "text-white"}
-          backgroundColor={
-            isActive
-              ? `${buttonBg} flex-1`
-              : "bg-gray-400 flex-1 cursor-not-allowed"
-          }
+          text={loading ? "Saving..." : (isEdit ? "Update Member" : "Add Member")}
+          backgroundColor={canSubmit ? "bg-red-900 hover:bg-red-700" : "bg-gray-400"}
+          textColor="text-white"
           onClick={handleSubmit}
-          isDisabled={!isValid || isAdding}
+          isDisabled={!canSubmit || loading}
         />
         <Button
           text="Cancel"
-          textColor="text-black"
-          backgroundColor="bg-white border-1 border-black/25 flex-1"
+          backgroundColor="bg-white border border-gray-300"
+          textColor="text-gray-700"
           onClick={onClose}
-          isDisabled={isAdding}
+          isDisabled={loading}
         />
       </div>
     </PopupWrapper>
   );
 };
 
+
+
+export interface DeletePopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  deleteItem: () => Promise<void>;
+  itemName: string;
+  itemType: string; // "Department", "Admin", "Member"
+}
 
 
 //For Deleting Department, Admin, and Member Records
@@ -891,6 +801,44 @@ export const DeletePopup = ({
           onClick={onClose}
           isDisabled={isDeleting}
         />
+      </div>
+    </PopupWrapper>
+  );
+};
+
+export interface SuccessPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+}
+
+// For any successful process
+export const SuccessPopup = ({ isOpen, onClose, title, message }: SuccessPopupProps) => {
+  if (!isOpen) return null;
+  return (
+    <PopupWrapper>
+      <div className="flex flex-col gap-4 text-center">
+        <button
+          aria-label="Close Popup"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
+        >
+          <Close className="w-6 h-6" />
+        </button>
+        <div className="flex-center rounded-full bg-green-500 w-18 h-18 md:w-24 md:h-24 lg:w-28 lg:h-28 place-self-center">
+          <Check className="text-white text-4xl md:text-5xl lg:text-6xl" />
+        </div>
+        <h2 className={headingClass}>{title}</h2>
+        <p className={`text-black ${textBaseClass}`}>{message}</p>
+        <div className="flex justify-end">
+          <Button
+            text="Close"
+            textColor="text-black"
+            backgroundColor="border-1 border-black/25 bg-white"
+            onClick={onClose}
+          />
+        </div>
       </div>
     </PopupWrapper>
   );
