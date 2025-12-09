@@ -35,7 +35,7 @@ export default function SessionEndedMessage({ session }: { session: SessionForCl
           })}
         </p>
 
-        <div className="mt-8">
+        <div className=" flex justify-center items-center mt-8">
         <Button 
             text="Go Home"
             textColor='text-white'

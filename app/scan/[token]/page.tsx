@@ -1,11 +1,17 @@
-
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import User from '@/models/User';
 import Attendance from '@/models/Attendance';
-import { ScanSuccess, ScanAlreadyPresent, WrongDepartmentWarning, SessionEndedMessage, InvalidQRMessage } from '@/lib/imports';
+import { 
+  ScanSuccess, 
+  ScanAlreadyPresent, 
+  WrongDepartmentWarning, 
+  SessionEndedMessage, 
+  SessionNotStartedYet,
+  InvalidQRMessage 
+} from '@/lib/imports';
 
 export const dynamic = 'force-dynamic';
 
@@ -94,6 +100,8 @@ export default async function ScanPage({
   };
 
   const now = new Date();
+
+  // ——— END TIME CHECK ———
   const [endHour, endMinute] = session.endTime.split(':');
   const sessionEndTime = new Date(session.date);
   sessionEndTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
@@ -101,6 +109,16 @@ export default async function ScanPage({
   if (now > sessionEndTime) {
     return <SessionEndedMessage session={session} />;
   }
+
+  // ——— NEW: START TIME CHECK ———
+  const [startHour, startMinute] = session.startTime.split(':');
+  const sessionStartTime = new Date(session.date);
+  sessionStartTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+
+  if (now < sessionStartTime) {
+    return <SessionNotStartedYet session={session} />;
+  }
+  // ————————————————
 
   const existingRecord = await Attendance.findOne({
     session: sessionDoc._id,

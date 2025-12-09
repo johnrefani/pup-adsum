@@ -23,7 +23,7 @@ export default function InvalidQRMessage({ message, token }: { message: string; 
           </code>
         )}
       </div>
-      <div className="mt-8 place-self-center">
+      <div className="mt-8 flex justify-center items-center">
         <Button 
             text="Go Home"
             textColor='text-white'
