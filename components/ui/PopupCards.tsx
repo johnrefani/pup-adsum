@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Button, InputField } from "@/lib/imports";
-import { TimeInPopupProps, CoursePopupProps, DepartmentPopupProps, ManageAdminProps } from "@/lib/types";
+import { TimeInPopupProps, CoursePopupProps, DepartmentPopupProps } from "@/lib/types";
 import { Check, Close } from "@/lib/icons";
 import { useState, useEffect } from "react";
 import { SearchableSelectField } from "@/lib/imports";
@@ -376,31 +376,50 @@ export const DepartmentPopup = ({
   );
 };
 
+export interface ManageAdminProps {
+  isOpen: boolean;
+  onClose: () => void;
+  departments: Array<{ id: number; acronym: string; name: string }>;
+  isEdit?: boolean;
+  initialData?: {
+    id: string;
+    fullname: string;
+    username: string;
+    password?: string;
+    departmentName: string;
+  };
+  onSubmit: (
+    fullname: string,
+    username: string,
+    password: string,
+    departmentName: string,
+    id?: string
+  ) => Promise<void>;
+}
 
-
-// For Editing and Adding Admin Account
-export const ManageAdmin = ({ 
-  isOpen, 
-  onClose, 
-  departments, 
-  isEdit = false, 
-  initialData, 
-  onSubmit 
+export const ManageAdmin = ({
+  isOpen,
+  onClose,
+  departments,
+  isEdit = false,
+  initialData,
+  onSubmit,
 }: ManageAdminProps) => {
   const [fullname, setFullname] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [adminId, setAdminId] = useState<number | undefined>(undefined);
+  const [adminId, setAdminId] = useState<string | undefined>(undefined);
   const [isValid, setIsValid] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       if (isEdit && initialData) {
         setFullname(initialData.fullname || "");
         setUsername(initialData.username || "");
-        setPassword(initialData.password || "");
+        setPassword(""); // Never prefill
         setSelectedDepartment(initialData.departmentName || "");
         setAdminId(initialData.id);
       } else {
@@ -410,28 +429,24 @@ export const ManageAdmin = ({
         setSelectedDepartment("");
         setAdminId(undefined);
       }
-      setIsAdding(false);
+      setShowSuccess(false);
+      setIsLoading(false);
     }
-  }, [isOpen, isEdit, initialData, departments]);
+  }, [isOpen, isEdit, initialData]);
 
   useEffect(() => {
-    const valid = 
+    const valid =
       fullname.trim().length > 0 &&
       username.trim().length > 0 &&
-      password.trim().length > 0 &&
+      (isEdit || password.trim().length > 0) &&
       selectedDepartment.trim().length > 0;
-
     setIsValid(valid);
-  }, [fullname, username, password, selectedDepartment]);
+  }, [fullname, username, password, selectedDepartment, isEdit]);
 
   const handleSubmit = async () => {
-    if (!isValid || isAdding) return;
-    setIsAdding(true);
+    if (!isValid || isLoading) return;
+    setIsLoading(true);
     try {
-      const dept = departments.find(d => d.name === selectedDepartment.trim());
-      if (!dept) {
-        throw new Error("Invalid department selected");
-      }
       await onSubmit(
         fullname.trim(),
         username.trim(),
@@ -439,11 +454,11 @@ export const ManageAdmin = ({
         selectedDepartment.trim(),
         adminId
       );
-    } catch (error) {
-      console.error(`Error ${isEdit ? "updating" : "adding"} admin:`, error);
-      alert(`Failed to ${isEdit ? "update" : "add"} admin`);
+      setShowSuccess(true);
+    } catch (error: any) {
+      alert(error.message || `Failed to ${isEdit ? "update" : "add"} admin`);
     } finally {
-      setIsAdding(false);
+      setIsLoading(false);
     }
   };
 
@@ -452,100 +467,64 @@ export const ManageAdmin = ({
   const actionText = isEdit ? "Update" : "Add";
   const actionIngText = isEdit ? "Updating" : "Adding";
   const titleText = isEdit ? "Update Admin" : "Add New Admin";
-  const isActive = isValid && !isAdding;
-  const buttonBg = isEdit ? "bg-gold-500" : "bg-maroon-900";
-  const buttonTextColor = isEdit ? "text-maroon-800" : "text-white";
 
   return (
-    <PopupWrapper>
-      <div className="flex justify-between items-center">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className={headingClass}>{titleText}</h2>
+    <>
+      {!showSuccess ? (
+        <PopupWrapper>
+          <div className="flex justify-between items-start">
+            <div>
+              <h2 className={headingClass}>{titleText}</h2>
+              <p className={textBaseClass}>Input required information.</p>
+            </div>
+            <button aria-label="close" onClick={onClose} disabled={isLoading} className="text-gray-500 hover:text-gray-700">
+              <Close className="w-6 h-6" />
+            </button>
           </div>
-          <p className={`text-gray-600 ${textBaseClass}`}>
-            Input required information.
-          </p>
-        </div>
 
-        <button
-          aria-label="Close Popup"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
-          disabled={isAdding}
-        >
-          <Close className="w-6 h-6" />
-        </button>
-      </div>
+          <div className="mt-6 space-y-5">
+            <InputField label="Full Name" placeholder="Enter full name" value={fullname} onChange={(e) => setFullname(e.target.value)} disabled={isLoading} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField label="Username" placeholder="Enter username" value={username} onChange={(e) => setUsername(e.target.value)} disabled={isLoading} />
+              <InputField
+                label="Password"
+                type="password"
+                placeholder={isEdit ? "Leave blank to keep current" : "Enter password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <SearchableSelectField
+              label="Department"
+              options={departments.map((d) => ({ value: d.name, label: d.name }))}
+              placeholder="Select department"
+              value={selectedDepartment}
+              onChange={setSelectedDepartment}
+              disabled={isLoading}
+            />
+          </div>
 
-      <div className="flex flex-col gap-4">
-        <InputField
-          label="Full Name"
-          placeholder="Enter full name"
-          value={fullname}
-          onChange={(e) => setFullname(e.target.value)}
-          isInvalid={fullname.trim().length === 0}
-          error={fullname.trim().length === 0 ? "Full name is required" : ""}
-          disabled={isAdding}
+          <div className="mt-8 flex flex-col md:flex-row gap-3 justify-end">
+            <Button
+              text={isLoading ? `${actionIngText}...` : `${actionText} Admin`}
+              textColor="text-white"
+              backgroundColor={isValid && !isLoading ? "bg-maroon-800 hover:bg-maroon-900" : "bg-gray-400"}
+              onClick={handleSubmit}
+              isDisabled={!isValid || isLoading}
+            />
+            <Button text="Cancel" textColor="text-black" backgroundColor="bg-white border border-black/25" onClick={onClose} isDisabled={isLoading} />
+          </div>
+        </PopupWrapper>
+      ) : (
+        <SuccessPopup
+          isOpen={showSuccess}
+          onClose={onClose}
+          title={isEdit ? "Admin Updated Successfully!" : "Admin Added Successfully!"}
+          message={isEdit ? "The admin has been updated." : "The new admin account has been created."}
         />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField
-            label="Username"
-            placeholder="Enter username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            isInvalid={username.trim().length === 0}
-            error={username.trim().length === 0 ? "Username is required" : ""}
-            disabled={isAdding}
-          />
-          <InputField
-            label="Password"
-            type="password"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            isInvalid={password.trim().length === 0}
-            error={password.trim().length === 0 ? "Password is required" : ""}
-            disabled={isAdding}
-          />
-        </div>
-
-        <SearchableSelectField
-          label="Department"
-          options={departments.map((d) => ({
-            value: d.name,
-            label: d.name,
-          }))}
-          placeholder="Select a department"
-          value={selectedDepartment}
-          onChange={setSelectedDepartment} // Direct function reference
-          error={selectedDepartment.trim().length === 0 ? "Department is required" : ""}
-          disabled={isAdding}
-        />
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-end gap-3 w-full">
-        <Button
-          text={isAdding ? `${actionIngText} Admin...` : `${actionText} Admin`}
-          textColor={isActive ? buttonTextColor : "text-white"}
-          backgroundColor={
-            isActive
-              ? `${buttonBg} flex-1`
-              : "bg-gray-400 flex-1 cursor-not-allowed"
-          }
-          onClick={handleSubmit}
-          isDisabled={!isValid || isAdding}
-        />
-        <Button
-          text="Cancel"
-          textColor="text-black"
-          backgroundColor="bg-white border-1 border-black/25 flex-1"
-          onClick={onClose}
-          isDisabled={isAdding}
-        />
-      </div>
-    </PopupWrapper>
+      )}
+    </>
   );
 };
 
