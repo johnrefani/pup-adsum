@@ -50,7 +50,7 @@ const UserManagement = () => {
               selectedCourse={filters.course}
               selectedYear={filters.year}
               searchName={filters.name}
-            />
+            /> 
           </div>
         ) : (
           <div className="flex flex-col md:grid-rows-2 gap-4 md:gap-6 lg:gap-8">
