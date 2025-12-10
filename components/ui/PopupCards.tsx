@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Button, InputField } from "@/lib/imports";
-import { TimeInPopupProps, DepartmentPopupProps } from "@/lib/types";
+import { TimeInPopupProps } from "@/lib/types";
 import { Check, Close } from "@/lib/icons";
 import { useState, useEffect } from "react";
 import { SearchableSelectField } from "@/lib/imports";
@@ -728,6 +728,141 @@ export const SuccessPopup = ({ isOpen, onClose, title, message }: SuccessPopupPr
             onClick={onClose}
           />
         </div>
+      </div>
+    </PopupWrapper>
+  );
+};
+
+export interface DepartmentPopupProps {
+  isOpen: boolean;
+  onClose: () => void;
+  isEdit?: boolean;
+  initialData?: {
+    id: number;
+    acronym: string;
+    name: string;
+  };
+  onSubmit: (acronym: string, name: string, id?: number) => Promise<void>;
+}
+
+// For Editing and Adding Department
+export const DepartmentPopup = ({ 
+  isOpen, 
+  onClose, 
+  isEdit = false, 
+  initialData, 
+  onSubmit 
+}: DepartmentPopupProps) => {
+  const [acronym, setAcronym] = useState("");
+  const [completeName, setCompleteName] = useState("");
+  const [id, setId] = useState<number | undefined>(undefined);
+  const [isValid, setIsValid] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (isEdit && initialData) {
+        setAcronym(initialData.acronym || "");
+        setCompleteName(initialData.name || "");
+        setId(initialData.id);
+      } else {
+        setAcronym("");
+        setCompleteName("");
+        setId(undefined);
+      }
+      setIsAdding(false);
+    }
+  }, [isOpen, isEdit, initialData]);
+
+  useEffect(() => {
+    setIsValid(
+      acronym.trim().length > 0 &&
+      completeName.trim().length > 0
+    );
+  }, [acronym, completeName]);
+
+  const handleSubmit = async () => {
+    if (!isValid || isAdding) return;
+    setIsAdding(true);
+    try {
+      await onSubmit(acronym.trim(), completeName.trim(), id);
+    } catch (error) {
+      console.error(`Error ${isEdit ? "updating" : "adding"} department:`, error);
+      alert(`Failed to ${isEdit ? "update" : "add"} department`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const actionText = isEdit ? "Update" : "Add";
+  const actionIngText = isEdit ? "Updating" : "Adding";
+  const titleText = isEdit ? "Update Department" : "Add New Department";
+  const isActive = isValid && !isAdding;
+  const buttonBg = isEdit ? "bg-gold-500" : "bg-maroon-900";
+  const buttonTextColor = isEdit ? "text-maroon-800" : "text-white";
+
+  return (
+    <PopupWrapper>
+      <div className="flex justify-between items-center">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className={headingClass}>{titleText}</h2>
+          </div>
+          <p className={`text-gray-600 ${textBaseClass}`}>
+            Input required information.
+          </p>
+        </div>
+
+        <button
+          aria-label="Close Popup"
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 cursor-pointer"
+          disabled={isAdding}
+        >
+          <Close className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-4">
+        <InputField
+          label="Acronym"
+          placeholder="Enter acronym"
+          value={acronym}
+          onChange={(e) => setAcronym(e.target.value)}
+          disabled={isAdding}
+          // Removed isInvalid & error props completely
+        />
+        <InputField
+          label="Complete Name"
+          placeholder="Enter complete name"
+          value={completeName}
+          onChange={(e) => setCompleteName(e.target.value)}
+          disabled={isAdding}
+          // Removed isInvalid & error props completely
+        />
+      </div>
+
+      <div className="flex flex-col md:flex-row justify-end gap-3 w-full">
+        <Button
+          text={isAdding ? `${actionIngText} Department...` : `${actionText} Department`}
+          textColor={isActive ? buttonTextColor : "text-white"}
+          backgroundColor={
+            isActive
+              ? `${buttonBg} flex-1`
+              : "bg-gray-400 flex-1 cursor-not-allowed"
+          }
+          onClick={handleSubmit}
+          isDisabled={!isValid || isAdding}
+        />
+        <Button
+          text="Cancel"
+          textColor="text-black"
+          backgroundColor="bg-white border-1 border-black/25 flex-1"
+          onClick={onClose}
+          isDisabled={isAdding}
+        />
       </div>
     </PopupWrapper>
   );

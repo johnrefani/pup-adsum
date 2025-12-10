@@ -26,9 +26,10 @@ const CourseList: React.FC = () => {
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
-  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false); // NEW
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
+  // ORIGINAL fetchData (kept unchanged)
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -58,9 +59,37 @@ const CourseList: React.FC = () => {
     }
   };
 
+  // NEW fetchDepartments – added exactly as you provided
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('/api/departments');
+      const data = await res.json();
+      if (data.departments) {
+        setDepartments(data.departments);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Refresh departments right before opening Add/Edit popups
+  const openAddPopup = async () => {
+    await fetchDepartments();
+    setIsAddPopupOpen(true);
+  };
+
+  const openEditPopup = async (course: Course) => {
+    setSelectedCourse(course);
+    await fetchDepartments();   // <-- ensures latest departments for edit
+    setIsEditPopupOpen(true);
+  };
 
   const handleSubmitCourse = async (
     acronym: string,
@@ -106,11 +135,6 @@ const CourseList: React.FC = () => {
     } catch (error: any) {
       alert(error.message || 'Failed to delete course');
     }
-  };
-
-  const openEditPopup = (course: Course) => {
-    setSelectedCourse(course);
-    setIsEditPopupOpen(true);
   };
 
   const openDeletePopup = (course: Course) => {
@@ -205,7 +229,7 @@ const CourseList: React.FC = () => {
             text="Add New Course"
             textColor="text-white"
             backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            onClick={() => setIsAddPopupOpen(true)}
+            onClick={openAddPopup} 
           />
         </div>
       </div>
