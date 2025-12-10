@@ -128,36 +128,82 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
   const handlePrint = () => {
     if (!selectedSession) return;
 
-    const printWindow = window.open('', '', `width=800,height=600,left=${(screen.availWidth - 800) / 2},top=${(screen.availHeight - 600) / 2},scrollbars=yes,resizable=yes`);
-    if (!printWindow) return;
+    const printWindow = window.open('', '', `width=800,height=600,left=${(screen.availWidth - 800) / 2},top=${(screen.availHeight - 600) / 2},scrollbars=no,resizable=yes`);
+    if (!printWindow) {
+      alert("Please allow popups to print the QR code");
+      return;
+    }
 
     printWindow.document.write(`
+      <!DOCTYPE html>
       <html>
         <head>
-          <title>Print QR Session: ${selectedSession.title}</title>
+          <title>${selectedSession.title}</title>
           <style>
-            body { font-family: 'Poppins', sans-serif; text-align: center; padding: 20px; }
-            img { width: 500px; margin: 20px auto; display: block; }
-            h2 { font-size: 64px; margin: 20px 0; color: #8B0000; }
-            .info { font-size: 32px; line-height: 1.6; }
-            .info strong { color: #333; }
+            body {
+              font-family: 'Segoe UI', Arial, sans-serif;
+              margin: 0;
+              padding: 40px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              background: white;
+              color: #222;
+            }
+            .qr { 
+              width: 420px; 
+              height: 420px; 
+              margin: 20px 0;
+              padding: 20px;
+              background: white;
+              box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            }
+            h1 {
+              font-size: 36px;
+              margin: 10px 0;
+              color: #8B0000;
+            }
+            .details {
+              font-size: 24px;
+              line-height: 1.8;
+              text-align: center;
+              max-width: 600px;
+            }
+            .details strong { color: #333; }
+            @media print {
+              body { padding: 20px; }
+            }
           </style>
         </head>
         <body>
-          <img src="${selectedSession.qrImageUrl}" alt="QR Code" />
-          <h2>${selectedSession.title}</h2>
-          <div class="info">
+          <img src="${selectedSession.qrImageUrl}" class="qr" alt="QR Code" />
+          <h1>${selectedSession.title}</h1>
+          <div class="details">
             <p><strong>Department:</strong> ${selectedSession.departmentLabel || 'N/A'}</p>
-            <p><strong>Date:</strong> ${new Date(selectedSession.date).toLocaleDateString()}</p>
-            <p><strong>Time:</strong> ${selectedSession.startTime} - ${selectedSession.endTime}</p>
-            <p><strong>Description:</strong> ${selectedSession.description || 'N/A'}</p>
+            <p><strong>Date:</strong> ${new Date(selectedSession.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p><strong>Time:</strong> ${selectedSession.startTime} – ${selectedSession.endTime}</p>
+            ${selectedSession.description ? `<p><strong>Description:</strong> ${selectedSession.description}</p>` : ''}
           </div>
         </body>
       </html>
     `);
 
     printWindow.document.close();
-    printWindow.print();
+
+    const img = printWindow.document.querySelector('img');
+    if (img) {
+      const triggerPrint = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
+
+      if (img.complete && img.naturalWidth > 0) {
+        triggerPrint();
+      } else {
+        img.onload = triggerPrint;
+        img.onerror = triggerPrint;
+      }
+    }
   };
 
   const isEdit = mode === 'edit';

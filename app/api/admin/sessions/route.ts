@@ -60,19 +60,40 @@ export async function POST(request: NextRequest) {
       await Attendance.insertMany(records);
     }
 
-    return NextResponse.json({
-      success: true,
-      session: {
-        _id: session._id.toString(),
-        title: session.title,
-        date: session.date.toISOString().split('T')[0],
-        startTime: session.startTime,
-        endTime: session.endTime,
-        description: session.description,
-        department: session.department.toString(),
-      },
-      qrImageUrl: uploadResult.secure_url,
-    });
+const populatedSession = await Session.findById(session._id)
+  .populate<{ department: { _id: string; acronym: string; name: string } }>(
+    'department',
+    'acronym name'
+  )
+  .lean<{ 
+    _id: string;
+    title: string;
+    date: Date;
+    startTime: string;
+    endTime: string;
+    description?: string;
+    department: { _id: string; acronym: string; name: string };
+  }>()
+  .exec();
+
+if (!populatedSession) {
+  throw new Error('Failed to retrieve created session');
+}
+
+return NextResponse.json({
+  success: true,
+  session: {
+    _id: populatedSession._id.toString(),
+    title: populatedSession.title,
+    date: populatedSession.date.toISOString().split('T')[0],
+    startTime: populatedSession.startTime,
+    endTime: populatedSession.endTime,
+    description: populatedSession.description || '',
+    department: populatedSession.department._id.toString(),
+    departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
+  },
+  qrImageUrl: uploadResult.secure_url,
+});
 
   } catch (error: any) {
     console.error('Session creation error:', error);
