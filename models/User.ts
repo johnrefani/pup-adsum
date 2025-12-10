@@ -49,6 +49,5 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.index({ idNumber: 1 }, { unique: true, sparse: true });
-userSchema.index({ username: 1 }, { unique: true });
 
 export default mongoose.models.User || mongoose.model('User', userSchema);

@@ -22,14 +22,21 @@ const AdminList: React.FC = () => {
   const [selectedAdmin, setSelectedAdmin] = useState<Admin | null>(null);
   const [departments, setDepartments] = useState<Array<{ id: number; acronym: string; name: string }>>([]);
 
-  useEffect(() => {
-    const fetchDepts = async () => {
+  // NEW: Your exact fetchDepartments function
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
       const res = await fetch('/api/departments');
       const data = await res.json();
-      setDepartments(data.departments || []);
-    };
-    fetchDepts();
-  }, []);
+      if (data.departments) {
+        setDepartments(data.departments);
+      }
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -109,8 +116,17 @@ const AdminList: React.FC = () => {
     fetchAdmins();
   };
 
-  const openEdit = (admin: Admin) => {
+  // Updated: Fetch fresh departments when opening Add
+  const openAddPopup = async () => {
+    await fetchDepartments();
+    setSelectedAdmin(null);
+    setPopupOpen(true);
+  };
+
+  // Updated: Fetch fresh departments when opening Edit
+  const openEdit = async (admin: Admin) => {
     setSelectedAdmin(admin);
+    await fetchDepartments();
     setPopupOpen(true);
   };
 
@@ -196,10 +212,7 @@ const AdminList: React.FC = () => {
             text="Add New Admin"
             textColor="text-white"
             backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            onClick={() => {
-              setSelectedAdmin(null);
-              setPopupOpen(true);
-            }}
+            onClick={openAddPopup}
           />
         </div>
       </div>
