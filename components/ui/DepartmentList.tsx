@@ -129,7 +129,7 @@ const DepartmentList: React.FC = () => {
 
   return (
     <div className="">
-      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full max-h-[700px] md:max-h-[600px] lg:max-h-[500px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
@@ -138,11 +138,11 @@ const DepartmentList: React.FC = () => {
           <p className="text-sm text-amber-600 mt-1">Manage departments</p>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* Scrollable Table */}
+        <div className="overflow-y-auto max-h-[calc(500px-140px)]">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
+              <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
                   Departments
                 </th>
@@ -154,13 +154,13 @@ const DepartmentList: React.FC = () => {
             <tbody className="divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={2} className="text-center py-8 text-gray-500">
+                  <td colSpan={2} className="text-center py-12 text-gray-500">
                     Loading departments...
                   </td>
                 </tr>
               ) : departments.length === 0 ? (
                 <tr>
-                  <td colSpan={2} className="text-center py-8 text-gray-500">
+                  <td colSpan={2} className="text-center py-12 text-gray-500">
                     No departments found.
                   </td>
                 </tr>
@@ -196,7 +196,7 @@ const DepartmentList: React.FC = () => {
         </div>
 
         {/* Add New Department Button */}
-        <div className="flex justify-end p-6">
+        <div className="flex justify-end p-6 border-t border-gray-200">
           <Button
             text="Add New Department"
             textColor="text-white"
@@ -213,31 +213,35 @@ const DepartmentList: React.FC = () => {
         onSubmit={handleAddDepartment}
       />
 
-      <DepartmentPopup
-        isOpen={isEditOpen}
-        onClose={() => {
-          setIsEditOpen(false);
-          setSelectedDepartment(null);
-        }}
-        isEdit={true}
-        initialData={{
-          id: selectedDepartment?._id as any,
-          acronym: selectedDepartment?.acronym || "",
-          name: selectedDepartment?.name || "",
-        }}
-        onSubmit={handleEditDepartment}
-      />
+      {selectedDepartment && (
+        <DepartmentPopup
+          isOpen={isEditOpen}
+          onClose={() => {
+            setIsEditOpen(false);
+            setSelectedDepartment(null);
+          }}
+          isEdit={true}
+          initialData={{
+            id: selectedDepartment._id as any,
+            acronym: selectedDepartment.acronym,
+            name: selectedDepartment.name,
+          }}
+          onSubmit={handleEditDepartment}
+        />
+      )}
 
-      <DeletePopup
-        isOpen={isDeleteOpen}
-        onClose={() => {
-          setIsDeleteOpen(false);
-          setSelectedDepartment(null);
-        }}
-        deleteItem={handleDeleteDepartment}
-        itemName={`${selectedDepartment?.acronym} - ${selectedDepartment?.name}`}
-        itemType="Department"
-      />
+      {selectedDepartment && (
+        <DeletePopup
+          isOpen={isDeleteOpen}
+          onClose={() => {
+            setIsDeleteOpen(false);
+            setSelectedDepartment(null);
+          }}
+          deleteItem={handleDeleteDepartment}
+          itemName={`${selectedDepartment.acronym} - ${selectedDepartment.name}`}
+          itemType="Department"
+        />
+      )}
 
       <SuccessPopup
         isOpen={isSuccessOpen}

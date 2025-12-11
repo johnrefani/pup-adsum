@@ -112,7 +112,7 @@ export default function GeneratedQR() {
 
   if (!qrData) {
     return (
-      <div className="bg-white rounded-2xl shadow-xl border p-12 text-center min-h-[500px] flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-xl p-12 text-center min-h-[500px] flex items-center justify-center">
         <p className="text-gray-400 text-lg">Fill the form and click "Generate QR Code"</p>
       </div>
     );

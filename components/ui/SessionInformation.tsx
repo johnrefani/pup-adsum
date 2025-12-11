@@ -210,7 +210,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
   return (
     <form onSubmit={handleSubmit(isEdit ? onUpdate : onCreate)} className="space-y-8">
-      <div className="bg-white rounded-2xl shadow-xl border p-8">
+      <div className="bg-white rounded-2xl shadow-xl p-8">
         <h2 className="text-3xl font-bold text-red-800 mb-8">
           {isEdit ? 'Edit Session' : 'Create New Session'}
         </h2>

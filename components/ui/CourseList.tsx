@@ -144,7 +144,7 @@ const CourseList: React.FC = () => {
 
   return (
     <div className="">
-      <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="w-full max-h-[700px] md:max-h-[600px] lg:max-h-[500px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
@@ -160,10 +160,10 @@ const CourseList: React.FC = () => {
 
         {/* Table */}
         {!loading && (
-          <div className="overflow-x-auto">
+          <div className="overflow-y-auto max-h-[calc(500px-120px)]">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50">
+                <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                     Courses
                   </th>
