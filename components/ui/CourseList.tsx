@@ -29,7 +29,6 @@ const CourseList: React.FC = () => {
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  // ORIGINAL fetchData (kept unchanged)
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -59,19 +58,21 @@ const CourseList: React.FC = () => {
     }
   };
 
-  // NEW fetchDepartments – added exactly as you provided
   const fetchDepartments = async () => {
     try {
-      setLoading(true);
       const res = await fetch('/api/departments');
       const data = await res.json();
       if (data.departments) {
-        setDepartments(data.departments);
+        setDepartments(
+          data.departments.map((d: any) => ({
+            id: d._id.toString(),
+            acronym: d.acronym,
+            name: d.name,
+          }))
+        );
       }
     } catch (error) {
       console.error('Error fetching departments:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -79,7 +80,6 @@ const CourseList: React.FC = () => {
     fetchData();
   }, []);
 
-  // Refresh departments right before opening Add/Edit popups
   const openAddPopup = async () => {
     await fetchDepartments();
     setIsAddPopupOpen(true);
@@ -87,7 +87,7 @@ const CourseList: React.FC = () => {
 
   const openEditPopup = async (course: Course) => {
     setSelectedCourse(course);
-    await fetchDepartments();   // <-- ensures latest departments for edit
+    await fetchDepartments();
     setIsEditPopupOpen(true);
   };
 
@@ -111,6 +111,8 @@ const CourseList: React.FC = () => {
     }
 
     await fetchData();
+    setIsAddPopupOpen(false);
+    setIsEditPopupOpen(false);
   };
 
   const handleDeleteCourse = async () => {
@@ -144,23 +146,23 @@ const CourseList: React.FC = () => {
 
   return (
     <div className="">
-      <div className="w-full max-h-[700px] md:max-h-[600px] lg:max-h-[500px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-        {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+      {/* Uniform height card - choose one value that looks good on all screens */}
+      <div className="w-full h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
+        {/* Header - fixed */}
+        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Courses List
           </h2>
           <p className="text-sm text-amber-600 mt-1">Manage courses</p>
         </div>
 
-        {/* Loading */}
-        {loading && (
-          <div className="p-8 text-center text-gray-500">Loading courses...</div>
-        )}
-
-        {/* Table */}
-        {!loading && (
-          <div className="overflow-y-auto max-h-[calc(500px-120px)]">
+        {/* Scrollable content - takes remaining space */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {loading ? (
+            <div className="p-12 text-center text-gray-500">Loading courses...</div>
+          ) : courses.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">No courses found</div>
+          ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
@@ -176,65 +178,63 @@ const CourseList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {courses.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="text-center py-8 text-gray-500">
-                      No courses found
+                {courses.map((course) => (
+                  <tr key={course.id} className="hover:bg-gray-50 transition">
+                    <td className="px-4 py-2 md:px-6 md:py-4">
+                      <div className="flex flex-col">
+                        <span className="text-base font-medium text-gray-900">
+                          {course.code}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          {course.name}
+                        </span>
+                        <span className="text-xs text-gray-400 lg:hidden mt-1">
+                          Dept: {course.department}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden lg:table-cell">
+                      {course.department}
+                    </td>
+                    <td className="px-4 py-2 md:px-6 md:py-4">
+                      <div className="flex items-center justify-center gap-2 lg:gap-4">
+                        <Button
+                          leftIcon={<Editing className="w-4 h-4" />}
+                          backgroundColor="bg-blue-600 hover:bg-blue-700"
+                          textColor="text-white"
+                          size="sm"
+                          onClick={() => openEditPopup(course)}
+                        />
+                        <Button
+                          leftIcon={<Trash className="w-4 h-4" />}
+                          backgroundColor="bg-red-600 hover:bg-red-700"
+                          textColor="text-white"
+                          size="sm"
+                          onClick={() => openDeletePopup(course)}
+                        />
+                      </div>
                     </td>
                   </tr>
-                ) : (
-                  courses.map((course) => (
-                    <tr key={course.id} className="hover:bg-gray-50 transition">
-                      <td className="px-4 py-2 md:px-6 md:py-4">
-                        <div className="flex flex-col">
-                          <span className="text-base font-medium text-gray-900">
-                            {course.code}
-                          </span>
-                          <span className="text-sm text-gray-500 md:flex hidden">
-                            {course.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden lg:table-cell">
-                        {course.department}
-                      </td>
-                      <td className="px-4 py-2 md:px-6 md:py-4">
-                        <div className="flex items-center justify-center gap-2 lg:gap-4">
-                          <Button
-                            leftIcon={<Editing className="w-4 h-4" />}
-                            backgroundColor="bg-blue-600 hover:bg-blue-700"
-                            textColor="text-white"
-                            size="sm"
-                            onClick={() => openEditPopup(course)}
-                          />
-                          <Button
-                            leftIcon={<Trash className="w-4 h-4" />}
-                            backgroundColor="bg-red-600 hover:bg-red-700"
-                            textColor="text-white"
-                            size="sm"
-                            onClick={() => openDeletePopup(course)}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
-          </div>
-        )}
+          )}
+        </div>
 
-        <div className="flex justify-end p-6">
-          <Button
-            text="Add New Course"
-            textColor="text-white"
-            backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            onClick={openAddPopup} 
-          />
+        {/* Fixed bottom button bar - always visible */}
+        <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white">
+          <div className="flex justify-end">
+            <Button
+              text="Add New Course"
+              textColor="text-white"
+              backgroundColor="bg-maroon-800 hover:bg-maroon-900"
+              onClick={openAddPopup}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Add Popup */}
+      {/* Popups */}
       <CoursePopup
         isOpen={isAddPopupOpen}
         onClose={() => setIsAddPopupOpen(false)}
@@ -246,7 +246,6 @@ const CourseList: React.FC = () => {
         onSubmit={handleSubmitCourse}
       />
 
-      {/* Edit Popup */}
       {selectedCourse && (
         <CoursePopup
           isOpen={isEditPopupOpen}
@@ -270,7 +269,6 @@ const CourseList: React.FC = () => {
         />
       )}
 
-      {/* Delete Confirmation Popup */}
       {selectedCourse && (
         <DeletePopup
           isOpen={isDeletePopupOpen}
@@ -284,7 +282,6 @@ const CourseList: React.FC = () => {
         />
       )}
 
-      {/* Success Popup after Delete */}
       <SuccessPopup
         isOpen={showDeleteSuccess}
         onClose={() => setShowDeleteSuccess(false)}

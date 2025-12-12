@@ -129,9 +129,10 @@ const DepartmentList: React.FC = () => {
 
   return (
     <div className="">
-      <div className="w-full max-h-[700px] md:max-h-[600px] lg:max-h-[500px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      {/* Uniform height card */}
+      <div className="w-full h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Department List
           </h2>
@@ -139,33 +140,25 @@ const DepartmentList: React.FC = () => {
         </div>
 
         {/* Scrollable Table */}
-        <div className="overflow-y-auto max-h-[calc(500px-140px)]">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
-                  Departments
-                </th>
-                <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
-                  Controls
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {loading ? (
-                <tr>
-                  <td colSpan={2} className="text-center py-12 text-gray-500">
-                    Loading departments...
-                  </td>
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {loading ? (
+            <div className="p-12 text-center text-gray-500">Loading departments...</div>
+          ) : departments.length === 0 ? (
+            <div className="p-12 text-center text-gray-500">No departments found.</div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
+                    Departments
+                  </th>
+                  <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
+                    Controls
+                  </th>
                 </tr>
-              ) : departments.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="text-center py-12 text-gray-500">
-                    No departments found.
-                  </td>
-                </tr>
-              ) : (
-                departments.map((dept) => (
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {departments.map((dept) => (
                   <tr key={dept._id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-5 text-base font-medium text-gray-900">
                       {dept.acronym} - {dept.name}
@@ -189,20 +182,22 @@ const DepartmentList: React.FC = () => {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        {/* Add New Department Button */}
-        <div className="flex justify-end p-6 border-t border-gray-200">
-          <Button
-            text="Add New Department"
-            textColor="text-white"
-            backgroundColor="bg-maroon-800 hover:bg-maroon-900"
-            onClick={() => setIsAddOpen(true)}
-          />
+        {/* Fixed Add Button Bar */}
+        <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white">
+          <div className="flex justify-end">
+            <Button
+              text="Add New Department"
+              textColor="text-white"
+              backgroundColor="bg-maroon-800 hover:bg-maroon-900"
+              onClick={() => setIsAddOpen(true)}
+            />
+          </div>
         </div>
       </div>
 
