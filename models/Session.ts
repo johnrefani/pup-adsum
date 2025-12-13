@@ -1,4 +1,4 @@
-
+// models/Session.ts
 import mongoose from 'mongoose';
 
 const sessionSchema = new mongoose.Schema({
@@ -10,8 +10,8 @@ const sessionSchema = new mongoose.Schema({
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
   qrToken: { type: String, required: true, unique: true },
   qrImageUrl: { type: String },
-}, {
-  timestamps: true
-});
+}, { timestamps: true });
 
-export default mongoose.models.Session || mongoose.model('Session', sessionSchema);
+const Session = mongoose.models.Session || mongoose.model('Session', sessionSchema);
+
+export default Session;

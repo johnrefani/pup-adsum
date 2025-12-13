@@ -1,11 +1,5 @@
 import mongoose from 'mongoose';
 
-import Attendance from '@/models/Attendance';
-import Course from '@/models/Course';
-import Department from '@/models/Department';
-import Session from '@/models/Session';
-import User from '@/models/User';
-
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {

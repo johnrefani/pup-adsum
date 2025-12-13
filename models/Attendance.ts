@@ -16,4 +16,6 @@ const attendanceSchema = new mongoose.Schema({
 
 attendanceSchema.index({ session: 1, member: 1 }, { unique: true });
 
-export default mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
+const Attendance = mongoose.models.Attendance || mongoose.model('Attendance', attendanceSchema);
+
+export default Attendance;
