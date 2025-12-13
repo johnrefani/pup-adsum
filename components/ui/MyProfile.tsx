@@ -1,7 +1,6 @@
-// components/MyProfile.tsx
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button, InputField } from "@/lib/imports";
 import { Camera } from "@/lib/icons";
 
@@ -9,72 +8,145 @@ interface ProfileData {
   fullName: string;
   schoolId: string;
   username: string;
-  course: string;
+  course: string; 
   yearLevel: string;
-  department: string;
-  photo: string | null;
+  department: string;   
+  profilePicture: string | null;
 }
-
-const initialData: ProfileData = {
-  fullName: "Juan Dela Cruz",
-  schoolId: "20-2025",
-  username: "juandc",
-  course: "BSED",
-  yearLevel: "2nd Year",
-  department: "BSED",
-  photo: null,
-};
 
 const MyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<ProfileData>(initialData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [formData, setFormData] = useState<ProfileData>({
+    fullName: "",
+    schoolId: "",
+    username: "",
+    course: "",
+    yearLevel: "",
+    department: "",
+    profilePicture: null,
+  });
 
-  // Separate state for password fields when editing
-  const [currentPassword] = useState("••••••••••••"); // Just for display
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/user/my-account')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load profile');
+        return res.json();
+      })
+      .then((data) => {
+        setFormData({
+          fullName: data.fullName || "",
+          schoolId: data.schoolId || "",
+          username: data.username || "",
+          department: data.departmentFormatted || "",
+          course: data.courseFormatted || "",
+          yearLevel: data.yearLevel || "",
+          profilePicture: data.profilePicture,
+        });
+        setPreviewPhoto(data.profilePicture);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Failed to load profile");
+        setLoading(false);
+      });
+  }, []);
 
   const handlePhotoClick = () => {
     if (isEditing) fileInputRef.current?.click();
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, photo: reader.result as string });
+        setPreviewPhoto(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSave = () => {
-    // Add real validation later if needed
+  const handleSave = async () => {
     if (newPassword && newPassword !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("New passwords do not match");
       return;
     }
-    alert("Profile updated successfully!");
-    setIsEditing(false);
-    setNewPassword("");
-    setConfirmPassword("");
+
+    setSaving(true);
+    setError("");
+
+    const submitData = new FormData();
+
+    if (formData.username !== formData.username) {
+      submitData.append('username', formData.username);
+    }
+    submitData.append('fullName', formData.fullName);
+
+    if (newPassword) {
+      submitData.append('password', newPassword);
+    }
+
+    if (fileInputRef.current?.files?.[0]) {
+      submitData.append('photo', fileInputRef.current.files[0]);
+    }
+
+    try {
+      const res = await fetch('/api/user/my-account', {
+        method: 'PUT',
+        body: submitData,
+      });
+
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Update failed');
+
+      alert("Profile updated successfully!");
+      setIsEditing(false);
+      setNewPassword("");
+      setConfirmPassword("");
+
+      if (previewPhoto && previewPhoto.startsWith('data:')) {
+        setFormData(prev => ({ ...prev, profilePicture: previewPhoto }));
+      }
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setFormData(initialData);
+    setIsEditing(false);
     setNewPassword("");
     setConfirmPassword("");
-    setIsEditing(false);
+    setPreviewPhoto(formData.profilePicture);
+    setError("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  if (loading) return <div className="p-10 text-center">Loading profile...</div>;
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-6">
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800 mb-8 text-center md:text-left">
         {isEditing ? "Edit Profile" : "My Profile"}
       </h1>
+      {
+        isEditing ? (
+        <p className="text-gold-600 text-center text-sm md:text-base lg:text-lg font-medium mb-1 md:mb-2 lg:mb-3">You are in edit mode. You can only update your full name, username, password, and profile picture..</p>
+        ):(
+        <p className="text-gray-600 text-center text-sm md:text-base lg:text-lg font-medium mb-1 md:mb-2 lg:mb-3">View your profile information. Click "Edit Profile" to make changes.</p>
+        )
+      }
+
+      {error && <p className="text-red-600 text-center mb-4">{error}</p>}
 
       <div className="p-6 md:p-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
@@ -86,8 +158,8 @@ const MyProfile = () => {
                 isEditing ? "hover:border-yellow-500 hover:shadow-lg cursor-pointer" : ""
               }`}
             >
-              {formData.photo ? (
-                <img src={formData.photo} alt="Profile" className="w-full h-full object-cover" />
+              {previewPhoto ? (
+                <img src={previewPhoto} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <Camera className="w-20 h-20 text-gray-400" />
               )}
@@ -105,8 +177,9 @@ const MyProfile = () => {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  onChange={handlePhotoUpload}
+                  onChange={handlePhotoChange}
                   className="hidden"
+                  aria-label="Profile Picture"
                 />
                 <Button
                   text="UPLOAD PHOTO"
@@ -129,11 +202,7 @@ const MyProfile = () => {
                 placeholder="Enter full name"
               />
 
-              <InputField
-                label="School ID"
-                value={formData.schoolId}
-                state="disabled"
-              />
+              <InputField label="School ID" value={formData.schoolId} state="disabled" />
 
               <InputField
                 label="Username"
@@ -146,27 +215,26 @@ const MyProfile = () => {
               <InputField
                 label="Department"
                 value={formData.department}
-                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                state={isEditing ? "editable" : "readonly"}
-                placeholder="e.g. BSED"
+                state="disabled"
               />
 
-              <InputField label="Course" value={formData.course} state="readonly" />
+              <InputField
+                label="Course"
+                value={formData.course}
+                state="disabled"
+              />
 
-              <InputField label="Year Level" value={formData.yearLevel} state="readonly" />
+              <InputField label="Year Level" value={formData.yearLevel} state="disabled" />
 
-              {/* PASSWORD SECTION */}
-              <div className="md:col-span-2 space-y-6">
-                {/* Current Password - Always shown, toggleable in edit mode only if editing */}
+              <div className="md:col-span-2 space-y-6 mt-6">
                 <InputField
                   label="Current Password"
                   type="password"
-                  value={isEditing ? "" : currentPassword}
-                  placeholder={isEditing ? "Enter current password" : undefined}
-                  state={isEditing ? "editable" : "readonly"}
+                  value={isEditing ? "" : "••••••••••••"}
+                  placeholder={isEditing ? "Leave blank to keep current" : ""}
+                  state="readonly"
                 />
 
-                {/* Only show these when editing */}
                 {isEditing && (
                   <>
                     <InputField
@@ -174,7 +242,7 @@ const MyProfile = () => {
                       type="password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="Enter new password"
+                      placeholder="Enter new password (optional)"
                       showPasswordToggle={true}
                       state="editable"
                     />
@@ -194,16 +262,16 @@ const MyProfile = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mt-10 justify-end">
               {isEditing ? (
                 <>
                   <Button
-                    text="Save Changes"
+                    text={saving ? "Saving..." : "Save Changes"}
                     backgroundColor="bg-red-600 hover:bg-red-700"
                     textColor="text-white"
                     size="lg"
                     onClick={handleSave}
+                    isDisabled={saving}
                   />
                   <Button
                     text="Cancel"
