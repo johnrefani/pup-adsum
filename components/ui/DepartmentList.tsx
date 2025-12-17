@@ -132,7 +132,7 @@ const DepartmentList: React.FC = () => {
       {/* Uniform height card */}
       <div className="w-full h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Department List
           </h2>
@@ -189,7 +189,7 @@ const DepartmentList: React.FC = () => {
         </div>
 
         {/* Fixed Add Button Bar */}
-        <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white">
+        <div className="border-t border-gray-200 px-6 py-4 bg-white">
           <div className="flex justify-end">
             <Button
               text="Add New Department"
