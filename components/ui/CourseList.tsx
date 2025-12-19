@@ -147,9 +147,9 @@ const CourseList: React.FC = () => {
   return (
     <div className="">
       {/* Uniform height card - choose one value that looks good on all screens */}
-      <div className="w-full h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
+      <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
         {/* Header - fixed */}
-        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Courses List
           </h2>

@@ -67,9 +67,9 @@ const SessionList: React.FC = () => {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
-              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Session Name</th>
-              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
-              <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Time</th>
+              <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Session Name</th>
+              <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
+              <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Time</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -88,13 +88,13 @@ const SessionList: React.FC = () => {
                     selectedSession?._id === session._id ? 'bg-blue-100 ring-2 ring-blue-400' : ''
                   }`}
                 >
-                  <td className="px-6 py-5">
+                  <td className="px-5 py-5">
                     <div className="font-medium text-gray-900">{session.title}</div>
                     <div className="text-sm text-gray-500 sm:hidden">
                       {new Date(session.date).toLocaleDateString()}
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-gray-700 hidden sm:table-cell">
+                  <td className="px-5 py-5 text-gray-700 hidden sm:table-cell">
                     {new Date(session.date).toLocaleDateString('en-US', {
                       weekday: 'short',
                       year: 'numeric',
@@ -102,7 +102,7 @@ const SessionList: React.FC = () => {
                       day: 'numeric',
                     })}
                   </td>
-                  <td className="px-6 py-5 text-gray-700 font-medium">
+                  <td className="px-5 py-5 text-gray-700 font-medium">
                     {session.startTime} – {session.endTime}
                   </td>
                 </tr>
