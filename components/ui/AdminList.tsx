@@ -140,9 +140,9 @@ const AdminList: React.FC = () => {
   return (
     <div className="">
       {/* Uniform height card */}
-      <div className="w-full h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
+      <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
+        <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">Admin List</h2>
           <p className="text-sm text-amber-600 mt-1">Manage admin accounts</p>
         </div>
