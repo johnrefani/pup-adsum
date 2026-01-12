@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import { getCurrentAdmin } from '@/lib/auth';
 import mongoose from 'mongoose';
+import { Models } from '@/lib/models';
 
 export async function GET(request: Request) {
   try {

@@ -8,6 +8,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import User from '@/models/User';
 import Department from '@/models/Department';
+import { Models } from '@/lib/models';
 
 interface PopulatedSession {
   _id: mongoose.Types.ObjectId;

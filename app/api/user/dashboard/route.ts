@@ -6,6 +6,7 @@ import Session from '@/models/Session';
 import User from '@/models/User';
 import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
+import { Models } from '@/lib/models';
 
 interface UpcomingEvent {
   _id: string;

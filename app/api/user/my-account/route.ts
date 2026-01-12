@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import cloudinary from '@/lib/cloudinary';
 import User from '@/models/User';
 import { connectToDatabase } from '@/lib/mongodb';
+import { Models } from '@/lib/models';
 
 async function getCurrentUser() {
   const cookieStore = await cookies();
