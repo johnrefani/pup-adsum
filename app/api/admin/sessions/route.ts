@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     });
 
     const uploadResult = await cloudinary.uploader.upload(qrDataUrl, {
-      folder: 'attendance-qr',
+      folder: 'pup-adsum/attendance-qr',
       public_id: qrToken,
       format: 'png',
     });
