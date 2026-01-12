@@ -1,5 +1,5 @@
 // components/attendance/MonthFilter.tsx
-import { ChevronDown } from "../../lib/icons";
+import { ChevronDown } from "@/lib/icons";
 
 const months = [
   "January", "February", "March", "April", "May", "June",
@@ -20,10 +20,10 @@ const MonthFilter = ({ selectedMonth, selectedYear, onChange }: MonthFilterProps
     <div className="flex items-center gap-3 bg-white rounded-lg shadow-sm border px-4 py-3">
       <div className="flex items-center gap-2">
         <select
+        title="Select Month"
           value={selectedMonth}
           onChange={(e) => onChange(e.target.value, selectedYear)}
           className="text-sm sm:text-base font-medium text-gray-700 bg-transparent outline-none cursor-pointer appearance-none pr-6"
-          style={{ backgroundImage: "none" }}
         >
           {months.map((m) => (
             <option key={m} value={m}>{m}</option>
@@ -36,6 +36,7 @@ const MonthFilter = ({ selectedMonth, selectedYear, onChange }: MonthFilterProps
 
       <div className="flex items-center gap-2">
         <select
+        title="Select Year"
           value={selectedYear}
           onChange={(e) => onChange(selectedMonth, Number(e.target.value))}
           className="text-sm sm:text-base font-medium text-gray-700 bg-transparent outline-none cursor-pointer appearance-none pr-6"
