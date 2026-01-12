@@ -3,6 +3,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Course from '@/models/Course';
 import { cookies } from 'next/headers';
 import User from '@/models/User';
+import { Models } from '@/lib/models';
 
 export async function GET() {
   try {

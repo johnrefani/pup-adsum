@@ -1,3 +1,4 @@
+//lib/models.ts
 
 import '@/lib/mongodb'; 
 import User from '@/models/User';
@@ -7,4 +8,4 @@ import Attendance from '@/models/Attendance';
 import Session from '@/models/Session';
 
 
-export { User, Department, Course, Attendance, Session };
+export { User, Department, Course, Attendance, Session as Models };

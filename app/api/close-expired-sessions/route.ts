@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import Attendance from '@/models/Attendance';
+import { Models } from '@/lib/models';
 
 export async function GET() {
   try {

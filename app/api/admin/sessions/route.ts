@@ -6,6 +6,7 @@ import User from '@/models/User';
 import QRCode from 'qrcode';
 import cloudinary from '@/lib/cloudinary';
 import { v4 as uuidv4 } from 'uuid';
+import { Models } from '@/lib/models';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.254.184:3000';
 
