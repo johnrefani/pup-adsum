@@ -8,9 +8,9 @@ interface ProfileData {
   fullName: string;
   schoolId: string;
   username: string;
-  course: string; 
+  course: string;
   yearLevel: string;
-  department: string;   
+  department: string;
   profilePicture: string | null;
 }
 
@@ -34,29 +34,35 @@ const MyProfile = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
+  const loadProfile = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/user/my-account");
+      if (!res.ok) throw new Error("Failed to load profile");
+      const data = await res.json();
+
+      const updatedData: ProfileData = {
+        fullName: data.fullName || "",
+        schoolId: data.schoolId || "",
+        username: data.username || "",
+        department: data.departmentFormatted || "",
+        course: data.courseFormatted || "",
+        yearLevel: data.yearLevel || "",
+        profilePicture: data.profilePicture || null,
+      };
+
+      setFormData(updatedData);
+      setPreviewPhoto(data.profilePicture);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetch('/api/user/my-account')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load profile');
-        return res.json();
-      })
-      .then((data) => {
-        setFormData({
-          fullName: data.fullName || "",
-          schoolId: data.schoolId || "",
-          username: data.username || "",
-          department: data.departmentFormatted || "",
-          course: data.courseFormatted || "",
-          yearLevel: data.yearLevel || "",
-          profilePicture: data.profilePicture,
-        });
-        setPreviewPhoto(data.profilePicture);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError("Failed to load profile");
-        setLoading(false);
-      });
+    loadProfile();
   }, []);
 
   const handlePhotoClick = () => {
@@ -85,36 +91,38 @@ const MyProfile = () => {
 
     const submitData = new FormData();
 
-    if (formData.username !== formData.username) {
-      submitData.append('username', formData.username);
-    }
-    submitData.append('fullName', formData.fullName);
+    submitData.append("username", formData.username);
+    submitData.append("fullName", formData.fullName);
 
-    if (newPassword) {
-      submitData.append('password', newPassword);
+    if (newPassword.trim()) {
+      submitData.append("password", newPassword.trim());
     }
 
-    if (fileInputRef.current?.files?.[0]) {
-      submitData.append('photo', fileInputRef.current.files[0]);
+    const photoFile = fileInputRef.current?.files?.[0];
+    if (photoFile) {
+      submitData.append("photo", photoFile);
     }
 
     try {
-      const res = await fetch('/api/user/my-account', {
-        method: 'PUT',
+      const res = await fetch("/api/user/my-account", {
+        method: "PUT",
         body: submitData,
       });
 
       const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Update failed');
+
+      if (!res.ok) {
+        throw new Error(result.error || "Update failed");
+      }
 
       alert("Profile updated successfully!");
+
       setIsEditing(false);
       setNewPassword("");
       setConfirmPassword("");
+      if (fileInputRef.current) fileInputRef.current.value = "";
 
-      if (previewPhoto && previewPhoto.startsWith('data:')) {
-        setFormData(prev => ({ ...prev, profilePicture: previewPhoto }));
-      }
+      await loadProfile();
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
@@ -126,31 +134,37 @@ const MyProfile = () => {
     setIsEditing(false);
     setNewPassword("");
     setConfirmPassword("");
-    setPreviewPhoto(formData.profilePicture);
     setError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    loadProfile();
   };
 
-  if (loading) return <div className="p-10 text-center">Loading profile...</div>;
+  if (loading) {
+    return <div className="p-10 text-center">Loading profile...</div>;
+  }
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-6">
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800 mb-8 text-center md:text-left">
         {isEditing ? "Edit Profile" : "My Profile"}
       </h1>
-      {
-        isEditing ? (
-        <p className="text-gold-600 text-center text-sm md:text-base lg:text-lg font-medium mb-1 md:mb-2 lg:mb-3">You are in edit mode. You can only update your full name, username, password, and profile picture..</p>
-        ):(
-        <p className="text-gray-600 text-center text-sm md:text-base lg:text-lg font-medium mb-1 md:mb-2 lg:mb-3">View your profile information. Click "Edit Profile" to make changes.</p>
-        )
-      }
 
-      {error && <p className="text-red-600 text-center mb-4">{error}</p>}
+      {isEditing ? (
+        <p className="text-gold-600 text-center text-sm md:text-base lg:text-lg font-medium mb-4">
+          You are in edit mode. You can update your full name, username, password, and profile picture.
+        </p>
+      ) : (
+        <p className="text-gray-600 text-center text-sm md:text-base lg:text-lg font-medium mb-4">
+          View your profile information. Click "Edit Profile" to make changes.
+        </p>
+      )}
+
+      {error && <p className="text-red-600 text-center mb-6 font-medium">{error}</p>}
 
       <div className="p-6 md:p-10">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
-          {/* Profile Photo */}
+          {/* Profile Photo Section */}
           <div className="w-full lg:w-80 flex flex-col items-center">
             <div
               onClick={handlePhotoClick}
@@ -159,7 +173,11 @@ const MyProfile = () => {
               }`}
             >
               {previewPhoto ? (
-                <img src={previewPhoto} alt="Profile" className="w-full h-full object-cover" />
+                <img
+                  src={previewPhoto}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <Camera className="w-20 h-20 text-gray-400" />
               )}
@@ -197,17 +215,25 @@ const MyProfile = () => {
               <InputField
                 label="Full Name"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
                 state={isEditing ? "editable" : "readonly"}
                 placeholder="Enter full name"
               />
 
-              <InputField label="School ID" value={formData.schoolId} state="disabled" />
+              <InputField
+                label="School ID"
+                value={formData.schoolId}
+                state="disabled"
+              />
 
               <InputField
                 label="Username"
                 value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
                 state={isEditing ? "editable" : "readonly"}
                 placeholder="Enter username"
               />
@@ -224,7 +250,11 @@ const MyProfile = () => {
                 state="disabled"
               />
 
-              <InputField label="Year Level" value={formData.yearLevel} state="disabled" />
+              <InputField
+                label="Year Level"
+                value={formData.yearLevel}
+                state="disabled"
+              />
 
               <div className="md:col-span-2 space-y-6 mt-6">
                 <InputField
@@ -255,7 +285,11 @@ const MyProfile = () => {
                       placeholder="Re-type new password"
                       showPasswordToggle={true}
                       state="editable"
-                      error={confirmPassword && newPassword !== confirmPassword ? "Passwords do not match" : ""}
+                      error={
+                        confirmPassword && newPassword !== confirmPassword
+                          ? "Passwords do not match"
+                          : ""
+                      }
                     />
                   </>
                 )}

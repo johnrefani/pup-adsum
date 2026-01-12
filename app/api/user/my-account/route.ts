@@ -60,23 +60,20 @@ export async function PUT(request: NextRequest) {
     updates.username = username.trim();
   }
 
-
   if (fullName && fullName.trim() !== user.fullName) {
     updates.fullName = fullName.trim();
   }
 
-
   if (password && password.trim()) {
     updates.password = password.trim();
   }
-
 
   if (photoFile && photoFile.size > 0) {
     const buffer = Buffer.from(await photoFile.arrayBuffer());
 
     const uploadResult = await new Promise((resolve, reject) => {
       cloudinary.uploader.upload_stream(
-        { folder: 'profile-pictures', public_id: user._id.toString(), overwrite: true },
+        { folder: 'pup-adsum/profile-pictures', public_id: user._id.toString(), overwrite: true },
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
@@ -87,12 +84,6 @@ export async function PUT(request: NextRequest) {
     // @ts-ignore
     updates.profilePicture = uploadResult.secure_url;
 
-    if (user.profilePicture) {
-      const publicId = user.profilePicture.split('/').pop()?.split('.')[0];
-      if (publicId) {
-        await cloudinary.uploader.destroy(`profile-pictures/${publicId}`);
-      }
-    }
   }
 
   if (Object.keys(updates).length === 0) {
