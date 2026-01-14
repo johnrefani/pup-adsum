@@ -34,13 +34,13 @@ export async function GET(): Promise<NextResponse<DashboardResponse | { error: s
     await connectToDatabase();
 
     const cookieStore = await cookies();
-    const username = cookieStore.get('authUser')?.value;
+    const sessionToken = cookieStore.get('sessionToken')?.value;
 
-    if (!username) {
+    if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await User.findOne({ username, role: 'member' });
+    const user = await User.findOne({ currentSessionToken: sessionToken, role: 'member' });
     if (!user) {
       return NextResponse.json({ error: 'User not found or not a member' }, { status: 404 });
     }

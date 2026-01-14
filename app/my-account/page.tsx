@@ -5,21 +5,30 @@ import { connectToDatabase } from '@/lib/mongodb';
 import UserAccount from '@/components/UserAccount';
 
 export default async function AdminPage() {
-  const cookieStore = await cookies();
-  const usernameCookie = cookieStore.get('authUser')?.value;
+    const cookieStore = await cookies(); 
+  const sessionToken = cookieStore.get('sessionToken')?.value;
 
-  if (!usernameCookie) {
+  if (!sessionToken) {
     redirect('/');
   }
 
+  let user = null;
   let userRole: string | null = null;
+
   try {
     const { db } = await connectToDatabase();
     const collection = db.collection('users');
-    const user = await collection.findOne({ username: usernameCookie });
-    userRole = user?.role || null;
+
+    user = await collection.findOne({ currentSessionToken: sessionToken });
+
+    if (!user) {
+      redirect('/');
+    }
+
+    userRole = user.role || null;
+
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('Error validating session:', error);
     redirect('/');
   }
 

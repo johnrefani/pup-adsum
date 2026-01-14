@@ -4,14 +4,15 @@ import cloudinary from '@/lib/cloudinary';
 import User from '@/models/User';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Models } from '@/lib/models';
+import crypto from 'crypto'; 
 
 async function getCurrentUser() {
   const cookieStore = await cookies();
-  const username = cookieStore.get('authUser')?.value;
-  if (!username) return null;
+  const sessionToken = cookieStore.get('sessionToken')?.value;
+  if (!sessionToken) return null;
 
   await connectToDatabase();
-  return await User.findOne({ username, role: 'member' })
+  return await User.findOne({ currentSessionToken: sessionToken, role: 'member' })
     .populate('department', 'acronym name')
     .populate('course', 'acronym name');
 }
@@ -52,12 +53,15 @@ export async function PUT(request: NextRequest) {
 
   const updates: any = {};
 
+  let shouldRotateSession = false;
+
   if (username && username.trim() !== user.username) {
     const existing = await User.findOne({ username: username.trim(), _id: { $ne: user._id } });
     if (existing) {
       return NextResponse.json({ error: 'Username already taken' }, { status: 400 });
     }
     updates.username = username.trim();
+    shouldRotateSession = true;          
   }
 
   if (fullName && fullName.trim() !== user.fullName) {
@@ -66,6 +70,7 @@ export async function PUT(request: NextRequest) {
 
   if (password && password.trim()) {
     updates.password = password.trim();
+    shouldRotateSession = true;       
   }
 
   if (photoFile && photoFile.size > 0) {
@@ -83,11 +88,29 @@ export async function PUT(request: NextRequest) {
 
     // @ts-ignore
     updates.profilePicture = uploadResult.secure_url;
-
   }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ message: 'No changes made' });
+  }
+
+  if (shouldRotateSession) {
+    const newSessionToken = crypto.randomBytes(32).toString('hex');
+    updates.currentSessionToken = newSessionToken;
+
+    const response = NextResponse.json({ message: 'Profile updated successfully!' });
+
+    response.cookies.set('sessionToken', newSessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days - same as login
+      path: '/',
+    });
+
+    await User.findByIdAndUpdate(user._id, updates);
+
+    return response;
   }
 
   await User.findByIdAndUpdate(user._id, updates);

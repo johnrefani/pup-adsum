@@ -1,4 +1,3 @@
-// app/page.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
@@ -8,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const cookieStore = await cookies();
-  const authUser = cookieStore.get('authUser')?.value;
+  const authUser = cookieStore.get('sessionToken')?.value;
 
   if (authUser) {
     let userRole: string | null = null;
@@ -17,7 +16,7 @@ export default async function HomePage() {
       const { db } = await connectToDatabase();
       const user = await db
         .collection('users')
-        .findOne({ username: authUser }, { projection: { role: 1 } });
+        .findOne({ currentSessionToken: authUser }, { projection: { role: 1 } });
 
       userRole = user?.role || null;
     } catch (error) {
