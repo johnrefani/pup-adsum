@@ -12,31 +12,29 @@ export async function GET(request: Request) {
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month'); // e.g., "November"
-    const year = searchParams.get('year');  // e.g., "2025"
+    const month = searchParams.get('month'); 
+    const year = searchParams.get('year'); 
 
     if (!month || !year) {
       return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
     }
 
     const cookieStore = await cookies();
-    const username = cookieStore.get('authUser')?.value;
+    const sessionToken = cookieStore.get('sessionToken')?.value;
 
-    if (!username) {
+    if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await User.findOne({ username, role: 'member' });
+    const user = await User.findOne({ currentSessionToken: sessionToken, role: 'member' });
     if (!user) {
       return NextResponse.json({ error: 'User not found or not a member' }, { status: 404 });
     }
 
-    // Parse month index (January = 0)
     const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
     const startOfMonth = new Date(Number(year), monthIndex, 1);
-    const endOfMonth = new Date(Number(year), monthIndex + 1, 0, 23, 59, 59); // last day
+    const endOfMonth = new Date(Number(year), monthIndex + 1, 0, 23, 59, 59);
 
-    // Find all sessions in the selected month
     const sessions = await Session.find({
       date: { $gte: startOfMonth, $lte: endOfMonth },
       department: user.department,
@@ -49,13 +47,11 @@ export async function GET(request: Request) {
       session: { $in: sessionIds }
     }).lean();
 
-    // Map attendance records by session ID for quick lookup
     const attendanceMap = new Map();
     attendances.forEach(att => {
       attendanceMap.set(att.session.toString(), att);
     });
 
-    // Build final list
     const records = sessions.map(session => {
       const att = attendanceMap.get(session._id.toString());
       const timeIn = att?.timeIn
