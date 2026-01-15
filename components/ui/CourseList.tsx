@@ -27,6 +27,9 @@ const CourseList: React.FC = () => {
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
   const [isDeletePopupOpen, setIsDeletePopupOpen] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [showCourseSuccess, setShowCourseSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
   const fetchData = async () => {
@@ -61,16 +64,15 @@ const CourseList: React.FC = () => {
   const fetchDepartments = async () => {
     try {
       const res = await fetch('/api/departments');
+      if (!res.ok) throw new Error('Failed to fetch departments');
       const data = await res.json();
-      if (data.departments) {
-        setDepartments(
-          data.departments.map((d: any) => ({
-            id: d._id.toString(),
-            acronym: d.acronym,
-            name: d.name,
-          }))
-        );
-      }
+      setDepartments(
+        data.departments?.map((d: any) => ({
+          id: d._id.toString(),
+          acronym: d.acronym,
+          name: d.name,
+        })) || []
+      );
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -111,8 +113,19 @@ const CourseList: React.FC = () => {
     }
 
     await fetchData();
+
+    // Close form popups
     setIsAddPopupOpen(false);
     setIsEditPopupOpen(false);
+    setSelectedCourse(null);
+
+    // Show success message
+    setSuccessMessage(
+      id
+        ? "Course has been updated successfully."
+        : "Course has been added successfully."
+    );
+    setShowCourseSuccess(true);
   };
 
   const handleDeleteCourse = async () => {
@@ -146,9 +159,7 @@ const CourseList: React.FC = () => {
 
   return (
     <div className="">
-      {/* Uniform height card - choose one value that looks good on all screens */}
       <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
-        {/* Header - fixed */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
             Courses List
@@ -156,7 +167,6 @@ const CourseList: React.FC = () => {
           <p className="text-sm text-amber-600 mt-1">Manage courses</p>
         </div>
 
-        {/* Scrollable content - takes remaining space */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {loading ? (
             <div className="p-12 text-center text-gray-500">Loading courses...</div>
@@ -221,7 +231,6 @@ const CourseList: React.FC = () => {
           )}
         </div>
 
-        {/* Fixed bottom button bar - always visible */}
         <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white">
           <div className="flex justify-end">
             <Button
@@ -287,6 +296,13 @@ const CourseList: React.FC = () => {
         onClose={() => setShowDeleteSuccess(false)}
         title="Deleted!"
         message="Course has been deleted successfully."
+      />
+
+      <SuccessPopup
+        isOpen={showCourseSuccess}
+        onClose={() => setShowCourseSuccess(false)}
+        title="Success!"
+        message={successMessage}
       />
     </div>
   );
