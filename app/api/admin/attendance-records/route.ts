@@ -16,10 +16,10 @@ export async function GET(request: Request) {
     const search = url.searchParams.get('search')?.trim();
 
     const cookieStore = await cookies();
-    const username = cookieStore.get('authUser')?.value;
-    if (!username) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const admin = await User.findOne({ username, role: 'admin' }).select('department');
+    const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' }).select('department');
     if (!admin?.department) return NextResponse.json({ students: [] });
 
     const memberFilter: any = { role: 'member', department: admin.department };

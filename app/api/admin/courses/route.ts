@@ -9,9 +9,10 @@ export async function GET() {
   try {
     await connectToDatabase();
     const cookieStore = await cookies();
-    const username = cookieStore.get('authUser')?.value;
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const admin = await User.findOne({ username, role: 'admin' }).select('department');
+    const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' }).select('department');
     if (!admin) return NextResponse.json({ courses: [] });
 
     const courses = await Course.find({ department: admin.department }).sort({ name: 1 });

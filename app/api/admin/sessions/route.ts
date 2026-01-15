@@ -7,12 +7,17 @@ import QRCode from 'qrcode';
 import cloudinary from '@/lib/cloudinary';
 import { v4 as uuidv4 } from 'uuid';
 import { Models } from '@/lib/models';
+import { cookies } from 'next/headers';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.254.184:3000';
 
 // ==================== POST (Create Session + QR) ====================
 export async function POST(request: NextRequest) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const data = await request.json();
 
@@ -108,6 +113,10 @@ return NextResponse.json({
 // ==================== GET (List Sessions) ====================
 export async function GET(request: NextRequest) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
 
     const url = new URL(request.url);
@@ -142,6 +151,10 @@ export async function GET(request: NextRequest) {
 // ==================== PATCH (Update Session) ====================
 export async function PATCH(request: NextRequest) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const data = await request.json();
     const { sessionId, ...updates } = data;
