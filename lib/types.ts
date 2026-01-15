@@ -157,7 +157,7 @@ export interface StatusProps {
 
 
 export interface AdminDashboardProps {
-    username: string;
+    username: string | null;
 }
 
 export interface MemberDashboardProps {

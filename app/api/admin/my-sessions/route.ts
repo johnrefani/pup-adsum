@@ -30,9 +30,9 @@ export async function GET() {
     await connectToDatabase();
 
     const cookieStore = await cookies();
-    const username = cookieStore.get('authUser')?.value;
+    const currentToken = cookieStore.get('sessionToken')?.value;
 
-    if (!username) {
+    if (!currentToken) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -40,7 +40,7 @@ export async function GET() {
     }
 
     const admin = await User.findOne({
-      username,
+      currentSessionToken: currentToken,
       role: 'admin',
     })
       .select('department')

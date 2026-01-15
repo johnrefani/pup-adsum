@@ -11,12 +11,12 @@ interface AdminLean {
 
 export async function getCurrentAdmin(): Promise<AdminLean | null> {
   const cookieStore = await cookies();
-  const username = cookieStore.get('authUser')?.value;
-  if (!username) return null;
+  const currentToken = cookieStore.get('sessionToken')?.value;
+  if (!currentToken) return null;
 
   await connectToDatabase();
 
-  const admin = await User.findOne({ username, role: 'admin' })
+  const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' })
     .select('department')
     .lean<{ department: mongoose.Types.ObjectId }>();
 

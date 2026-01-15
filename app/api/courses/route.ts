@@ -4,9 +4,14 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Course from '@/models/Course';
 import Department from '@/models/Department';
 import { Models } from '@/lib/models';
+import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     await connectToDatabase();
     const courses = await Course.find({})
       .populate('department', 'name acronym')
@@ -31,6 +36,10 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { acronym, name, departmentName } = await request.json();
 
     if (!acronym || !name || !departmentName) {
@@ -63,6 +72,10 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { id, acronym, name, departmentName } = await request.json();
 
     if (!id || !acronym || !name || !departmentName) {
@@ -103,6 +116,10 @@ export async function PATCH(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { id } = await request.json();
 
     if (!id) {
