@@ -29,6 +29,7 @@ const MyProfile = () => {
     profilePicture: null,
   });
 
+  const [Password, setPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -208,14 +209,14 @@ const MyProfile = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, fullName: e.target.value })
                 }
-                disabled={!isEditing}
+                state={isEditing ? "editable" : "readonly"}
                 placeholder="Enter full name"
               />
 
               <InputField
                 label="School ID"
                 value={formData.schoolId}
-                disabled={!isEditing}
+                state={isEditing ? "disabled" : "readonly"}
               />
 
               <InputField
@@ -224,35 +225,37 @@ const MyProfile = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                disabled={!isEditing}
+                state={isEditing ? "editable" : "readonly"}
                 placeholder="Enter username"
               />
 
               <InputField
                 label="Department"
                 value={formData.department}
-                disabled={!isEditing}
+                state={isEditing ? "disabled" : "readonly"}
               />
 
               <InputField
                 label="Course"
                 value={formData.course}
-                disabled={!isEditing}
+                state={isEditing ? "disabled" : "readonly"}
               />
 
               <InputField
                 label="Year Level"
                 value={formData.yearLevel}
-                disabled={!isEditing}
+                state={isEditing ? "disabled" : "readonly"}
               />
 
               <div className="md:col-span-2 space-y-6">
                 <InputField
                   label="Current Password"
                   type="password"
-                  value={isEditing ? "" : "••••••••••••"}
+                  value={isEditing ? Password : "••••••••••••"}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder={isEditing ? "Leave blank to keep current" : ""}
-                  disabled={!isEditing}
+                  showPasswordToggle={isEditing}          // ← key change
+                  state={isEditing ? "editable" : "readonly"}
                 />
 
                 {isEditing && (
@@ -264,7 +267,7 @@ const MyProfile = () => {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password (optional)"
                       showPasswordToggle={true}
-                      disabled={!isEditing}
+                      state={isEditing ? "editable" : "readonly"}
                     />
 
                     <InputField
@@ -274,7 +277,7 @@ const MyProfile = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-type new password"
                       showPasswordToggle={true}
-                      disabled={!isEditing}
+                      state={isEditing ? "editable" : "readonly"}
                       error={
                         confirmPassword && newPassword !== confirmPassword
                           ? "Passwords do not match"
