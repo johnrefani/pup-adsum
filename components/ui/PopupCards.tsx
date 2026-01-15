@@ -114,25 +114,6 @@ export interface CoursePopupProps {
   ) => Promise<void>;
 }
 
-export interface CoursePopupProps {
-  isOpen: boolean;
-  onClose: () => void;
-  department: Array<{ id: number; acronym: string; name: string }>;
-  isEdit?: boolean;
-  initialData?: {
-    id: string;
-    acronym: string;
-    completeName: string;
-    department: string;
-  };
-  onSubmit: (
-    acronym: string,
-    completeName: string,
-    departmentName: string,
-    id?: string
-  ) => Promise<void>;
-}
-
 export const CoursePopup = ({
   isOpen,
   onClose,
@@ -144,8 +125,7 @@ export const CoursePopup = ({
   const [acronym, setAcronym] = useState("");
   const [completeName, setCompleteName] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [isAdding, setIsAdding] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -161,22 +141,15 @@ export const CoursePopup = ({
     }
   }, [isOpen, isEdit, initialData]);
 
-
-  useEffect(() => {
-    if (!isOpen) {
-      setShowSuccess(false); 
-    }
-  }, [isOpen]);
-
   const isFormValid =
     acronym.trim().length > 0 &&
     completeName.trim().length > 0 &&
     selectedDepartment.trim().length > 0;
 
   const handleSubmit = async () => {
-    if (!isFormValid || isAdding) return;
+    if (!isFormValid || isSubmitting) return;
 
-    setIsAdding(true);
+    setIsSubmitting(true);
     try {
       await onSubmit(
         acronym.trim(),
@@ -184,21 +157,15 @@ export const CoursePopup = ({
         selectedDepartment.trim(),
         isEdit ? initialData?.id : undefined
       );
-
-      setShowSuccess(true);
+      // Form closes via parent callback — no need to call onClose() here
     } catch (error: any) {
       alert(error.message || `Failed to ${isEdit ? "update" : "add"} course`);
     } finally {
-      setIsAdding(false);
+      setIsSubmitting(false);
     }
   };
 
-  const handleSuccessClose = () => {
-    setShowSuccess(false);
-    onClose(); 
-  };
-
-  if (!isOpen && !showSuccess) return null;
+  if (!isOpen) return null;
 
   const titleText = isEdit ? "Edit Course" : "Add New Course";
   const actionText = isEdit ? "Update" : "Add";
@@ -206,84 +173,72 @@ export const CoursePopup = ({
   const buttonBg = isEdit ? "bg-gold-500 hover:bg-gold-600" : "bg-maroon-900 hover:bg-maroon-800";
 
   return (
-    <>
-      {/* Main Form – only show when not in success state */}
-      {isOpen && !showSuccess && (
-        <PopupWrapper>
-          <div className="relative">
-            <button
-              aria-label="Close Popup"
-              onClick={onClose}
-              disabled={isAdding}
-              className="absolute top-0 right-0 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-            >
-              <Close className="w-6 h-6" />
-            </button>
+    <PopupWrapper>
+      <div className="relative">
+        <button
+          aria-label="Close Popup"
+          onClick={onClose}
+          disabled={isSubmitting}
+          className="absolute top-0 right-0 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+        >
+          <Close className="w-6 h-6" />
+        </button>
 
-            <div className="mb-6">
-              <h2 className={headingClass}>{titleText}</h2>
-              <p className="text-gray-600 mt-1">Fill in all fields to continue.</p>
-            </div>
+        <div className="mb-6">
+          <h2 className={headingClass}>{titleText}</h2>
+          <p className="text-gray-600 mt-1">Fill in all fields to continue.</p>
+        </div>
 
-            <div className="space-y-5">
-              <InputField
-                label="Course Acronym"
-                placeholder="e.g. BSIT"
-                value={acronym}
-                onChange={(e) => setAcronym(e.target.value.toUpperCase())}
-                disabled={isAdding}
-              />
+        <div className="space-y-5">
+          <InputField
+            label="Course Acronym"
+            placeholder="e.g. BSIT"
+            value={acronym}
+            onChange={(e) => setAcronym(e.target.value.toUpperCase())}
+            disabled={isSubmitting}
+          />
 
-              <InputField
-                label="Complete Name"
-                placeholder="e.g. Bachelor of Science in Information Technology"
-                value={completeName}
-                onChange={(e) => setCompleteName(e.target.value)}
-                disabled={isAdding}
-              />
+          <InputField
+            label="Complete Name"
+            placeholder="e.g. Bachelor of Science in Information Technology"
+            value={completeName}
+            onChange={(e) => setCompleteName(e.target.value)}
+            disabled={isSubmitting}
+          />
 
-              <SearchableSelectField
-                label="Department"
-                options={department.map((d) => ({ value: d.name, label: d.name }))}
-                placeholder="Select a department"
-                value={selectedDepartment}
-                onChange={setSelectedDepartment}
-                disabled={isAdding}
-              />
-            </div>
+          <SearchableSelectField
+            label="Department"
+            options={department.map((d) => ({ value: d.name, label: d.name }))}
+            placeholder="Select a department"
+            value={selectedDepartment}
+            onChange={setSelectedDepartment}
+            disabled={isSubmitting}
+          />
+        </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Button
-                text={isAdding ? `${actionIngText}...` : `${actionText} Course`}
-                backgroundColor={
-                  isFormValid && !isAdding
-                    ? buttonBg
-                    : "bg-gray-400 cursor-not-allowed"
-                }
-                textColor="text-white"
-                onClick={handleSubmit}
-                isDisabled={!isFormValid || isAdding}
-              />
+        <div className="flex flex-col sm:flex-row gap-3 mt-8">
+          <Button
+            text={isSubmitting ? `${actionIngText}...` : `${actionText} Course`}
+            backgroundColor={
+              isFormValid && !isSubmitting
+                ? buttonBg
+                : "bg-gray-400 cursor-not-allowed"
+            }
+            textColor="text-white"
+            onClick={handleSubmit}
+            isDisabled={!isFormValid || isSubmitting}
+          />
 
-              <Button
-                text="Cancel"
-                backgroundColor="bg-white border border-gray-300"
-                textColor="text-gray-700"
-                onClick={onClose}
-                isDisabled={isAdding}
-              />
-            </div>
-          </div>
-        </PopupWrapper>
-      )}
-
-      <SuccessPopup
-        isOpen={showSuccess}
-        onClose={handleSuccessClose} 
-        title="Success!"
-        message={`Course has been ${isEdit ? "updated" : "added"} successfully.`}
-      />
-    </>
+          <Button
+            text="Cancel"
+            backgroundColor="bg-white border border-gray-300"
+            textColor="text-gray-700"
+            onClick={onClose}
+            isDisabled={isSubmitting}
+          />
+        </div>
+      </div>
+    </PopupWrapper>
   );
 };
 export interface ManageAdminProps {
