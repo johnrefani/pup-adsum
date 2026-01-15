@@ -146,19 +146,9 @@ const MyProfile = () => {
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden p-6">
-      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800 mb-8 text-center md:text-left">
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800 text-center md:text-left">
         {isEditing ? "Edit Profile" : "My Profile"}
       </h1>
-
-      {isEditing ? (
-        <p className="text-gold-600 text-center text-sm md:text-base lg:text-lg font-medium mb-4">
-          You are in edit mode. You can update your full name, username, password, and profile picture.
-        </p>
-      ) : (
-        <p className="text-gray-600 text-center text-sm md:text-base lg:text-lg font-medium mb-4">
-          View your profile information. Click "Edit Profile" to make changes.
-        </p>
-      )}
 
       {error && <p className="text-red-600 text-center mb-6 font-medium">{error}</p>}
 
@@ -168,7 +158,7 @@ const MyProfile = () => {
           <div className="w-full lg:w-80 flex flex-col items-center">
             <div
               onClick={handlePhotoClick}
-              className={`relative w-52 h-52 md:w-64 md:h-64 rounded-2xl border-4 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center overflow-hidden transition-all ${
+              className={`relative w-52 h-52 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-2xl border-4 border-dashed border-gray-300 bg-gray-100 flex items-center justify-center overflow-hidden transition-all ${
                 isEditing ? "hover:border-yellow-500 hover:shadow-lg cursor-pointer" : ""
               }`}
             >
@@ -218,14 +208,14 @@ const MyProfile = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, fullName: e.target.value })
                 }
-                state={isEditing ? "editable" : "readonly"}
+                disabled={!isEditing}
                 placeholder="Enter full name"
               />
 
               <InputField
                 label="School ID"
                 value={formData.schoolId}
-                state="disabled"
+                disabled={!isEditing}
               />
 
               <InputField
@@ -234,35 +224,35 @@ const MyProfile = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, username: e.target.value })
                 }
-                state={isEditing ? "editable" : "readonly"}
+                disabled={!isEditing}
                 placeholder="Enter username"
               />
 
               <InputField
                 label="Department"
                 value={formData.department}
-                state="disabled"
+                disabled={!isEditing}
               />
 
               <InputField
                 label="Course"
                 value={formData.course}
-                state="disabled"
+                disabled={!isEditing}
               />
 
               <InputField
                 label="Year Level"
                 value={formData.yearLevel}
-                state="disabled"
+                disabled={!isEditing}
               />
 
-              <div className="md:col-span-2 space-y-6 mt-6">
+              <div className="md:col-span-2 space-y-6">
                 <InputField
                   label="Current Password"
                   type="password"
                   value={isEditing ? "" : "••••••••••••"}
                   placeholder={isEditing ? "Leave blank to keep current" : ""}
-                  state="readonly"
+                  disabled={!isEditing}
                 />
 
                 {isEditing && (
@@ -274,7 +264,7 @@ const MyProfile = () => {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Enter new password (optional)"
                       showPasswordToggle={true}
-                      state="editable"
+                      disabled={!isEditing}
                     />
 
                     <InputField
@@ -284,7 +274,7 @@ const MyProfile = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-type new password"
                       showPasswordToggle={true}
-                      state="editable"
+                      disabled={!isEditing}
                       error={
                         confirmPassword && newPassword !== confirmPassword
                           ? "Passwords do not match"

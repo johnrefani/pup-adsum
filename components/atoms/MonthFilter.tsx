@@ -17,7 +17,7 @@ const MonthFilter = ({ selectedMonth, selectedYear, onChange }: MonthFilterProps
   const years = Array.from({ length: currentYear - 2020 + 1 }, (_, i) => currentYear - i);
 
   return (
-    <div className="flex items-center gap-3 bg-white rounded-lg shadow-sm border px-4 py-3">
+    <div className="flex items-center gap-3 bg-white rounded-lg shadow-sm border border-gray-200 px-4 py-3">
       <div className="flex items-center gap-2">
         <select
         title="Select Month"
@@ -26,7 +26,7 @@ const MonthFilter = ({ selectedMonth, selectedYear, onChange }: MonthFilterProps
           className="text-sm sm:text-base font-medium text-gray-700 bg-transparent outline-none cursor-pointer appearance-none pr-6"
         >
           {months.map((m) => (
-            <option key={m} value={m}>{m}</option>
+            <option className = "text-center outline-none" key={m} value={m}>{m}</option>
           ))}
         </select>
         <ChevronDown className="w-4 h-4 text-gray-500 -ml-5 pointer-events-none" />
@@ -42,7 +42,7 @@ const MonthFilter = ({ selectedMonth, selectedYear, onChange }: MonthFilterProps
           className="text-sm sm:text-base font-medium text-gray-700 bg-transparent outline-none cursor-pointer appearance-none pr-6"
         >
           {years.map((y) => (
-            <option key={y} value={y}>{y}</option>
+            <option className = "text-center outline-none" key={y} value={y}>{y}</option>
           ))}
         </select>
         <ChevronDown className="w-4 h-4 text-gray-500 -ml-5 pointer-events-none" />
