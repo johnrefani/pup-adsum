@@ -49,6 +49,8 @@ export { default as CountStat } from '@/components/atoms/CountStat';
 export { SearchableSelectField } from '@/components/atoms/SearchableSelectField';
 export { default as Status } from '@/components/atoms/Status';
 export { default as MonthFilter } from '@/components/atoms/MonthFilter';
+export { default as CustomSelect } from '@/components/atoms/CustomSelect';
+
 
 //Data
 export {
