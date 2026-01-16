@@ -57,16 +57,18 @@ const SessionList: React.FC = () => {
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 max-h-[90vh] lg:max-h-[75vh] overflow-y-auto">
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col max-h-[90vh] lg:max-h-[75vh]">
+      {/* Fixed header */}
       <div className="border-b border-gray-200 px-6 py-5">
         <h2 className="text-2xl font-bold text-red-800">Your Sessions</h2>
         <p className="text-sm text-amber-600 mt-1">Click a row to edit</p>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200 bg-gray-50">
+      {/* Scrollable table body */}
+      <div className="flex-1 overflow-y-auto">
+        <table className="w-full min-w-full">
+          <thead className="sticky top-0 bg-gray-50 z-10">
+            <tr className="border-b border-gray-200">
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Session Name</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Time</th>
