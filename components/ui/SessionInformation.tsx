@@ -209,72 +209,77 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
   const isEdit = mode === 'edit';
 
   return (
-    <form onSubmit={handleSubmit(isEdit ? onUpdate : onCreate)} className="space-y-8 max-h-[90vh] lg:max-h-[75vh] overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-red-800 mb-8">
-          {isEdit ? 'Edit Session' : 'Create New Session'}
+    <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col max-h-[90vh] lg:max-h-[75vh]">
+      {/* Header - always visible */}
+      <div className="px-8 pt-8 pb-6 border-b border-gray-200">
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-red-800">
+          {mode === 'edit' ? 'Edit Session' : 'Create New Session'}
         </h2>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          <InputField label="Session Title" placeholder="e.g. Web Programming"
-            {...register('title', { required: 'Required' })} error={errors.title?.message} />
-          <InputField label="Date" type="date"
-            {...register('date', { required: 'Required' })} error={errors.date?.message} />
-        </div>
+      {/* Scrollable form content */}
+      <div className="flex-1 overflow-y-auto px-8 py-6">
+        <form onSubmit={handleSubmit(mode === 'edit' ? onUpdate : onCreate)} className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <InputField label="Session Title" placeholder="e.g. Web Programming"
+              {...register('title', { required: 'Required' })} error={errors.title?.message} />
+            <InputField label="Date" type="date"
+              {...register('date', { required: 'Required' })} error={errors.date?.message} />
+          </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mt-6">
-          <InputField label="Start Time" type="time"
-            {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
-          <InputField label="End Time" type="time"
-            {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
-        </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
+            <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
+          </div>
 
-        <div className="mt-3 lg:mt-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-          <textarea rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
-            {...register('description')} />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+            <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
+              {...register('description')} />
+          </div>
 
-        <div className="mt-3 lg:mt-6">
-          <SearchableSelectField
-            label="Department"
-            options={departments.map(d => ({ value: d._id, label: `${d.acronym} - ${d.name}` }))}
-            value={selectedDept}
-            onChange={(val) => setValue('department', val)}
-            error={errors.department?.message}
-            disabled={isEdit}
-          />
-          <input type="hidden" {...register('department', { required: 'Department required' })} />
-        </div>
+          <div>
+            <SearchableSelectField
+              label="Department"
+              options={departments.map(d => ({ value: d._id, label: `${d.acronym} - ${d.name}` }))}
+              value={selectedDept}
+              onChange={(val) => setValue('department', val)}
+              error={errors.department?.message}
+              disabled={mode === 'edit'}
+            />
+            <input type="hidden" {...register('department', { required: 'Department required' })} />
+          </div>
+        </form>
+      </div>
 
-        <div className="flex justify-end gap-4 mt-10">
+      {/* Footer buttons - always visible */}
+      <div className="px-8 py-6 border-t border-gray-200 flex justify-end gap-4">
+        <Button
+          type="button"
+          text="Clear"
+          backgroundColor="bg-gray-500"
+          textColor="text-white"
+          onClick={handleClear}
+          isDisabled={isSubmitting}
+        />
+        {mode === 'edit' && selectedSession && (
           <Button
             type="button"
-            text="Clear"
-            backgroundColor="bg-gray-500"
+            text="Print QR"
+            backgroundColor="bg-yellow-500"
             textColor="text-white"
-            onClick={handleClear}
+            onClick={handlePrint}
             isDisabled={isSubmitting}
           />
-          {isEdit && selectedSession && (
-            <Button
-              type="button"
-              text="Print QR"
-              backgroundColor="bg-yellow-500"
-              textColor="text-white"
-              onClick={handlePrint}
-              isDisabled={isSubmitting}
-            />
-          )}
-          <Button
-            type="submit"
-            text={isSubmitting ? "Saving..." : (isEdit ? "Update Session" : "Generate QR Code")}
-            backgroundColor="bg-maroon-800"
-            textColor="text-white"
-            isDisabled={isSubmitting || (isEdit && !selectedSession)}
-          />
-        </div>
+        )}
+        <Button
+          type="submit"
+          text={isSubmitting ? "Saving..." : (mode === 'edit' ? "Update Session" : "Generate QR Code")}
+          backgroundColor="bg-maroon-800"
+          textColor="text-white"
+          isDisabled={isSubmitting || (mode === 'edit' && !selectedSession)}
+        />
       </div>
-    </form>
+    </div>
   );
 }
