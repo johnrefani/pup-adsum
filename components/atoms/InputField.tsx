@@ -92,7 +92,7 @@ const InputField: React.FC<InputFieldProps> = ({
             w-full px-4 py-3 rounded-xl border transition-all duration-200
             ${icon ? "pl-10" : "pl-4"}
             ${showPasswordToggle ? "pr-12" : "pr-4"}
-            text-sm md:text-base
+            text-sm lg:text-base
             focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500
             ${
               hasError

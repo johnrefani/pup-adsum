@@ -209,9 +209,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
   const isEdit = mode === 'edit';
 
   return (
-    <form onSubmit={handleSubmit(isEdit ? onUpdate : onCreate)} className="space-y-8">
+    <form onSubmit={handleSubmit(isEdit ? onUpdate : onCreate)} className="space-y-8 max-h-[90vh] lg:max-h-[75vh] overflow-y-auto">
       <div className="bg-white rounded-2xl shadow-xl p-8">
-        <h2 className="text-3xl font-bold text-red-800 mb-8">
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold text-red-800 mb-8">
           {isEdit ? 'Edit Session' : 'Create New Session'}
         </h2>
 
@@ -229,13 +229,13 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
             {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-3 lg:mt-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
           <textarea rows={3} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
             {...register('description')} />
         </div>
 
-        <div className="mt-6">
+        <div className="mt-3 lg:mt-6">
           <SearchableSelectField
             label="Department"
             options={departments.map(d => ({ value: d._id, label: `${d.acronym} - ${d.name}` }))}

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Status } from '@/lib/imports';
+import { Button, Status } from '@/lib/imports';
 
 type Student = {
   _id: string;
@@ -89,15 +89,17 @@ export default function StudentList({
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-red-800">Members List</h2>
           <p className="text-sm text-amber-600 mt-1">Present and absent members</p>
         </div>
-        {students.length > 0 && (
-          <button
-            onClick={downloadCSV}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition"
-          >
-            Download CSV
-          </button>
+        {students.length > 0 && (          
+          <Button
+              type="button"
+              text="Print QR"
+              backgroundColor="bg-maroon-900"
+              textColor="text-white"
+              onClick={downloadCSV}
+          />
         )}
       </div>
+      
 
       {loading ? (
         <div className="p-10 text-center">Loading...</div>
