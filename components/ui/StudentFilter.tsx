@@ -105,22 +105,22 @@ export default function StudentFilter({
         <h2 className="font-bold text-gray-800">Filters</h2>
       </div>
 
-      <div className="p-6 sm:p-8 lg:p-10 space-y-8">
+      <div className="p-8 lg:p-10 space-y-8">
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">Session</label>
           <SearchableSelectField
             placeholder="Select session..."
+            label='Session'
             options={sessions}
             value={sessionId}
             onChange={handleSessionChange}
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Course</label>
             <SearchableSelectField
               placeholder="Select course..."
+              label='Course'
               options={courses}
               value={courseId}
               onChange={handleCourseChange}
@@ -128,9 +128,9 @@ export default function StudentFilter({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">Year Level</label>
             <SearchableSelectField
               placeholder="Select year..."
+              label='Year Level'
               options={yearLevelOptions}
               value={yearLevel}
               onChange={(v: string) => setYearLevel(v)}
@@ -139,10 +139,10 @@ export default function StudentFilter({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-3">Search</label>
           <InputField
             placeholder="Search by name or ID..."
             type="text"
+            label='Search'
             state="editable"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

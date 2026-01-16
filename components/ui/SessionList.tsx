@@ -57,7 +57,7 @@ const SessionList: React.FC = () => {
   }
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+    <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 max-h-[90vh] lg:max-h-[75vh] overflow-y-auto">
       <div className="border-b border-gray-200 px-6 py-5">
         <h2 className="text-2xl font-bold text-red-800">Your Sessions</h2>
         <p className="text-sm text-amber-600 mt-1">Click a row to edit</p>
