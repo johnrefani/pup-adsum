@@ -8,7 +8,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "PUP - ADSUM",
+  title: "PUP ADSUM",
   description: "An online attendance system.",
   icons: {
     icon: "/logo.svg", 
