@@ -381,14 +381,14 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       {/* Scrollable form content */}
       <div className="flex-1 overflow-y-auto px-8 py-6">
         <form onSubmit={handleSubmit(mode === 'edit' ? onUpdate : onCreate)} className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
             <InputField label="Session Title" placeholder="e.g. Web Programming"
               {...register('title', { required: 'Required' })} error={errors.title?.message} />
             <InputField label="Date" type="date"
               {...register('date', { required: 'Required' })} error={errors.date?.message} />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
             <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
             <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
           </div>
