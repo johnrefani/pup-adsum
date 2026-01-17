@@ -46,24 +46,20 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
           <h2 className="font-bold text-gray-800">Filters</h2>
         </div>
         <div className="p-6 sm:p-8 lg:p-10 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Course
-              </label>
               <SearchableSelectField
                 placeholder="Select course..."
+                label='Course'
                 options={courses}
                 value={selectedCourse}
                 onChange={setSelectedCourse}
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
-                Year
-              </label>
               <SearchableSelectField
                 placeholder="Select year..."
+                label='Year'
                 options={yearLevels.map((y) => ({ value: y, label: y }))}
                 value={selectedYear}
                 onChange={setSelectedYear}
