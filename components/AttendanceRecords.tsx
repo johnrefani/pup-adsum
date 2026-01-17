@@ -1,20 +1,39 @@
-import { StudentFilter, StudentList } from "@/lib/imports";
+"use client";
 
-const AttendanceRecords = () => {
+import StudentFilter from '@/components/ui/StudentFilter';
+import StudentList from '@/components/ui/StudentList';
+import { useState } from 'react';
+
+export default function AttendanceRecords() {
+  const [filters, setFilters] = useState({
+    sessionId: '',
+    courseId: '',
+    yearLevel: '',
+    search: '',
+  });
+
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
+  const [courseName, setCourseName] = useState('');
+
   return (
-    <section className="py-4 md:py-6 lg:py-8 space-y-4 md:space-y-6 lg:space-y-8">
-        <div>
-            <h1 className="font-bold text-xl md:text-2xl lg:text-[32px] ">Attendance Records</h1>
-            <p className="font-medium text-sm md:text-base lg:text-xl text-black/75">Detailed list of all attendance logs.</p>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
-            <StudentFilter />
-            <StudentList />
-        </div>
-        
-    </section>
-  )
-}
+    <section className="py-4 md:py-6 lg:py-8 space-y-8">
+      <div>
+        <h1 className="font-bold text-xl md:text-2xl lg:text-[32px]">Attendance Records</h1>
+        <p className=" font-medium text-sm md:text-base lg:text-xl text-black/75">Detailed list of all attendance logs.</p>
+      </div>
 
-export default AttendanceRecords
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <StudentFilter
+          onFiltersChange={setFilters}
+          onSessionChange={setSessionInfo}
+          onCourseChange={setCourseName}
+        />
+        <StudentList
+          {...filters}
+          sessionInfo={sessionInfo}
+          courseName={courseName}
+        />
+      </div>
+    </section>
+  );
+}

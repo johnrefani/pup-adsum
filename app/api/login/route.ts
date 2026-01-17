@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
+import crypto from 'crypto'; 
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,12 +25,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = NextResponse.json({ success: true, username, role: user.role });
-    response.cookies.set('authUser', username, {
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+
+    await collection.updateOne(
+      { username },
+      { $set: { currentSessionToken: sessionToken } }
+    );
+
+    const response = NextResponse.json({ 
+      success: true, 
+      username, 
+      role: user.role 
+    });
+
+    response.cookies.set('sessionToken', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 60 * 60 * 24 * 7, 
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/',
     });
 

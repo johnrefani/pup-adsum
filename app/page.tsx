@@ -1,38 +1,45 @@
-import React from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { Login } from "@/lib/imports"
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
+import { Login } from '@/lib/imports';
 
+export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function HomePage() {
   const cookieStore = await cookies();
-  const authUser = cookieStore.get("authUser");
+  const authUser = cookieStore.get('sessionToken')?.value;
 
-  if(!authUser) {
-    return (
-    <main className="min-h-screen flex-center">
-      <Login/>
+  if (authUser) {
+    let userRole: string | null = null;
+
+    try {
+      const { db } = await connectToDatabase();
+      const user = await db
+        .collection('users')
+        .findOne({ currentSessionToken: authUser }, { projection: { role: 1 } });
+
+      userRole = user?.role || null;
+    } catch (error) {
+      console.error('Error checking user role on root page:', error);
+    }
+
+    if (userRole === 'admin') {
+      redirect('/admin');
+    } else if (userRole === 'member') {
+      redirect('/dashboard');
+    }
+  }
+
+  const url = new URL(
+    typeof window === 'undefined'
+      ? 'http://localhost:3000'
+      : window.location.href
+  );
+  const redirectTo = url.searchParams.get('redirectTo');
+
+  return (
+    <main className="min-h-screen mx-sm md:mx-md lg:mx-lg flex-center ">
+      <Login initialRedirectTo={redirectTo || undefined} />
     </main>
-    )
-  }
-
-  let userRole: string | null = null;
-  try {
-    const { db } = await connectToDatabase();
-    const collection = db.collection('users');
-    const user = await collection.findOne({ username: authUser.value });
-    userRole = user?.role || null;
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    redirect('/');
-  }
-
-  if (userRole !== 'admin') {
-    redirect('/dashboard');
-  }else{
-    redirect('/admin');
-  }
-
-  
+  );
 }

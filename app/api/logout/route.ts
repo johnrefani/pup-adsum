@@ -1,17 +1,18 @@
+
 import { NextRequest, NextResponse } from 'next/server';
+import { connectToDatabase } from '@/lib/mongodb';
 
 export async function POST(request: NextRequest) {
   try {
-    const authCookie = request.cookies.get('authUser');
+    const sessionToken = request.cookies.get('sessionToken')?.value;
 
-    const response = NextResponse.json({ success: true, message: 'Logged out successfully' });
-    response.cookies.set('authUser', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: -1,
-      path: '/',
+    const response = NextResponse.json({
+      success: true,
+      message: 'Logged out successfully'
     });
+
+    response.cookies.delete('sessionToken');
+
 
     return response;
   } catch (error) {
