@@ -136,216 +136,55 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
     printWindow.document.write(`
       <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>${selectedSession.title}</title>
-        <style>
-          @page {
-            size: auto;                     /* ← key change: respect user's chosen paper size */
-            margin: 15mm 12mm;              /* still reasonable default margins */
-          }
-
-          * {
-            box-sizing: border-box;
-          }
-
-          body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            color: #1a1a1a;
-            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-          }
-
-          .page {
-            min-height: 100vh;              /* screen preview */
-            display: flex;
-            justify-content: center;        /* horizontal center */
-            align-items: center;            /* vertical center */
-            page-break-after: always;
-            background: #ffffff;
-          }
-
-          .content-wrapper {
-            width: 100%;
-            max-width: 190mm;               /* safe for A4 ~186–190 mm usable, also fine on Letter */
-            text-align: center;
-            padding: 0 10mm;
-          }
-
-          /* ── Page 1: Event + QR ── */
-          h1 {
-            font-size: clamp(2.4rem, 7vw, 3.2rem);
-            font-weight: 800;
-            margin: 0 0 1.8em 0;
-            color: #8B0000;
-            letter-spacing: -0.5px;
-            line-height: 1.1;
-          }
-
-          .qr-container {
-            background: #ffffff;
-            padding: 14px;
-            border-radius: 10px;
-            margin: 0 auto 2.2em;
-            width: min(320px, 85%);
-            aspect-ratio: 1 / 1;            /* keep square even if width adjusts */
-            max-width: 320px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            border: 1px solid #ddd;
-          }
-
-          .qr-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 6px;
-          }
-
-          .event-info {
-            font-size: clamp(1.25rem, 3.5vw, 1.4rem);
-            line-height: 1.55;
-            color: #333;
-          }
-
-          .event-info .highlight {
-            font-size: clamp(1.4rem, 4vw, 1.65rem);
-            color: #000;
-            font-weight: 700;
-            margin-bottom: 0.9em;
-          }
-
-          .event-info .date-time {
-            font-size: clamp(1.35rem, 4vw, 1.55rem);
-            font-weight: 700;
-            color: #8B0000;
-            margin: 1.1em 0 0.5em;
-          }
-
-          .event-info .time {
-            margin-bottom: 0.6em;
-          }
-
-          .event-info .small {
-            font-size: clamp(1.15rem, 3vw, 1.28rem);
-            margin-top: 0.8em;
-          }
-
-          /* ── Page 2: Instructions ── */
-          .instructions {
-            background: #f9f9f9;
-            border-radius: 10px;
-            padding: clamp(20px, 5vw, 32px) clamp(16px, 4vw, 28px);
-            text-align: left;
-            font-size: clamp(1.05rem, 3vw, 1.16rem);
-            line-height: 1.65;
-            border: 1px solid #e0e0e0;
-            max-width: 190mm;
-            margin: 0 auto;
-          }
-
-          .instructions h2 {
-            font-size: clamp(1.6rem, 4.5vw, 1.9rem);
-            color: #8B0000;
-            margin: 0 0 1.4em 0;
-            text-align: center;
-            font-weight: 700;
-          }
-
-          .instructions ol {
-            margin: 0 0 1em 0;
-            padding-left: 1.9em;
-          }
-
-          .instructions li {
-            margin-bottom: 0.8em;
-          }
-
-          .instructions li strong {
-            color: #111;
-          }
-
-          .instructions .warning {
-            color: #b22222;
-            font-weight: 700;
-            margin-top: 1.5em;
-            display: block;
-            text-align: center;
-            font-size: clamp(1.1rem, 3vw, 1.22rem);
-          }
-
-          /* Screen preview helpers */
-          @media screen {
-            .page {
-              min-height: 80vh;
-              margin-bottom: 3rem;
-              overflow: hidden;
+      <html>
+        <head>
+          <title>${selectedSession.title}</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Arial, sans-serif;
+              margin: 0;
+              padding: 40px;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              background: white;
+              color: #222;
             }
-          }
-
-          @media print {
-            .page {
-              min-height: unset;
-              height: auto;
+            .qr { 
+              width: 420px; 
+              height: 420px; 
+              margin: 20px 0;
+              padding: 20px;
+              background: white;
+              box-shadow: 0 0 20px rgba(0,0,0,0.1);
             }
-          }
-
-          @media (max-width: 600px) {
-            .content-wrapper { padding: 0 8mm; }
-            .qr-container { width: 280px; max-width: 90%; }
-          }
-        </style>
-      </head>
-      <body>
-
-        <!-- Page 1 -->
-        <div class="page">
-          <div class="content-wrapper">
-            <h1>${selectedSession.title}</h1>
-
-            <div class="qr-container">
-              <img src="${selectedSession.qrImageUrl}" alt="QR Code" />
-            </div>
-
-            <div class="event-info">
-              <div class="highlight">
-                ${selectedSession.departmentLabel || 'N/A'}
-              </div>
-
-              <div class="date-time">
-                ${new Date(selectedSession.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
-
-              <div class="time">${selectedSession.startTime} – ${selectedSession.endTime}</div>
-
-              ${selectedSession.description ? `<div class="small"><strong>Description:</strong> ${selectedSession.description}</div>` : ''}
-            </div>
+            h1 {
+              font-size: 36px;
+              margin: 10px 0;
+              color: #8B0000;
+            }
+            .details {
+              font-size: 24px;
+              line-height: 1.8;
+              text-align: center;
+              max-width: 600px;
+            }
+            .details strong { color: #333; }
+            @media print {
+              body { padding: 20px; }
+            }
+          </style>
+        </head>
+        <body>
+          <img src="${selectedSession.qrImageUrl}" class="qr" alt="QR Code" />
+          <h1>${selectedSession.title}</h1>
+          <div class="details">
+            <p><strong>Department:</strong> ${selectedSession.departmentLabel || 'N/A'}</p>
+            <p><strong>Date:</strong> ${new Date(selectedSession.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p><strong>Time:</strong> ${selectedSession.startTime} – ${selectedSession.endTime}</p>
+            ${selectedSession.description ? `<p><strong>Description:</strong> ${selectedSession.description}</p>` : ''}
           </div>
-        </div>
-
-        <!-- Page 2 -->
-        <div class="page">
-          <div class="content-wrapper">
-            <div class="instructions">
-              <h2>How to be marked as Present</h2>
-              <ol>
-                <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
-                <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
-                <li><strong>Department check</strong><br>Only scan if you belong to the same department as the event.</li>
-                <li><strong>Timing window</strong><br>
-                  • Scanning is only possible after the event has started and before it ends.<br>
-                  • Early or late scans will not work.
-                </li>
-                <li><strong>After scanning</strong><br>A link/URL will appear → tap it immediately to complete your time-in.</li>
-              </ol>
-              <span class="warning">Members who do not successfully scan during the event will be automatically marked absent once the event ends.</span>
-            </div>
-          </div>
-        </div>
-
-      </body>
+        </body>
       </html>
     `);
 
@@ -379,16 +218,17 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       </div>
 
       {/* Scrollable form content */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 px-8 py-6">
         <form onSubmit={handleSubmit(mode === 'edit' ? onUpdate : onCreate)} className="space-y-6">
-          <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
+          <div className='overflow-y-auto max-h-[50vh] md:max-h-[45vh] lg:max-h-auto'>
+          <div className="grid md:grid-cols-2 gap-6">
             <InputField label="Session Title" placeholder="e.g. Web Programming"
               {...register('title', { required: 'Required' })} error={errors.title?.message} />
             <InputField label="Date" type="date"
               {...register('date', { required: 'Required' })} error={errors.date?.message} />
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
             <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
           </div>
@@ -410,11 +250,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
             />
             <input type="hidden" {...register('department', { required: 'Department required' })} />
           </div>
-        </form>
-      </div>
+          </div>
 
-      {/* Footer buttons - always visible */}
-      <div className="px-8 py-6 border-t border-gray-200 flex justify-end gap-4">
+          {/* Footer buttons - always visible */}
+      <div className="py-6 border-t border-gray-200 flex justify-end gap-4">
         <Button
           type="button"
           text="Clear"
@@ -441,6 +280,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
           isDisabled={isSubmitting || (mode === 'edit' && !selectedSession)}
         />
       </div>
+        </form>
+      </div>
+
+      
     </div>
   );
 }

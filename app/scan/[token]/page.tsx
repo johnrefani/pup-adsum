@@ -37,7 +37,7 @@ export default async function ScanPage({
   }
 
   const cookieStore = await cookies();
-  const authUser = cookieStore.get('authUser')?.value;
+  const authUser = cookieStore.get('sessionToken')?.value;
 
   if (!authUser) {
     redirect(`/?redirectTo=${encodeURIComponent(`/scan/${token}`)}`);
@@ -46,7 +46,7 @@ export default async function ScanPage({
   let user: any = null;
   try {
     await connectToDatabase();
-    user = await User.findOne({ username: authUser })
+    user = await User.findOne({ currentSessionToken: authUser })
       .populate('department', 'acronym name')
       .select('fullName department role')
       .lean();
