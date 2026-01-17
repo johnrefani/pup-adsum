@@ -38,7 +38,7 @@ export default async function HomePage() {
   const redirectTo = url.searchParams.get('redirectTo');
 
   return (
-    <main className="min-h-screen flex-center bg-gradient-to-br from-maroon-50 to-red-100">
+    <main className="min-h-screen mx-sm md:mx-md lg:mx-lg flex-center ">
       <Login initialRedirectTo={redirectTo || undefined} />
     </main>
   );
