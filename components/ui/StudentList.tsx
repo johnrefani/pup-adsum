@@ -92,8 +92,8 @@ export default function StudentList({
         {students.length > 0 && (          
           <Button
               type="button"
-              text="Print QR"
-              backgroundColor="bg-maroon-900"
+              text="Download CSV"
+              backgroundColor="bg-green-700"
               textColor="text-white"
               onClick={downloadCSV}
           />
