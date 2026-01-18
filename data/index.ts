@@ -2,7 +2,7 @@ export const adminLinks = [
   { id: 1, title: "Dashboard", href: "/admin" },
   { id: 2, title: "Sessions", href: "/sessions" },
   { id: 3, title: "Attendance Records", href: "/attendance-records" },
-  { id: 4, title: "User Management", href: "/user-management" },
+  { id: 4, title: "Member Management", href: "/user-management" },
 ];
 
 export const memberLinks = [
