@@ -11,6 +11,10 @@ export const memberLinks = [
   { id: 3, title: "My Account", href: "/my-account" },
 ];
 
+export const mainLinks = [
+  { title: "Manage Admin", href: "/manage-admin" },
+];
+
 
 export const department = [
   {

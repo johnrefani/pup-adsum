@@ -1,4 +1,4 @@
-import { Header, UserManagement } from '@/lib/imports';
+import { Header, AdminManagement } from '@/lib/imports';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { connectToDatabase } from '@/lib/mongodb';
@@ -34,15 +34,16 @@ export default async function AdminPage() {
   if (userRole === 'member') {
     redirect('/dashboard');
   }
-
-    if (userRole === 'main') {
-    redirect('/manage-admin');
+  
+  if(userRole === 'admin'){
+    redirect('/admin');
   }
+  
   return (
     <main>
-      <Header type='admin' />
+      <Header type='main' />
       <div className="min-h-screen mx-sm md:mx-md lg:mx-lg">
-        <UserManagement />
+        <AdminManagement />
       </div>
     </main>
   );

@@ -5,16 +5,21 @@ import React, { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Menu, Close } from "@/lib/icons";
-import { memberLinks, adminLinks } from "@/lib/imports";
+import { memberLinks, adminLinks, mainLinks } from "@/lib/imports";
 import { HeaderProps } from "@/lib/types";
 
-const Header: React.FC<HeaderProps> = ({ isAdmin }) => {
+
+const Header: React.FC<HeaderProps & { type?: "admin" | "member" | "main" }> = ({
+  type = "member",
+}) => {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const links = isAdmin ? adminLinks : memberLinks;
+  // Determine which links to use
+  const links =
+    type === "admin" ? adminLinks : type === "main" ? mainLinks : memberLinks;
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -47,7 +52,10 @@ const Header: React.FC<HeaderProps> = ({ isAdmin }) => {
             <Image src="/logo.svg" alt="logo" fill className="object-contain" />
           </div>
           <h1 className="text-sm md:text-base lg:text-lg font-bold whitespace-wrap text-white">
-            PUP <span className="block text-xs md:text-sm lg:text-base font-semibold">Attendance System</span>
+            PUP{" "}
+            <span className="block text-xs md:text-sm lg:text-base font-semibold">
+              Attendance System
+            </span>
           </h1>
         </div>
 
@@ -98,7 +106,7 @@ const Header: React.FC<HeaderProps> = ({ isAdmin }) => {
 
       {/* Mobile + Tablet Dropdown */}
       {menuOpen && (
-        <div className="flex flex-col items-center gap-1  lg:hidden">
+        <div className="flex flex-col items-center gap-1 lg:hidden">
           <hr className="w-full border-gray-300" />
           <ul className="flex flex-col items-center gap-1 w-full">
             {links.map((link, idx) => (
