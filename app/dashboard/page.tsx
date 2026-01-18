@@ -32,13 +32,16 @@ export default async function MemberPage() {
     redirect('/');
   }
 
-  if (userRole !== 'member') {
+  if (userRole === 'admin') {
     redirect('/admin');
   }
-
+  
+  if (userRole === 'main') {
+    redirect('/manage-admin');
+  }
   return (
     <main>
-      <Header isAdmin={false} />
+      <Header type='member' />
       <div className="min-h-screen mx-sm md:mx-md lg:mx-lg">
         <MemberDashboard username={user.username} />
       </div>

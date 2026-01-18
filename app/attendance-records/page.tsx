@@ -32,13 +32,17 @@ export default async function AdminPage() {
     redirect('/');
   }
 
-  if (userRole !== 'admin') {
+  if (userRole === 'member') {
     redirect('/dashboard');
+  }
+
+    if (userRole === 'main') {
+    redirect('/manage-admin');
   }
 
   return (
     <main>
-      <Header isAdmin={true} />
+      <Header type='admin' />
       <div className="min-h-screen mx-sm md:mx-md lg:mx-lg">
         <AttendanceRecords />
       </div>

@@ -19,7 +19,7 @@ export interface TabsProps {
 }
 
 export interface HeaderProps {
-  isAdmin: boolean;
+  type: "admin" | "member" | "main";
 }
 
 export interface InputFieldProps {

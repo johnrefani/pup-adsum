@@ -6,6 +6,7 @@ export { default as AttendanceRecords } from '@/components/AttendanceRecords';
 export { default as UserManagement } from '@/components/UserManagement';
 export { default as UserAccount } from '@/components/UserAccount';
 export { default as UserAttendance } from '@/components/UserAttendance';
+export { default as AdminManagement } from '@/components/AdminManagement';
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';
@@ -56,4 +57,5 @@ export { default as CustomSelect } from '@/components/atoms/CustomSelect';
 export {
     adminLinks,
     memberLinks,
+    mainLinks,
 } from '@/data';
