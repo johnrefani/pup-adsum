@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       fullName,
       username,
       password,
-      idNumber: null,      
+      idNumber: 0,      
       role: 'admin',
       department: dept._id,
       course: null,
