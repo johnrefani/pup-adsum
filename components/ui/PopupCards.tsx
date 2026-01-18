@@ -822,3 +822,118 @@ export const DepartmentPopup = ({
     </PopupWrapper>
   );
 };
+
+
+export interface UpdateMyAccountProps {
+  isOpen: boolean;
+  onClose: () => void;
+  initialData?: {
+    id: string;
+    fullname: string;
+    username: string;
+  };
+  onSubmit: (
+    fullname: string,
+    username: string,
+    password: string
+  ) => Promise<void>;
+}
+
+export const UpdateMyAccount = ({
+  isOpen,
+  onClose,
+  initialData,
+  onSubmit,
+}: UpdateMyAccountProps) => {
+  const [fullname, setFullname] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setFullname(initialData.fullname);
+      setUsername(initialData.username);
+      setPassword("");
+    }
+  }, [isOpen, initialData]);
+
+  const isValid =
+    fullname.trim().length > 0 &&
+    username.trim().length > 0;
+
+  const handleSubmit = async () => {
+    if (!isValid || isLoading) return;
+    setIsLoading(true);
+    try {
+      await onSubmit(
+        fullname.trim(),
+        username.trim(),
+        password.trim()
+      );
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <PopupWrapper>
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-xl font-bold">Update My Account</h2>
+          <p className="text-sm text-black/70">
+            Update your admin credentials.
+          </p>
+        </div>
+        <button aria-label="close" onClick={onClose} disabled={isLoading}>
+          <Close className="w-6 h-6" />
+        </button>
+      </div>
+
+      <div className="mt-6 space-y-4">
+        <InputField
+          label="Full Name"
+          value={fullname}
+          onChange={(e) => setFullname(e.target.value)}
+          disabled={isLoading}
+        />
+        <InputField
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          disabled={isLoading}
+        />
+        <InputField
+          label="New Password (optional)"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoading}
+          showPasswordToggle={true}
+        />
+      </div>
+
+      <div className="mt-8 flex justify-end gap-3">
+        <Button
+          text={isLoading ? "Updating..." : "Update Account"}
+          textColor="text-white"
+          backgroundColor={
+            isValid ? "bg-maroon-800 hover:bg-maroon-900" : "bg-gray-400"
+          }
+          onClick={handleSubmit}
+          isDisabled={!isValid || isLoading}
+        />
+        <Button
+          text="Cancel"
+          textColor="text-black"
+          backgroundColor="bg-white border border-black/25"
+          onClick={onClose}
+        />
+      </div>
+    </PopupWrapper>
+  );
+};

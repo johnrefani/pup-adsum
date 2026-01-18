@@ -18,6 +18,7 @@ export { SuccessPopup,
     ManageAdmin,
     ManageMember,
     DeletePopup,
+    UpdateMyAccount,
 } from '@/components/ui/PopupCards';
 export { default as GeneratedQR } from '@/components/ui/GeneratedQR';
 export { default as SessionInformation } from '@/components/ui/SessionInformation';
