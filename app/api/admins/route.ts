@@ -18,13 +18,15 @@ export async function GET() {
       .select('fullName username password department')
       .lean();
 
-    const formatted = admins.map((a: any) => ({
-      id: a._id.toString(),
-      fullName: a.fullName,
-      username: a.username,
-      password: a.password,           
-      department: a.department?.name || '—',
-    }));
+    const formatted = admins
+      .map((a: any) => ({
+        id: a._id.toString(),
+        fullName: a.fullName,
+        username: a.username,
+        password: a.password,
+        department: a.department?.name || '—',
+      }))
+      .sort((a, b) => a.department.localeCompare(b.department));
 
     return NextResponse.json({ admins: formatted });
   } catch (error) {
@@ -32,6 +34,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch admins' }, { status: 500 });
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
       fullName,
       username,
       password,
-      idNumber: null,      
+      idNumber: undefined,      
       role: 'admin',
       department: dept._id,
       course: null,

@@ -9,24 +9,36 @@ import { v4 as uuidv4 } from 'uuid';
 import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.254.184:3000';
+const BASE_URL = 'https://pup-adsum.vercel.app';
 
 // ==================== POST (Create Session + QR) ====================
 export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const currentToken = cookieStore.get('sessionToken')?.value;
-    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!currentToken)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await connectToDatabase();
+
+    // Get logged-in user
+    const user = await User.findOne({ currentSessionToken: currentToken });
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const data = await request.json();
+    const { title, date, startTime, endTime, description } = data;
 
-    const { title, date, startTime, endTime, description, department } = data;
-
-    if (!title || !date || !startTime || !endTime || !department) {
+    if (!title || !date || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    // Use user's department
+    const department = user.department;
+    if (!department) {
+      return NextResponse.json({ error: 'User has no department assigned' }, { status: 400 });
+    }
+
+    // Generate QR token
     const tokenPart = uuidv4().replace(/-/g, '').slice(0, 20);
     const qrToken = `sess_${tokenPart}`;
     const scanUrl = `${BASE_URL}/scan/${qrToken}`;
@@ -49,11 +61,12 @@ export async function POST(request: NextRequest) {
       startTime,
       endTime,
       description: description || '',
-      department,
+      department, // <-- store user's department automatically
       qrToken,
       qrImageUrl: uploadResult.secure_url,
     });
 
+    // Create attendance records for members in the same department
     const members = await User.find({ role: 'member', department }).select('_id');
     const records = members.map((m: any) => ({
       session: session._id,
@@ -66,41 +79,40 @@ export async function POST(request: NextRequest) {
       await Attendance.insertMany(records);
     }
 
-const populatedSession = await Session.findById(session._id)
-  .populate<{ department: { _id: string; acronym: string; name: string } }>(
-    'department',
-    'acronym name'
-  )
-  .lean<{ 
-    _id: string;
-    title: string;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    description?: string;
-    department: { _id: string; acronym: string; name: string };
-  }>()
-  .exec();
+    const populatedSession = await Session.findById(session._id)
+      .populate<{ department: { _id: string; acronym: string; name: string } }>(
+        'department',
+        'acronym name'
+      )
+      .lean<{
+        _id: string;
+        title: string;
+        date: Date;
+        startTime: string;
+        endTime: string;
+        description?: string;
+        department: { _id: string; acronym: string; name: string };
+      }>()
+      .exec();
 
-if (!populatedSession) {
-  throw new Error('Failed to retrieve created session');
-}
+    if (!populatedSession) {
+      throw new Error('Failed to retrieve created session');
+    }
 
-return NextResponse.json({
-  success: true,
-  session: {
-    _id: populatedSession._id.toString(),
-    title: populatedSession.title,
-    date: populatedSession.date.toISOString().split('T')[0],
-    startTime: populatedSession.startTime,
-    endTime: populatedSession.endTime,
-    description: populatedSession.description || '',
-    department: populatedSession.department._id.toString(),
-    departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
-  },
-  qrImageUrl: uploadResult.secure_url,
-});
-
+    return NextResponse.json({
+      success: true,
+      session: {
+        _id: populatedSession._id.toString(),
+        title: populatedSession.title,
+        date: populatedSession.date.toISOString().split('T')[0],
+        startTime: populatedSession.startTime,
+        endTime: populatedSession.endTime,
+        description: populatedSession.description || '',
+        department: populatedSession.department._id.toString(),
+        departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
+      },
+      qrImageUrl: uploadResult.secure_url,
+    });
   } catch (error: any) {
     console.error('Session creation error:', error);
     return NextResponse.json(
@@ -109,6 +121,7 @@ return NextResponse.json({
     );
   }
 }
+
 
 // ==================== GET (List Sessions) ====================
 export async function GET(request: NextRequest) {

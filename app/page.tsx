@@ -27,6 +27,8 @@ export default async function HomePage() {
       redirect('/admin');
     } else if (userRole === 'member') {
       redirect('/dashboard');
+    } else if (userRole === 'main') {
+      redirect('/manage-admin');
     }
   }
 

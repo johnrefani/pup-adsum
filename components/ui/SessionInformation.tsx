@@ -5,11 +5,6 @@ import { useForm } from 'react-hook-form';
 import { Button, InputField, SearchableSelectField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
 
-interface Department {
-  _id: string;
-  acronym: string;
-  name: string;
-}
 
 interface FormData {
   title: string;
@@ -17,23 +12,14 @@ interface FormData {
   startTime: string;
   endTime: string;
   description?: string;
-  department: string;
 }
 
 export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
   const { selectedSession, setSelectedSession } = useSelectedSession();
-  const [departments, setDepartments] = useState<Department[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>();
-  const selectedDept = watch("department");
 
-  useEffect(() => {
-    fetch('/api/departments')
-      .then(r => r.json())
-      .then(d => setDepartments(d.departments || []))
-      .catch(() => alert("Failed to load departments"));
-  }, []);
 
   useEffect(() => {
     if (selectedSession) {
@@ -43,7 +29,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: selectedSession.startTime,
         endTime: selectedSession.endTime,
         description: selectedSession.description,
-        department: selectedSession.department,
       });
     } else {
       reset({
@@ -52,7 +37,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
-        department: ''
       });
     }
   }, [selectedSession, reset]);
@@ -68,7 +52,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed");
 
-      reset({ title: '', date: '', startTime: '', endTime: '', description: '', department: '' });
+      reset({ title: '', date: '', startTime: '', endTime: '', description: ''});
 
       window.dispatchEvent(new CustomEvent('session-created', {
         detail: { qrImageUrl: result.qrImageUrl, session: result.session }
@@ -103,7 +87,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
-        department: ''
       });
       window.dispatchEvent(new Event('session-updated'));
     } catch (err: any) {
@@ -120,7 +103,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       startTime: '',
       endTime: '',
       description: '',
-      department: ''
     });
     setSelectedSession(null);
   };
@@ -237,18 +219,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
             <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
             <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
               {...register('description')} />
-          </div>
-
-          <div>
-            <SearchableSelectField
-              label="Department"
-              options={departments.map(d => ({ value: d._id, label: `${d.acronym} - ${d.name}` }))}
-              value={selectedDept}
-              onChange={(val) => setValue('department', val)}
-              error={errors.department?.message}
-              disabled={mode === 'edit'}
-            />
-            <input type="hidden" {...register('department', { required: 'Department required' })} />
           </div>
           </div>
 
