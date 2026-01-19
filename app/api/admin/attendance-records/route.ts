@@ -47,6 +47,7 @@ export async function GET(request: Request) {
             hour: 'numeric',
             minute: '2-digit',
             hour12: true,
+          timeZone: 'Asia/Manila',
           })
         : '---';
 
