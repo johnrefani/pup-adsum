@@ -133,7 +133,7 @@ export default function StudentList({
                     (
                       <Status status='present' />
                     ):(
-                      <Status status='present' />
+                      <Status status='absent' />
                     )
                   }
                   </td>
