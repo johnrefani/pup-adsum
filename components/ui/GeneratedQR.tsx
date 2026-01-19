@@ -37,219 +37,223 @@ export default function GeneratedQR() {
       return;
     }
 
+    const format12Hour = (time24: string): string => {
+    if (!time24) return '';
+    const [hoursStr, minutesStr] = time24.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
+
+    if (isNaN(hours) || isNaN(minutes)) return time24;
+
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+
+    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+
     printWindow.document.write(`
 <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>${qrData.session.title}</title>
-        <style>
-          @page {
-            size: auto;                     /* ← key change: respect user's chosen paper size */
-            margin: 15mm 12mm;              /* still reasonable default margins */
-          }
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>${qrData.session.title}</title>
+  <style>
+    @page {
+      size: auto;
+      margin: 6mm 5mm;          /* tighter margins for more content */
+    }
 
-          * {
-            box-sizing: border-box;
-          }
+    * {
+      box-sizing: border-box;
+    }
 
-          body {
-            margin: 0;
-            padding: 0;
-            background: #ffffff;
-            color: #1a1a1a;
-            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-          }
+    body {
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+      color: #1a1a1a;
+      font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+    }
 
-          .page {
-            min-height: 100vh;              /* screen preview */
-            display: flex;
-            justify-content: center;        /* horizontal center */
-            align-items: center;            /* vertical center */
-            page-break-after: always;
-            background: #ffffff;
-          }
+    .page {
+      display: flex;
+      justify-content: center;
+      background: #ffffff;
+    }
 
-          .content-wrapper {
-            width: 100%;
-            max-width: 190mm;               /* safe for A4 ~186–190 mm usable, also fine on Letter */
-            text-align: center;
-            padding: 0 10mm;
-          }
+    .content-wrapper {
+      width: 100%;
+      max-width: 200mm;             /* wider usable area */
+      padding: 0 8mm;
+      text-align: center;
+    }
 
-          /* ── Page 1: Event + QR ── */
-          h1 {
-            font-size: clamp(2.4rem, 7vw, 3.2rem);
-            font-weight: 800;
-            margin: 0 0 1.8em 0;
-            color: #8B0000;
-            letter-spacing: -0.5px;
-            line-height: 1.1;
-          }
+    /* ── Main heading ── */
+    h1 {
+      font-size: clamp(2.1rem, 5.8vw, 2.7rem);
+      font-weight: 800;
+      margin: 0.2em 0 0.3em 0;
+      color: #8B0000;
+      letter-spacing: -0.4px;
+      line-height: 1.05;
+    }
 
-          .qr-container {
-            background: #ffffff;
-            padding: 14px;
-            border-radius: 10px;
-            margin: 0 auto 2.2em;
-            width: min(320px, 85%);
-            aspect-ratio: 1 / 1;            /* keep square even if width adjusts */
-            max-width: 320px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-            border: 1px solid #ddd;
-          }
+    /* ── QR code ── */
+    .qr-container {
+      background: #ffffff;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 0 auto 1.4em;
+      width: min(260px, 70%);
+      aspect-ratio: 1 / 1;
+      max-width: 260px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+      border: 1px solid #ddd;
+    }
 
-          .qr-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            border-radius: 6px;
-          }
+    .qr-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 5px;
+    }
 
-          .event-info {
-            font-size: clamp(1.25rem, 3.5vw, 1.4rem);
-            line-height: 1.55;
-            color: #333;
-          }
+    /* ── Event info ── */
+    .event-info {
+      font-size: clamp(1.1rem, 3vw, 1.22rem);
+      line-height: 1.5;
+      color: #222;
+    }
 
-          .event-info .highlight {
-            font-size: clamp(1.4rem, 4vw, 1.65rem);
-            color: #000;
-            font-weight: 700;
-            margin-bottom: 0.9em;
-          }
+    .event-info .highlight {
+      font-size: clamp(1.25rem, 3.4vw, 1.4rem);
+      color: #000;
+      font-weight: 700;
+      margin: 0.4em 0 0.6em;
+    }
 
-          .event-info .date-time {
-            font-size: clamp(1.35rem, 4vw, 1.55rem);
-            font-weight: 700;
-            color: #8B0000;
-            margin: 1.1em 0 0.5em;
-          }
+    .event-info .date-time {
+      font-size: clamp(1.2rem, 3.3vw, 1.32rem);
+      font-weight: 700;
+      color: #8B0000;
+      margin: 0;
+    }
 
-          .event-info .time {
-            margin-bottom: 0.6em;
-          }
+    .event-info .time {
+      margin-bottom: 0.2em;
+    }
 
-          .event-info .small {
-            font-size: clamp(1.15rem, 3vw, 1.28rem);
-            margin-top: 0.8em;
-          }
+    .event-info .small {
+      font-size: clamp(1rem, 2.7vw, 1.08rem);
+      margin-top: 0.25em;
+    }
 
-          /* ── Page 2: Instructions ── */
-          .instructions {
-            background: #f9f9f9;
-            border-radius: 10px;
-            padding: clamp(20px, 5vw, 32px) clamp(16px, 4vw, 28px);
-            text-align: left;
-            font-size: clamp(1.05rem, 3vw, 1.16rem);
-            line-height: 1.65;
-            border: 1px solid #e0e0e0;
-            max-width: 190mm;
-            margin: 0 auto;
-          }
+    /* ── Instructions (now wider & rectangular) ── */
+    .instructions {
+      background: #f9f9f9;
+      border-radius: 8px;
+      padding: 8px 10px;
+      text-align: left;
+      font-size: clamp(0.92rem, 2.45vw, 0.96rem);
+      line-height: 1.55;
+      border: 1px solid #e0e0e0;
+      margin: 0.7em auto 0;
+      max-width: 100%;                /* full available width */
+    }
 
-          .instructions h2 {
-            font-size: clamp(1.6rem, 4.5vw, 1.9rem);
-            color: #8B0000;
-            margin: 0 0 1.4em 0;
-            text-align: center;
-            font-weight: 700;
-          }
+    .instructions h2 {
+      font-size: clamp(1.35rem, 3.8vw, 1.55rem);
+      color: #8B0000;
+      margin: 0;
+      text-align: center;
+      font-weight: 700;
+    }
 
-          .instructions ol {
-            margin: 0 0 1em 0;
-            padding-left: 1.9em;
-          }
+    .instructions ol {
+      margin: 0;
+      padding-left: 1.7em;
+    }
 
-          .instructions li {
-            margin-bottom: 0.8em;
-          }
+    .instructions li {
+      margin-bottom: 0.35em;
+    }
 
-          .instructions li strong {
-            color: #111;
-          }
+    .instructions li strong {
+      color: #111;
+    }
 
-          .instructions .warning {
-            color: #b22222;
-            font-weight: 700;
-            margin-top: 1.5em;
-            display: block;
-            text-align: center;
-            font-size: clamp(1.1rem, 3vw, 1.22rem);
-          }
+    .instructions .warning {
+      color: #b22222;
+      font-weight: 700;
+      margin-top: 0.35em;
+      display: block;
+      text-align: center;
+      font-size: clamp(0.96rem, 2.55vw, 1rem);
+    }
 
-          /* Screen preview helpers */
-          @media screen {
-            .page {
-              min-height: 80vh;
-              margin-bottom: 3rem;
-              overflow: hidden;
-            }
-          }
+    /* Print optimizations */
+    @media print {
+      .page {
+        min-height: unset;
+      }
+      body {
+        font-size: 9.5pt;   /* fallback base size for print */
+      }
+    }
 
-          @media print {
-            .page {
-              min-height: unset;
-              height: auto;
-            }
-          }
+    @media screen and (max-width: 600px) {
+      .content-wrapper { padding: 0 6mm; }
+      .qr-container { width: 200px; max-width: 85%; }
+    }
+  </style>
+</head>
+<body>
 
-          @media (max-width: 600px) {
-            .content-wrapper { padding: 0 8mm; }
-            .qr-container { width: 280px; max-width: 90%; }
-          }
-        </style>
-      </head>
-      <body>
+  <div class="page">
+    <div class="content-wrapper">
 
-        <!-- Page 1 -->
-        <div class="page">
-          <div class="content-wrapper">
-            <h1>${qrData.session.title}</h1>
+      <h1>${qrData.session.title}</h1>
 
-            <div class="qr-container">
-              <img src="${qrData.qrImageUrl}" alt="QR Code" />
-            </div>
+      <div class="qr-container">
+        <img src="${qrData.qrImageUrl}" alt="QR Code" />
+      </div>
 
-            <div class="event-info">
-              <div class="highlight">
-                ${qrData.session.departmentLabel || 'N/A'}
-              </div>
-
-              <div class="date-time">
-                ${new Date(qrData.session.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </div>
-
-              <div class="time">${qrData.session.startTime} – ${qrData.session.endTime}</div>
-
-              ${qrData.session.description ? `<div class="small"><strong>Description:</strong> ${qrData.session.description}</div>` : ''}
-            </div>
-          </div>
+      <div class="event-info">
+        <div class="highlight">
+          ${qrData.session.departmentLabel || 'N/A'}
         </div>
 
-        <!-- Page 2 -->
-        <div class="page">
-          <div class="content-wrapper">
-            <div class="instructions">
-              <h2>How to be marked as Present</h2>
-              <ol>
-                <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
-                <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
-                <li><strong>Department check</strong><br>Only scan if you belong to the same department as the event.</li>
-                <li><strong>Timing window</strong><br>
-                  • Scanning is only possible after the event has started and before it ends.<br>
-                  • Early or late scans will not work.
-                </li>
-                <li><strong>After scanning</strong><br>A link/URL will appear → tap it immediately to complete your time-in.</li>
-              </ol>
-              <span class="warning">Members who do not successfully scan during the event will be automatically marked absent once the event ends.</span>
-            </div>
-          </div>
+        <div class="date-time">
+          ${new Date(qrData.session.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </div>
 
-      </body>
-      </html>
+        <div class="time">${format12Hour(qrData.session.startTime)} – ${format12Hour(qrData.session.endTime)}</div>
+
+        ${qrData.session.description ? `<div class="small"><strong>Description:</strong> ${qrData.session.description}</div>` : ''}
+      </div>
+
+      <!-- Instructions – now on same page, wider layout -->
+      <div class="instructions">
+        <h2>How to be marked as Present</h2>
+        <ol>
+          <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
+          <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
+          <li><strong>Department check</strong><br>Only scan if you belong to the same department as the event.</li>
+          <li><strong>Timing window</strong><br>
+            • Scanning is only possible after the event has started and before it ends.<br>
+            • Early or late scans will not work.
+          </li>
+          <li><strong>After scanning</strong><br>A link/URL will appear → tap it immediately to complete your time-in.</li>
+        </ol>
+        <span class="warning">Members who do not successfully scan during the event will be automatically marked absent once the event ends.</span>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>
     `);
 
     printWindow.document.close();
