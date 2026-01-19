@@ -101,24 +101,23 @@ export default async function ScanPage({
 
   const now = new Date();
 
-  // ——— END TIME CHECK ———
-  const [endHour, endMinute] = session.endTime.split(':');
-  const sessionEndTime = new Date(session.date);
-  sessionEndTime.setHours(parseInt(endHour), parseInt(endMinute), 0, 0);
+  // ——— END TIME CHECK (FIXED) ———
+  const sessionEndTime = new Date(
+    `${session.date.split('T')[0]}T${session.endTime}:00`
+  );
 
   if (now > sessionEndTime) {
     return <SessionEndedMessage session={session} />;
   }
 
-  // ——— NEW: START TIME CHECK ———
-  const [startHour, startMinute] = session.startTime.split(':');
-  const sessionStartTime = new Date(session.date);
-  sessionStartTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
+  // ——— START TIME CHECK (FIXED) ———
+  const sessionStartTime = new Date(
+    `${session.date.split('T')[0]}T${session.startTime}:00`
+  );
 
   if (now < sessionStartTime) {
     return <SessionNotStartedYet session={session} />;
   }
-  // ————————————————
 
   const existingRecord = await Attendance.findOne({
     session: sessionDoc._id,
