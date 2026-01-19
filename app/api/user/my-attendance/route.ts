@@ -74,7 +74,7 @@ export async function GET(request: Request) {
         session: sessionName,
         date: dateStr,
         timeIn: timeIn || "Not Attended",
-        isPresent: att?.status === 'present'
+        status: att?.status ?? null
       };
     });
 

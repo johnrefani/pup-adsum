@@ -10,7 +10,7 @@ interface AttendanceRecord {
   session: string;
   date: string;
   timeIn: string;
-  isPresent: boolean;
+  status: "present" | "absent" | null;
 }
 
 const MyAttendance = () => {
@@ -22,6 +22,19 @@ const MyAttendance = () => {
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const Statuses = ({ status }: { status: "present" | "absent" | null }) => {
+  if (status === null) {
+    return <Status status={null} />;
+  }
+
+  return status === "present" ? (
+    <Status status="present" />
+  ) : (
+    <Status status="absent" />
+  );
+};
+
 
   useEffect(() => {
     const fetchAttendance = async () => {
@@ -85,20 +98,27 @@ const MyAttendance = () => {
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
-                  <tr key={record._id} className="border-b hover:bg-gray-50 transition">
-                    <td className="px-4 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-900 font-medium">
-                      {record.session}
-                    </td>
-                    <td className="px-4 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-700">{record.date}</td>
-                    <td className="px-1 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-700">
-                      {record.timeIn === "Not Attended" ? "—" : record.timeIn}
-                    </td>
-                    <td className="px-4 py-2 lg:px-6 lg:py-4">
-                      <Status isPresent={record.isPresent} />
-                    </td>
-                  </tr>
-                ))}
+                {[...records]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.date).getTime() - new Date(a.date).getTime()
+                  )
+                  .map((record) => (
+                    <tr key={record._id} className="border-b hover:bg-gray-50 transition">
+                      <td className="px-4 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-900 font-medium">
+                        {record.session}
+                      </td>
+                      <td className="px-4 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-700">
+                        {record.date}
+                      </td>
+                      <td className="px-1 py-2 lg:px-6 lg:py-4 text-sm md:text-base lg:text-lg text-gray-700">
+                        {record.timeIn === "Not Attended" ? "—" : record.timeIn}
+                      </td>
+                      <td className="px-4 py-2 lg:px-6 lg:py-4">
+                        <Statuses status={record.status} />
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -134,7 +154,7 @@ const MyAttendance = () => {
                         </td>
                         <td className="px-4 py-4 text-center">
                           <div className="flex justify-center">
-                            <Status isPresent={record.isPresent} />
+                            <Statuses status={record.status} />
                           </div>
                         </td>
                       </tr>

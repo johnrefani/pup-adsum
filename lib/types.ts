@@ -152,7 +152,7 @@ export interface CountStatProps {
 }
 
 export interface StatusProps {
-    isPresent: boolean;
+    status: "present" | "absent" | null;
 }
 
 
