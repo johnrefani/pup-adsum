@@ -99,7 +99,9 @@ export default async function ScanPage({
     departmentName: sessionDoc.department.acronym || sessionDoc.department.name,
   };
 
-  const now = new Date();
+  const now = new Date(
+  new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
+);
 
   // ——— END TIME CHECK (FIXED) ———
   const sessionEndTime = new Date(
@@ -128,7 +130,9 @@ export default async function ScanPage({
     return <ScanAlreadyPresent session={session} timeIn={existingRecord.timeIn} />;
   }
 
-  const timeIn = new Date();
+  const timeIn = new Date(
+  new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
+);
   await Attendance.findOneAndUpdate(
     { session: sessionDoc._id, member: user._id },
     { $set: { timeIn, status: 'present', timeOut: null } },
