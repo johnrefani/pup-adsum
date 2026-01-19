@@ -127,10 +127,15 @@ export default function StudentList({
                   <td className="px-6 py-5 hidden md:table-cell">{s.timeIn}</td>
                   <td className="px-6 py-5">
                     {s.status === null ? (
-                      <span className="text-gray-400 font-medium">--</span>
-                    ) : (
-                      <Status isPresent={s.status === 'present'} />
-                    )}
+                      <Status status={null} />
+                    ) :
+                    s.status === 'present' ? 
+                    (
+                      <Status status='present' />
+                    ):(
+                      <Status status='present' />
+                    )
+                  }
                   </td>
                 </tr>
               ))}
