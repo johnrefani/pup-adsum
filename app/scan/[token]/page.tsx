@@ -130,9 +130,7 @@ export default async function ScanPage({
     return <ScanAlreadyPresent session={session} timeIn={existingRecord.timeIn} />;
   }
 
-  const timeIn = new Date(
-  new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' })
-);
+  const timeIn = new Date();
   await Attendance.findOneAndUpdate(
     { session: sessionDoc._id, member: user._id },
     { $set: { timeIn, status: 'present', timeOut: null } },
