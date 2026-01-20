@@ -239,7 +239,7 @@ export default function GeneratedQR() {
         <ol>
           <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
           <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
-          <li><strong>Department check</strong><br>Only scan if you belong to the same department as the event.</li>
+          <li><strong>Organization check</strong><br>Only scan if you belong to the same organization as the event.</li>
           <li><strong>Timing window</strong><br>
             • Scanning is only possible after the event has started and before it ends.<br>
             • Early or late scans will not work.
@@ -303,12 +303,12 @@ export default function GeneratedQR() {
         <p className="text-lg"><strong>Date:</strong> {new Date(qrData.session.date).toLocaleDateString()}</p>
         <p className="text-lg"><strong>Time:</strong> {qrData.session.startTime} - {qrData.session.endTime}</p>
         <p className="text-lg"><strong>Description:</strong> {qrData.session.description || 'N/A'}</p>
-        <p className="text-lg"><strong>Department:</strong> {qrData.session.departmentLabel || 'N/A'}</p>
+        <p className="text-lg"><strong>Organization:</strong> {qrData.session.departmentLabel || 'N/A'}</p>
       </div>
 
       <div className="flex justify-end gap-4 mt-10">
         <Button
-          text="Print QR Code"
+          text="Print QR"
           backgroundColor="bg-yellow-500"
           textColor="text-white"
           onClick={handlePrint}
