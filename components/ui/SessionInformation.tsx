@@ -318,7 +318,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         <ol>
           <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
           <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
-          <li><strong>Department check</strong><br>Only scan if you belong to the same department as the event.</li>
+          <li><strong>Organization check</strong><br>Only scan if you belong to the same organization as the event.</li>
           <li><strong>Timing window</strong><br>
             • Scanning is only possible after the event has started and before it ends.<br>
             • Early or late scans will not work.

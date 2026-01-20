@@ -51,11 +51,8 @@ const Header: React.FC<HeaderProps & { type?: "admin" | "member" | "main" }> = (
           <div className="relative h-12 w-12 md:h-16 md:w-16 lg:w-20 lg:h-20">
             <Image src="/logo.svg" alt="logo" fill className="object-contain" />
           </div>
-          <h1 className="text-sm md:text-base lg:text-lg font-bold whitespace-wrap text-white">
-            PUP{" "}
-            <span className="block text-xs md:text-sm lg:text-base font-semibold">
-              Attendance System
-            </span>
+          <h1 className="text-lg md:text-xl lg:text-2xl font-bold whitespace-wrap text-white">
+            PUP ADSUM
           </h1>
         </div>
 

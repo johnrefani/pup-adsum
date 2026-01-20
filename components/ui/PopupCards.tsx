@@ -363,7 +363,7 @@ export const ManageAdmin = ({
             <SearchableSelectField
               label="Organization"
               options={departments.map((d) => ({ value: d.name, label: d.name }))}
-              placeholder="Select department"
+              placeholder="Select organization"
               value={selectedDepartment}
               onChange={setSelectedDepartment}
               disabled={isLoading}
