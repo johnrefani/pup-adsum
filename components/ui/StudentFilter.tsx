@@ -119,8 +119,8 @@ export default function StudentFilter({
         <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
           <div>
             <SearchableSelectField
-              placeholder="Select course..."
-              label='Course'
+              placeholder="Select program..."
+              label='Program'
               options={courses}
               value={courseId}
               onChange={handleCourseChange}

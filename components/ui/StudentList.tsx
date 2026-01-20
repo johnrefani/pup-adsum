@@ -77,7 +77,7 @@ export default function StudentList({
   if (!ready) {
     return (
       <div className="w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-10 text-center text-gray-500">
-        Please select Session, Course, and Year Level to view attendance.
+        Please select Session, Program, and Year Level to view attendance.
       </div>
     );
   }
