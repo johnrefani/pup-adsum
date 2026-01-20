@@ -122,8 +122,8 @@ const CourseList: React.FC = () => {
     // Show success message
     setSuccessMessage(
       id
-        ? "Course has been updated successfully."
-        : "Course has been added successfully."
+        ? "Program has been updated successfully."
+        : "Program has been added successfully."
     );
     setShowCourseSuccess(true);
   };
@@ -148,7 +148,7 @@ const CourseList: React.FC = () => {
       setSelectedCourse(null);
       setShowDeleteSuccess(true);
     } catch (error: any) {
-      alert(error.message || 'Failed to delete course');
+      alert(error.message || 'Failed to delete Program');
     }
   };
 
@@ -162,25 +162,25 @@ const CourseList: React.FC = () => {
       <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden flex flex-col">
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
-            Courses List
+            Program List
           </h2>
-          <p className="text-sm text-amber-600 mt-1">Manage courses</p>
+          <p className="text-sm text-amber-600 mt-1">Manage programs</p>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
           {loading ? (
-            <div className="p-12 text-center text-gray-500">Loading courses...</div>
+            <div className="p-12 text-center text-gray-500">Loading programs...</div>
           ) : courses.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">No courses found</div>
+            <div className="p-12 text-center text-gray-500">No program found</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
-                    Courses
+                    Program
                   </th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">
-                    Department
+                    Organization
                   </th>
                   <th className="text-center px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                     Controls
@@ -234,7 +234,7 @@ const CourseList: React.FC = () => {
         <div className="flex-shrink-0 border-t border-gray-200 px-6 py-4 bg-white">
           <div className="flex justify-end">
             <Button
-              text="Add New Course"
+              text="Add New Program"
               textColor="text-white"
               backgroundColor="bg-maroon-800 hover:bg-maroon-900"
               onClick={openAddPopup}
@@ -295,7 +295,7 @@ const CourseList: React.FC = () => {
         isOpen={showDeleteSuccess}
         onClose={() => setShowDeleteSuccess(false)}
         title="Deleted!"
-        message="Course has been deleted successfully."
+        message="Program has been deleted successfully."
       />
 
       <SuccessPopup

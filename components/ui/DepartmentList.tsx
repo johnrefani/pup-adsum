@@ -62,9 +62,9 @@ const DepartmentList: React.FC = () => {
 
       await fetchDepartments();
       setIsAddOpen(false);
-      showSuccess("Department Added!", "The new department has been successfully added.");
+      showSuccess("Department Added!", "The new organization has been successfully added.");
     } catch (error: any) {
-      alert(error.message || 'Failed to add department');
+      alert(error.message || 'Failed to add organization');
       throw error;
     }
   };
@@ -88,7 +88,7 @@ const DepartmentList: React.FC = () => {
       setIsEditOpen(false);
       showSuccess("Department Updated!", `"${acronym}" has been successfully updated.`);
     } catch (error: any) {
-      alert(error.message || 'Failed to update department');
+      alert(error.message || 'Failed to update organization');
       throw error;
     }
   };
@@ -112,7 +112,7 @@ const DepartmentList: React.FC = () => {
       setIsDeleteOpen(false);
       showSuccess("Department Deleted!", `"${selectedDepartment.acronym}" has been removed.`);
     } catch (error: any) {
-      alert(error.message || 'Failed to delete department');
+      alert(error.message || 'Failed to delete organization');
       throw error;
     }
   };
@@ -134,23 +134,23 @@ const DepartmentList: React.FC = () => {
         {/* Header */}
         <div className="border-b border-gray-200 px-6 py-5 lg:px-8 lg:py-6">
           <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-red-800">
-            Department List
+            Organization List
           </h2>
-          <p className="text-sm text-amber-600 mt-1">Manage departments</p>
+          <p className="text-sm text-amber-600 mt-1">Manage organizations</p>
         </div>
 
         {/* Scrollable Table */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {loading ? (
-            <div className="p-12 text-center text-gray-500">Loading departments...</div>
+            <div className="p-12 text-center text-gray-500">Loading organizations...</div>
           ) : departments.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">No departments found.</div>
+            <div className="p-12 text-center text-gray-500">No Organizations found.</div>
           ) : (
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">
-                    Departments
+                    Organization
                   </th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-gray-700">
                     Controls
@@ -192,7 +192,7 @@ const DepartmentList: React.FC = () => {
         <div className="border-t border-gray-200 px-6 py-4 bg-white">
           <div className="flex justify-end">
             <Button
-              text="Add New Department"
+              text="Add New Organization"
               textColor="text-white"
               backgroundColor="bg-maroon-800 hover:bg-maroon-900"
               onClick={() => setIsAddOpen(true)}

@@ -167,7 +167,7 @@ export const CoursePopup = ({
 
   if (!isOpen) return null;
 
-  const titleText = isEdit ? "Edit Course" : "Add New Course";
+  const titleText = isEdit ? "Edit Program" : "Add New Program";
   const actionText = isEdit ? "Update" : "Add";
   const actionIngText = isEdit ? "Updating" : "Adding";
   const buttonBg = isEdit ? "bg-gold-500 hover:bg-gold-600" : "bg-maroon-900 hover:bg-maroon-800";
@@ -191,7 +191,7 @@ export const CoursePopup = ({
 
         <div className="space-y-5">
           <InputField
-            label="Course Acronym"
+            label="Program Acronym"
             placeholder="e.g. BSIT"
             value={acronym}
             onChange={(e) => setAcronym(e.target.value.toUpperCase())}
@@ -207,9 +207,9 @@ export const CoursePopup = ({
           />
 
           <SearchableSelectField
-            label="Department"
+            label="Organization"
             options={department.map((d) => ({ value: d.name, label: d.name }))}
-            placeholder="Select a department"
+            placeholder="Select an organization"
             value={selectedDepartment}
             onChange={setSelectedDepartment}
             disabled={isSubmitting}
@@ -218,7 +218,7 @@ export const CoursePopup = ({
 
         <div className="flex flex-col sm:flex-row gap-3 mt-8">
           <Button
-            text={isSubmitting ? `${actionIngText}...` : `${actionText} Course`}
+            text={isSubmitting ? `${actionIngText}...` : `${actionText} Program`}
             backgroundColor={
               isFormValid && !isSubmitting
                 ? buttonBg
@@ -361,7 +361,7 @@ export const ManageAdmin = ({
               />
             </div>
             <SearchableSelectField
-              label="Department"
+              label="Organization"
               options={departments.map((d) => ({ value: d.name, label: d.name }))}
               placeholder="Select department"
               value={selectedDepartment}
@@ -518,8 +518,8 @@ export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemb
         </div>
 
         <SearchableSelectField
-          label="Course *"
-          placeholder="Select course"
+          label="Program *"
+          placeholder="Select program"
           options={courses}
           value={selectedCourse}
           onChange={setSelectedCourse}
@@ -742,8 +742,8 @@ export const DepartmentPopup = ({
     try {
       await onSubmit(acronym.trim(), completeName.trim(), id);
     } catch (error) {
-      console.error(`Error ${isEdit ? "updating" : "adding"} department:`, error);
-      alert(`Failed to ${isEdit ? "update" : "add"} department`);
+      console.error(`Error ${isEdit ? "updating" : "adding"} organization:`, error);
+      alert(`Failed to ${isEdit ? "update" : "add"} organization`);
     } finally {
       setIsAdding(false);
     }
@@ -753,7 +753,7 @@ export const DepartmentPopup = ({
 
   const actionText = isEdit ? "Update" : "Add";
   const actionIngText = isEdit ? "Updating" : "Adding";
-  const titleText = isEdit ? "Update Department" : "Add New Department";
+  const titleText = isEdit ? "Update Organization" : "Add New Organization";
   const isActive = isValid && !isAdding;
   const buttonBg = isEdit ? "bg-gold-500" : "bg-maroon-900";
   const buttonTextColor = isEdit ? "text-maroon-800" : "text-white";
@@ -801,7 +801,7 @@ export const DepartmentPopup = ({
 
       <div className="flex flex-col md:flex-row justify-end gap-3 w-full">
         <Button
-          text={isAdding ? `${actionIngText} Department...` : `${actionText} Department`}
+          text={isAdding ? `${actionIngText} Organization...` : `${actionText} Organization`}
           textColor={isActive ? buttonTextColor : "text-white"}
           backgroundColor={
             isActive

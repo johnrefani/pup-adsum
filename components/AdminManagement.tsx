@@ -59,7 +59,7 @@ const AdminManagement = () => {
             Admin Management
           </h1>
           <p className="font-medium text-sm md:text-base lg:text-xl text-black/75">
-            Manage Admin Accounts, Departments, and Courses.
+            Manage Admin Accounts, Organizations, and Programs.
           </p>
         </div>
 
