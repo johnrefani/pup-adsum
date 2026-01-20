@@ -84,10 +84,10 @@ const LoginForm = ({ initialRedirectTo }: LoginProps) => {
             />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-maroon-900">
-              WELCOME BACK
+            <h1 className="text-2xl md:text-3xl font-bold text-maroon-900 w-full">
+              PUP ADSUM
             </h1>
-            <p className="text-sm md:text-base text-maroon-800">
+            <p className="text-sm md:text-base text-maroon-800 w-full">
               Sign in to your account
             </p>
           </div>
