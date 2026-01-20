@@ -230,13 +230,13 @@ const MyProfile = () => {
               />
 
               <InputField
-                label="Department"
+                label="Organization"
                 value={formData.department}
                 state={isEditing ? "disabled" : "readonly"}
               />
 
               <InputField
-                label="Course"
+                label="Program"
                 value={formData.course}
                 state={isEditing ? "disabled" : "readonly"}
               />

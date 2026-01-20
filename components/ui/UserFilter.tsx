@@ -49,8 +49,8 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
           <div className="grid lg:grid-cols-2 gap-2 md:gap-4 lg:gap-6">
             <div>
               <SearchableSelectField
-                placeholder="Select course..."
-                label='Course'
+                placeholder="Select program..."
+                label='Program'
                 options={courses}
                 value={selectedCourse}
                 onChange={setSelectedCourse}
@@ -68,13 +68,13 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Search by Name {selectedCourse && selectedYear ? '' : '(Select course & year first)'}
+              Search by Name {selectedCourse && selectedYear ? '' : '(Select program & year first)'}
             </label>
             <InputField
               placeholder={
                 selectedCourse && selectedYear
                   ? "Type name to search..."
-                  : "Course & Year required first"
+                  : "Program & Year required first"
               }
               type="text"
               value={searchName}
