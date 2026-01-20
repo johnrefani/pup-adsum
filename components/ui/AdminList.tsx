@@ -31,7 +31,7 @@ const AdminList: React.FC = () => {
         setDepartments(data.departments);
       }
     } catch (error) {
-      console.error('Error fetching departments:', error);
+      console.error('Error fetching organizations:', error);
     } finally {
       setLoading(false);
     }
@@ -160,7 +160,7 @@ const AdminList: React.FC = () => {
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">Full Name</th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden md:table-cell">Username</th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Password</th>
-                  <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Department</th>
+                  <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Organization</th>
                   <th className="text-center px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">Controls</th>
                 </tr>
               </thead>
