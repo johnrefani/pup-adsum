@@ -173,7 +173,7 @@ const AdminList: React.FC = () => {
                         <div className="text-sm text-gray-500 md:hidden space-y-1 mt-1">
                           <div><span className="font-medium">Username:</span> {admin.username}</div>
                           <div><span className="font-medium">Password:</span> {admin.password}</div>
-                          <div><span className="font-medium">Dept:</span> {admin.department}</div>
+                          <div><span className="font-medium">Organization:</span> {admin.department}</div>
                         </div>
                       </div>
                     </td>
