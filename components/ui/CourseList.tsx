@@ -180,7 +180,7 @@ const CourseList: React.FC = () => {
                     Program
                   </th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">
-                    Department
+                    Organization
                   </th>
                   <th className="text-center px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">
                     Controls
