@@ -199,7 +199,7 @@ const CourseList: React.FC = () => {
                           {course.name}
                         </span>
                         <span className="text-xs text-gray-400 lg:hidden mt-1">
-                          Dept: {course.department}
+                          Organization: {course.department}
                         </span>
                       </div>
                     </td>
