@@ -5,6 +5,7 @@ import { getCurrentAdmin } from '@/lib/auth';
 import mongoose from 'mongoose';
 import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
+import { hashPassword } from '@/lib/password';
 
 export async function GET(request: Request) {
   try {
@@ -36,6 +37,7 @@ export async function GET(request: Request) {
         '2nd Year': '2',
         '3rd Year': '3',
         '4th Year': '4',
+        '5th Year': '5',
       };
       query.yearLevel = yearMap[yearLevelRaw] || yearLevelRaw;
     }
@@ -78,6 +80,7 @@ function getYearSuffix(year: string) {
     case '1': return 'st';
     case '2': return 'nd';
     case '3': return 'rd';
+    case '5': return 'th';
     default: return 'th';
   }
 }
@@ -109,7 +112,7 @@ export async function POST(request: Request) {
       fullName: fullName.trim(),
       idNumber: idNumber.trim(),
       username: username.trim(),
-      password: password.trim(),
+      password: hashPassword(password.trim()),
       role: 'member',
       department: admin.department,
       course: new mongoose.Types.ObjectId(course),
@@ -147,7 +150,7 @@ export async function PATCH(request: Request) {
       yearLevel,
     };
 
-    if (password?.trim()) updateData.password = password.trim();
+    if (password?.trim()) updateData.password = hashPassword(password.trim());
 
     const conflict = await User.findOne({
       _id: { $ne: id },

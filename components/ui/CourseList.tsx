@@ -10,6 +10,7 @@ interface Course {
   code: string;
   name: string;
   department: string;
+  yearRange: number;
 }
 
 interface Department {
@@ -18,10 +19,18 @@ interface Department {
   name: string;
 }
 
+interface DepartmentResponse {
+  _id: string;
+  acronym: string;
+  name: string;
+}
+
 const CourseList: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDepartmentFilter, setSelectedDepartmentFilter] = useState("");
+  const [programSearch, setProgramSearch] = useState("");
 
   const [isAddPopupOpen, setIsAddPopupOpen] = useState(false);
   const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
@@ -47,7 +56,7 @@ const CourseList: React.FC = () => {
 
       setCourses(coursesData.courses || []);
       setDepartments(
-        deptData.departments?.map((d: any) => ({
+        deptData.departments?.map((d: DepartmentResponse) => ({
           id: d._id.toString(),
           acronym: d.acronym,
           name: d.name,
@@ -67,7 +76,7 @@ const CourseList: React.FC = () => {
       if (!res.ok) throw new Error('Failed to fetch departments');
       const data = await res.json();
       setDepartments(
-        data.departments?.map((d: any) => ({
+        data.departments?.map((d: DepartmentResponse) => ({
           id: d._id.toString(),
           acronym: d.acronym,
           name: d.name,
@@ -97,6 +106,7 @@ const CourseList: React.FC = () => {
     acronym: string,
     completeName: string,
     departmentName: string,
+    yearRange: number,
     id?: string
   ) => {
     const method = id ? 'PATCH' : 'POST';
@@ -104,7 +114,7 @@ const CourseList: React.FC = () => {
     const res = await fetch('/api/courses', {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, acronym, name: completeName, departmentName }),
+      body: JSON.stringify({ id, acronym, name: completeName, departmentName, yearRange }),
     });
 
     if (!res.ok) {
@@ -147,8 +157,8 @@ const CourseList: React.FC = () => {
       setIsDeletePopupOpen(false);
       setSelectedCourse(null);
       setShowDeleteSuccess(true);
-    } catch (error: any) {
-      alert(error.message || 'Failed to delete Program');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to delete Program');
     }
   };
 
@@ -156,6 +166,18 @@ const CourseList: React.FC = () => {
     setSelectedCourse(course);
     setIsDeletePopupOpen(true);
   };
+
+  const filteredCourses = courses.filter((course) => {
+    const matchesDepartment =
+      !selectedDepartmentFilter || course.department === selectedDepartmentFilter;
+    const normalizedSearch = programSearch.trim().toLowerCase();
+    const matchesProgram =
+      !normalizedSearch ||
+      course.code.toLowerCase().includes(normalizedSearch) ||
+      course.name.toLowerCase().includes(normalizedSearch);
+
+    return matchesDepartment && matchesProgram;
+  });
 
   return (
     <div className="">
@@ -165,12 +187,40 @@ const CourseList: React.FC = () => {
             Program List
           </h2>
           <p className="text-sm text-amber-600 mt-1">Manage programs</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-5">
+            <label className="space-y-2">
+              <span className="block text-sm font-medium text-gray-700">Filter by Organization</span>
+              <select
+                value={selectedDepartmentFilter}
+                onChange={(event) => setSelectedDepartmentFilter(event.target.value)}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-maroon-800"
+              >
+                <option value="">All organizations</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.name}>
+                    {department.acronym} - {department.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="space-y-2">
+              <span className="block text-sm font-medium text-gray-700">Search Program</span>
+              <input
+                value={programSearch}
+                onChange={(event) => setProgramSearch(event.target.value)}
+                placeholder="Search acronym or program name"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-maroon-800"
+              />
+            </label>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
           {loading ? (
             <div className="p-12 text-center text-gray-500">Loading programs...</div>
-          ) : courses.length === 0 ? (
+          ) : filteredCourses.length === 0 ? (
             <div className="p-12 text-center text-gray-500">No program found</div>
           ) : (
             <table className="w-full">
@@ -188,7 +238,7 @@ const CourseList: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {courses.map((course) => (
+                {filteredCourses.map((course) => (
                   <tr key={course.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-2 md:px-6 md:py-4">
                       <div className="flex flex-col">
@@ -197,6 +247,9 @@ const CourseList: React.FC = () => {
                         </span>
                         <span className="text-sm text-gray-500">
                           {course.name}
+                        </span>
+                        <span className="text-xs text-gray-500 mt-1">
+                          {course.yearRange} year{course.yearRange === 1 ? '' : 's'}
                         </span>
                         <span className="text-xs text-gray-400 lg:hidden mt-1">
                           Organization: {course.department}
@@ -273,6 +326,7 @@ const CourseList: React.FC = () => {
             acronym: selectedCourse.code,
             completeName: selectedCourse.name,
             department: selectedCourse.department,
+            yearRange: selectedCourse.yearRange,
           }}
           onSubmit={handleSubmitCourse}
         />

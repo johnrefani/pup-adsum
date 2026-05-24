@@ -5,6 +5,7 @@ import User from '@/models/User';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Models } from '@/lib/models';
 import crypto from 'crypto'; 
+import { hashPassword } from '@/lib/password';
 
 async function getCurrentUser() {
   const cookieStore = await cookies();
@@ -69,7 +70,7 @@ export async function PUT(request: NextRequest) {
   }
 
   if (password && password.trim()) {
-    updates.password = password.trim();
+    updates.password = hashPassword(password.trim());
     shouldRotateSession = true;       
   }
 
