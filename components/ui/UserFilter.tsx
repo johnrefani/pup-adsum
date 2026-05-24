@@ -12,7 +12,7 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"] as const;
+  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"] as const;
 
   useEffect(() => {
     fetch('/api/admin/courses')

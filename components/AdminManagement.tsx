@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AdminList,
-  CourseList,
-  DepartmentList,
   Button,
   SuccessPopup,
   UpdateMyAccount,
 } from "@/lib/imports";
 
+type AccountData = {
+  id: string;
+  fullname: string;
+  username: string;
+};
+
 const AdminManagement = () => {
   const [openUpdate, setOpenUpdate] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [initialData, setInitialData] = useState<any>(null);
+  const [initialData, setInitialData] = useState<AccountData | null>(null);
 
   const fetchMyAccount = async () => {
     const res = await fetch("/api/admins/main");
@@ -59,7 +63,7 @@ const AdminManagement = () => {
             Admin Management
           </h1>
           <p className="font-medium text-sm md:text-base lg:text-xl text-black/75">
-            Manage Admin Accounts, Organizations, and Programs.
+            Manage organization admin accounts.
           </p>
         </div>
 
@@ -77,16 +81,12 @@ const AdminManagement = () => {
 
       <div className="flex flex-col gap-6">
         <AdminList />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CourseList />
-          <DepartmentList />
-        </div>
       </div>
 
       <UpdateMyAccount
         isOpen={openUpdate}
         onClose={() => setOpenUpdate(false)}
-        initialData={initialData}
+        initialData={initialData || undefined}
         onSubmit={handleSubmit}
       />
 

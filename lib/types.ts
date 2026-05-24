@@ -70,8 +70,9 @@ export interface CoursePopupProps {
     acronym: string;
     completeName: string;
     department: string;
+    yearRange?: number;
   };
-  onSubmit: (acronym: string, completeName: string, department: string, id?: number) => Promise<void>;
+  onSubmit: (acronym: string, completeName: string, department: string, yearRange: number, id?: number) => Promise<void>;
 }
 
 export interface SearchableSelectFieldProps {

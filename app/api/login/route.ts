@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import crypto from 'crypto'; 
+import { hashPassword, isHashedPassword, verifyPassword } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const user = await collection.findOne({ username });
 
-    if (!user || user.password !== password) {
+    if (!user || !verifyPassword(password, user.password)) {
       return NextResponse.json(
         { success: false, message: 'Invalid username or password' },
         { status: 401 }
@@ -27,10 +28,12 @@ export async function POST(request: NextRequest) {
 
     const sessionToken = crypto.randomBytes(32).toString('hex');
 
-    await collection.updateOne(
-      { username },
-      { $set: { currentSessionToken: sessionToken } }
-    );
+    const updates: Record<string, string> = { currentSessionToken: sessionToken };
+    if (!isHashedPassword(user.password)) {
+      updates.password = hashPassword(password);
+    }
+
+    await collection.updateOne({ username }, { $set: updates });
 
     const response = NextResponse.json({ 
       success: true, 

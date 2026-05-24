@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 import crypto from 'crypto';
+import { hashPassword, verifyPassword } from '@/lib/password';
 
 type AdminLean = {
   _id: any;
@@ -72,8 +73,8 @@ export async function PATCH(request: Request) {
     }
 
     // Check if password changed
-    if (password && password.trim() && password.trim() !== admin.password) {
-      updates.password = password.trim();
+    if (password && password.trim() && !verifyPassword(password.trim(), admin.password)) {
+      updates.password = hashPassword(password.trim());
       shouldRotateSession = true;
     }
 
