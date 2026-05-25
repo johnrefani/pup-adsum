@@ -12,6 +12,10 @@ interface FormData {
   startTime: string;
   endTime: string;
   description?: string;
+  gracePeriodMinutes: number;
+  absentAfterMinutes: number;
+  startTimeOutBeforeEndMinutes: number;
+  timeOutLimitMinutes: number;
 }
 
 export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
@@ -29,6 +33,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: selectedSession.startTime,
         endTime: selectedSession.endTime,
         description: selectedSession.description,
+        gracePeriodMinutes: selectedSession.gracePeriodMinutes ?? 15,
+        absentAfterMinutes: selectedSession.absentAfterMinutes ?? 30,
+        startTimeOutBeforeEndMinutes: selectedSession.startTimeOutBeforeEndMinutes ?? 0,
+        timeOutLimitMinutes: selectedSession.timeOutLimitMinutes ?? 30,
       });
     } else {
       reset({
@@ -37,6 +45,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
       });
     }
   }, [selectedSession, reset]);
@@ -52,7 +64,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed");
 
-      reset({ title: '', date: '', startTime: '', endTime: '', description: ''});
+      reset({ title: '', date: '', startTime: '', endTime: '', description: '', gracePeriodMinutes: 15, absentAfterMinutes: 30, startTimeOutBeforeEndMinutes: 0, timeOutLimitMinutes: 30 });
 
       window.dispatchEvent(new CustomEvent('session-created', {
         detail: { qrImageUrl: result.qrImageUrl, session: result.session }
@@ -87,6 +99,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
       });
       window.dispatchEvent(new Event('session-updated'));
     } catch (err: any) {
@@ -103,6 +119,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       startTime: '',
       endTime: '',
       description: '',
+      gracePeriodMinutes: 15,
+      absentAfterMinutes: 30,
+      startTimeOutBeforeEndMinutes: 0,
+      timeOutLimitMinutes: 30,
     });
     setSelectedSession(null);
   };
@@ -367,17 +387,48 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       {/* Scrollable form content */}
       <div className="flex-1 px-8 py-6">
         <form onSubmit={handleSubmit(mode === 'edit' ? onUpdate : onCreate)} className="space-y-6">
-          <div className='overflow-y-auto max-h-[50vh] md:max-h-[45vh] lg:max-h-auto'>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className='overflow-y-auto space-y-4 md:space-y-5 lg:space-y-6 max-h-[50vh] md:max-h-[45vh] lg:max-h-auto'>
+          <div className="grid md:grid-cols-2 gap-4 md:gap-5 lg:gap-6">
             <InputField label="Session Title" placeholder="e.g. Web Programming"
               {...register('title', { required: 'Required' })} error={errors.title?.message} />
             <InputField label="Date" type="date"
               {...register('date', { required: 'Required' })} error={errors.date?.message} />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4 md:gap-5 lg:gap-6">
             <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
             <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
+          </div>
+
+          <div className="grid md:grid-cols-2 xl:grid-cols-4 items-end gap-4 md:gap-5 lg:gap-6">
+            <InputField
+              label="Late After (minutes)"
+              type="number"
+              min={0}
+              {...register('gracePeriodMinutes', { required: 'Required', min: 0 })}
+              error={errors.gracePeriodMinutes?.message}
+            />
+            <InputField
+              label="Absent After (minutes)"
+              type="number"
+              min={0}
+              {...register('absentAfterMinutes', { required: 'Required', min: 0 })}
+              error={errors.absentAfterMinutes?.message}
+            />
+            <InputField
+              label="Start Time-out Before End (minutes)"
+              type="number"
+              min={0}
+              {...register('startTimeOutBeforeEndMinutes', { required: 'Required', min: 0 })}
+              error={errors.startTimeOutBeforeEndMinutes?.message}
+            />
+            <InputField
+              label="Time-out Limit After End (minutes)"
+              type="number"
+              min={0}
+              {...register('timeOutLimitMinutes', { required: 'Required', min: 0 })}
+              error={errors.timeOutLimitMinutes?.message}
+            />
           </div>
 
           <div>

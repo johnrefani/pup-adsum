@@ -8,6 +8,15 @@ const sessionSchema = new mongoose.Schema({
   endTime: { type: String, required: true },
   description: String,
   department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', required: true },
+  semester: {
+    type: String,
+    enum: ['1st Semester', '2nd Semester'],
+    default: '1st Semester',
+  },
+  gracePeriodMinutes: { type: Number, min: 0, default: 15 },
+  absentAfterMinutes: { type: Number, min: 0, default: 30 },
+  startTimeOutBeforeEndMinutes: { type: Number, min: 0, default: 0 },
+  timeOutLimitMinutes: { type: Number, min: 0, default: 30 },
   qrToken: { type: String, required: true, unique: true },
   qrImageUrl: { type: String },
 }, { timestamps: true });

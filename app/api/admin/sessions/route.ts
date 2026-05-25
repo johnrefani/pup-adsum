@@ -8,6 +8,7 @@ import cloudinary from '@/lib/cloudinary';
 import { v4 as uuidv4 } from 'uuid';
 import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
+import SystemSettings from '@/models/SystemSettings';
 
 const BASE_URL = 'https://pup-adsum.vercel.app';
 
@@ -26,10 +27,25 @@ export async function POST(request: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const data = await request.json();
-    const { title, date, startTime, endTime, description } = data;
+    const {
+      title,
+      date,
+      startTime,
+      endTime,
+      description,
+      gracePeriodMinutes = 15,
+      absentAfterMinutes = 30,
+      startTimeOutBeforeEndMinutes = 0,
+      timeOutLimitMinutes = 30,
+    } = data;
 
     if (!title || !date || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const timingValues = [gracePeriodMinutes, absentAfterMinutes, startTimeOutBeforeEndMinutes, timeOutLimitMinutes].map(Number);
+    if (timingValues.some((value) => !Number.isFinite(value) || value < 0)) {
+      return NextResponse.json({ error: 'Timing limits must be zero or greater' }, { status: 400 });
     }
 
     // Use user's department
@@ -55,6 +71,8 @@ export async function POST(request: NextRequest) {
       format: 'png',
     });
 
+    const settings = await SystemSettings.findOne({ key: 'academic' }).select('semester');
+
     const session = await Session.create({
       title,
       date: new Date(date),
@@ -62,12 +80,17 @@ export async function POST(request: NextRequest) {
       endTime,
       description: description || '',
       department, // <-- store user's department automatically
+      semester: settings?.semester || '1st Semester',
+      gracePeriodMinutes: timingValues[0],
+      absentAfterMinutes: Math.max(timingValues[1], timingValues[0]),
+      startTimeOutBeforeEndMinutes: timingValues[2],
+      timeOutLimitMinutes: timingValues[3],
       qrToken,
       qrImageUrl: uploadResult.secure_url,
     });
 
     // Create attendance records for members in the same department
-    const members = await User.find({ role: 'member', department }).select('_id');
+    const members = await User.find({ role: 'member', department, yearLevel: { $ne: null } }).select('_id');
     const records = members.map((m: any) => ({
       session: session._id,
       member: m._id,
@@ -91,6 +114,11 @@ export async function POST(request: NextRequest) {
         startTime: string;
         endTime: string;
         description?: string;
+        semester?: string;
+        gracePeriodMinutes?: number;
+        absentAfterMinutes?: number;
+        startTimeOutBeforeEndMinutes?: number;
+        timeOutLimitMinutes?: number;
         department: { _id: string; acronym: string; name: string };
       }>()
       .exec();
@@ -108,6 +136,11 @@ export async function POST(request: NextRequest) {
         startTime: populatedSession.startTime,
         endTime: populatedSession.endTime,
         description: populatedSession.description || '',
+        semester: populatedSession.semester || '1st Semester',
+        gracePeriodMinutes: populatedSession.gracePeriodMinutes ?? 15,
+        absentAfterMinutes: populatedSession.absentAfterMinutes ?? 30,
+        startTimeOutBeforeEndMinutes: populatedSession.startTimeOutBeforeEndMinutes ?? 0,
+        timeOutLimitMinutes: populatedSession.timeOutLimitMinutes ?? 30,
         department: populatedSession.department._id.toString(),
         departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
       },
@@ -149,6 +182,11 @@ export async function GET(request: NextRequest) {
       startTime: s.startTime,
       endTime: s.endTime,
       description: s.description || '',
+      semester: s.semester || '1st Semester',
+      gracePeriodMinutes: s.gracePeriodMinutes ?? 15,
+      absentAfterMinutes: s.absentAfterMinutes ?? 30,
+      startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
+      timeOutLimitMinutes: s.timeOutLimitMinutes ?? 30,
       department: s.department._id.toString(),
       departmentLabel: `${s.department.acronym} - ${s.department.name}`,
       qrImageUrl: s.qrImageUrl,
@@ -185,6 +223,10 @@ export async function PATCH(request: NextRequest) {
         endTime: updates.endTime,
         description: updates.description || '',
         department: updates.department,
+        gracePeriodMinutes: Number(updates.gracePeriodMinutes ?? 15),
+        absentAfterMinutes: Number(updates.absentAfterMinutes ?? 30),
+        startTimeOutBeforeEndMinutes: Number(updates.startTimeOutBeforeEndMinutes ?? 0),
+        timeOutLimitMinutes: Number(updates.timeOutLimitMinutes ?? 30),
       },
       { new: true }
     ).populate('department', 'acronym name');

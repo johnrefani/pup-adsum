@@ -16,6 +16,11 @@ type SelectedSession = {
   startTime: string;
   endTime: string;
   description: string;
+  semester?: string;
+  gracePeriodMinutes?: number;
+  absentAfterMinutes?: number;
+  startTimeOutBeforeEndMinutes?: number;
+  timeOutLimitMinutes?: number;
   department: string;
   departmentLabel: string;
   qrImageUrl?: string;

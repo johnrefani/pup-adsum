@@ -153,7 +153,7 @@ export interface CountStatProps {
 }
 
 export interface StatusProps {
-    status: "present" | "absent" | null;
+    status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
 
