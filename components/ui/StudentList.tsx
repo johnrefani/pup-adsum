@@ -7,7 +7,8 @@ type Student = {
   name: string;
   idNumber: string;
   timeIn: string;
-  status: 'present' | 'absent' | null;
+  timeOut: string;
+  status: 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
 };
 
 type Props = {
@@ -47,12 +48,13 @@ export default function StudentList({
   const downloadCSV = () => {
     if (!sessionInfo || students.length === 0) return;
 
-    const headers = ['ID Number', 'Full Name', 'Time-In', 'Status'];
+    const headers = ['ID Number', 'Full Name', 'Time-In', 'Time-Out', 'Status'];
     const rows = students.map(s => [
       s.idNumber,
       s.name,
       s.timeIn,
-      s.status === null ? '--' : s.status === 'present' ? 'Present' : 'Absent',
+      s.timeOut,
+      s.status === null ? '--' : s.status,
     ]);
 
     let csv = headers.join(',') + '\r\n';
@@ -112,6 +114,7 @@ export default function StudentList({
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Full Name</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden md:table-cell">Time-In</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Time-Out</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-gray-700">Status</th>
               </tr>
             </thead>
@@ -122,20 +125,13 @@ export default function StudentList({
                     <div className="flex flex-col">
                       <span className="text-base font-medium text-gray-900">{s.name}</span>
                       <span className="text-sm text-gray-500 md:hidden">Time-In: {s.timeIn}</span>
+                      <span className="text-sm text-gray-500 lg:hidden">Time-Out: {s.timeOut}</span>
                     </div>
                   </td>
                   <td className="px-6 py-5 hidden md:table-cell">{s.timeIn}</td>
+                  <td className="px-6 py-5 hidden lg:table-cell">{s.timeOut}</td>
                   <td className="px-6 py-5">
-                    {s.status === null ? (
-                      <Status status={null} />
-                    ) :
-                    s.status === 'present' ? 
-                    (
-                      <Status status='present' />
-                    ):(
-                      <Status status='absent' />
-                    )
-                  }
+                    <Status status={s.status} />
                   </td>
                 </tr>
               ))}
