@@ -5,6 +5,7 @@ import User from '@/models/User';
 import Department from '@/models/Department';
 import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
+import { hashPassword } from '@/lib/password';
 
 export async function GET() {
   try {
@@ -15,7 +16,7 @@ export async function GET() {
     await connectToDatabase();
     const admins = await User.find({ role: 'admin' })
       .populate('department', 'name acronym')
-      .select('fullName username password department')
+      .select('fullName username department')
       .lean();
 
     const formatted = admins
@@ -23,7 +24,6 @@ export async function GET() {
         id: a._id.toString(),
         fullName: a.fullName,
         username: a.username,
-        password: a.password,
         department: a.department?.name || '—',
       }))
       .sort((a, b) => a.department.localeCompare(b.department));
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     const newAdmin = new User({
       fullName,
       username,
-      password,
+      password: hashPassword(password),
       idNumber: undefined,      
       role: 'admin',
       department: dept._id,
@@ -126,7 +126,7 @@ export async function PATCH(request: Request) {
     };
 
     if (password && password.trim() !== '') {
-      updateData.password = password.trim();
+      updateData.password = hashPassword(password.trim());
     }
 
     const updatedAdmin = await User.findByIdAndUpdate(

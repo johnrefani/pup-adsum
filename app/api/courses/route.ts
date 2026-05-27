@@ -23,7 +23,9 @@ export async function GET() {
       code: c.acronym,
       name: c.name,
       department: c.department?.name || 'Unknown',
+      departmentId: c.department?._id?.toString() || '',
       departmentAcronym: c.department?.acronym || '',
+      yearRange: c.yearRange || 4,
     }));
 
     return NextResponse.json({ courses: formatted });
@@ -40,10 +42,15 @@ export async function POST(request: Request) {
     const currentToken = cookieStore.get('sessionToken')?.value;
     if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { acronym, name, departmentName } = await request.json();
+    const { acronym, name, departmentName, yearRange } = await request.json();
 
-    if (!acronym || !name || !departmentName) {
+    if (!acronym || !name || !departmentName || !yearRange) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const parsedYearRange = Number(yearRange);
+    if (!Number.isInteger(parsedYearRange) || parsedYearRange < 1 || parsedYearRange > 5) {
+      return NextResponse.json({ error: 'Year range must be from 1 to 5' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -57,6 +64,7 @@ export async function POST(request: Request) {
       acronym: acronym.trim().toUpperCase(),
       name: name.trim(),
       department: department._id,
+      yearRange: parsedYearRange,
     });
 
     return NextResponse.json({ course: newCourse }, { status: 201 });
@@ -76,10 +84,15 @@ export async function PATCH(request: Request) {
     const currentToken = cookieStore.get('sessionToken')?.value;
     if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { id, acronym, name, departmentName } = await request.json();
+    const { id, acronym, name, departmentName, yearRange } = await request.json();
 
-    if (!id || !acronym || !name || !departmentName) {
+    if (!id || !acronym || !name || !departmentName || !yearRange) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const parsedYearRange = Number(yearRange);
+    if (!Number.isInteger(parsedYearRange) || parsedYearRange < 1 || parsedYearRange > 5) {
+      return NextResponse.json({ error: 'Year range must be from 1 to 5' }, { status: 400 });
     }
 
     await connectToDatabase();
@@ -95,6 +108,7 @@ export async function PATCH(request: Request) {
         acronym: acronym.trim().toUpperCase(),
         name: name.trim(),
         department: department._id,
+        yearRange: parsedYearRange,
       },
       { new: true }
     );

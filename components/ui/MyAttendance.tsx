@@ -10,7 +10,7 @@ interface AttendanceRecord {
   session: string;
   date: string;
   timeIn: string;
-  status: "present" | "absent" | null;
+  status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
 const MyAttendance = () => {
@@ -23,17 +23,9 @@ const MyAttendance = () => {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const Statuses = ({ status }: { status: "present" | "absent" | null }) => {
-  if (status === null) {
-    return <Status status={null} />;
-  }
-
-  return status === "present" ? (
-    <Status status="present" />
-  ) : (
-    <Status status="absent" />
-  );
-};
+  const Statuses = ({ status }: { status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null }) => {
+    return <Status status={status} />;
+  };
 
 
   useEffect(() => {

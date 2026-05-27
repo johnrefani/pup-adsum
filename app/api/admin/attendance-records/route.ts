@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     if (sessionId) attendanceFilter.session = sessionId;
 
     const attendances = await Attendance.find(attendanceFilter)
-      .select('member timeIn status')
+      .select('member timeIn timeOut status')
       .lean();
 
     let result = members.map((member: any) => {
@@ -50,12 +50,21 @@ export async function GET(request: Request) {
           timeZone: 'Asia/Manila',
           })
         : '---';
+      const timeOut = att?.timeOut
+        ? new Date(att.timeOut).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Manila',
+          })
+        : '---';
 
       return {
         _id: member._id.toString(),
         name: member.fullName,
         idNumber: member.idNumber || 'N/A',
         timeIn,
+        timeOut,
         status: att?.status || null,
       };
     });

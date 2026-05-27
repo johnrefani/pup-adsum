@@ -17,6 +17,11 @@ interface PopulatedSession {
   startTime: string;
   endTime: string;
   description?: string;
+  semester?: string;
+  gracePeriodMinutes?: number;
+  absentAfterMinutes?: number;
+  startTimeOutBeforeEndMinutes?: number;
+  timeOutLimitMinutes?: number;
   department: {
     _id: mongoose.Types.ObjectId;
     acronym: string;
@@ -70,6 +75,11 @@ export async function GET() {
       startTime: s.startTime,
       endTime: s.endTime,
       description: s.description ?? '',
+      semester: s.semester ?? '1st Semester',
+      gracePeriodMinutes: s.gracePeriodMinutes ?? 15,
+      absentAfterMinutes: s.absentAfterMinutes ?? 30,
+      startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
+      timeOutLimitMinutes: s.timeOutLimitMinutes ?? 30,
       department: s.department._id.toString(),
       departmentLabel: `${s.department.acronym} - ${s.department.name}`,
       qrImageUrl: s.qrImageUrl ?? '',

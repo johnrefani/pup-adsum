@@ -21,6 +21,7 @@ export async function GET() {
       courses: courses.map((c: any) => ({
         value: c._id.toString(),
         label: c.acronym || c.name,
+        yearRange: c.yearRange || 4,
       })),
     });
   } catch (error) {
