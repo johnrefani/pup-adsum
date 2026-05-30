@@ -13,6 +13,7 @@ const sessionSchema = new mongoose.Schema({
     enum: ['1st Semester', '2nd Semester'],
     default: '1st Semester',
   },
+  schoolYear: { type: String, default: '' },
   gracePeriodMinutes: { type: Number, min: 0, default: 15 },
   absentAfterMinutes: { type: Number, min: 0, default: 30 },
   startTimeOutBeforeEndMinutes: { type: Number, min: 0, default: 0 },

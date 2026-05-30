@@ -18,6 +18,7 @@ interface PopulatedSession {
   endTime: string;
   description?: string;
   semester?: string;
+  schoolYear?: string;
   gracePeriodMinutes?: number;
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;
@@ -76,6 +77,7 @@ export async function GET() {
       endTime: s.endTime,
       description: s.description ?? '',
       semester: s.semester ?? '1st Semester',
+      schoolYear: s.schoolYear ?? '',
       gracePeriodMinutes: s.gracePeriodMinutes ?? 15,
       absentAfterMinutes: s.absentAfterMinutes ?? 30,
       startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,

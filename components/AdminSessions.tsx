@@ -17,6 +17,7 @@ type SelectedSession = {
   endTime: string;
   description: string;
   semester?: string;
+  schoolYear?: string;
   gracePeriodMinutes?: number;
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;

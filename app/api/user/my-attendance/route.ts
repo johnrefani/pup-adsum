@@ -7,16 +7,29 @@ import User from '@/models/User';
 import { cookies } from 'next/headers';
 import { Models } from '@/lib/models';
 
+type AttendanceStatus = 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
+
+function schoolYearRange(schoolYear: string) {
+  const match = schoolYear.match(/^(\d{4})-(\d{4})$/);
+  if (!match) return null;
+
+  return {
+    start: new Date(Number(match[1]), 0, 1),
+    end: new Date(Number(match[2]), 11, 31, 23, 59, 59),
+  };
+}
+
 export async function GET(request: Request) {
   try {
     await connectToDatabase();
 
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); 
-    const year = searchParams.get('year'); 
+    const schoolYear = searchParams.get('schoolYear') || searchParams.get('year');
+    const semester = searchParams.get('semester');
 
-    if (!month || !year) {
-      return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    if (!month || !schoolYear || !semester) {
+      return NextResponse.json({ error: 'Month, school year, and semester are required' }, { status: 400 });
     }
 
     const cookieStore = await cookies();
@@ -31,13 +44,69 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'User not found or not a member' }, { status: 404 });
     }
 
-    const monthIndex = new Date(`${month} 1, ${year}`).getMonth();
-    const startOfMonth = new Date(Number(year), monthIndex, 1);
-    const endOfMonth = new Date(Number(year), monthIndex + 1, 0, 23, 59, 59);
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 1);
+
+    const oldSessions = await Session.find({ date: { $lt: cutoff } }).select('_id');
+    const oldSessionIds = oldSessions.map((session) => session._id);
+    if (oldSessionIds.length > 0) {
+      await Attendance.deleteMany({
+        member: user._id,
+        session: { $in: oldSessionIds },
+      });
+    }
+
+    const yearRange = schoolYearRange(schoolYear);
+    if (!yearRange) {
+      return NextResponse.json({ error: 'Invalid school year' }, { status: 400 });
+    }
+
+    const monthIndex = new Date(`${month} 1, ${yearRange.start.getFullYear()}`).getMonth();
+    const possibleYears = [yearRange.start.getFullYear(), yearRange.end.getFullYear()];
+    const monthWindows = possibleYears
+      .map((possibleYear) => {
+        const start = new Date(possibleYear, monthIndex, 1);
+        const end = new Date(possibleYear, monthIndex + 1, 0, 23, 59, 59);
+        return {
+          start: start < cutoff ? cutoff : start,
+          end,
+        };
+      })
+      .filter((window) =>
+        window.end >= cutoff &&
+        window.start >= yearRange.start &&
+        window.start <= yearRange.end
+      );
+
+    if (monthWindows.length === 0) {
+      return NextResponse.json({
+        records: [],
+        stats: { present: 0, absent: 0, late: 0, unfinished: 0 },
+      });
+    }
 
     const sessions = await Session.find({
-      date: { $gte: startOfMonth, $lte: endOfMonth },
       department: user.department,
+      $and: [
+        {
+          $or: monthWindows.map((window) => ({
+            date: { $gte: window.start, $lte: window.end },
+          })),
+        },
+        {
+          $or: [
+            { schoolYear },
+            { schoolYear: { $exists: false } },
+            { schoolYear: '' },
+          ],
+        },
+        {
+          $or: [
+            { semester },
+            { semester: { $exists: false } },
+          ],
+        },
+      ],
     }).sort({ date: 1, startTime: 1 });
 
     const sessionIds = sessions.map(s => s._id);
@@ -58,7 +127,16 @@ export async function GET(request: Request) {
         ? new Date(att.timeIn).toLocaleTimeString('en-US', {
             hour: 'numeric',
             minute: '2-digit',
-            hour12: true
+            hour12: true,
+            timeZone: 'Asia/Manila',
+          })
+        : null;
+      const timeOut = att?.timeOut
+        ? new Date(att.timeOut).toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: 'Asia/Manila',
           })
         : null;
 
@@ -74,11 +152,23 @@ export async function GET(request: Request) {
         session: sessionName,
         date: dateStr,
         timeIn: timeIn || "Not Attended",
-        status: att?.status ?? null
+        timeOut: timeOut || "Not Timed Out",
+        status: (att?.status ?? null) as AttendanceStatus,
       };
     });
 
-    return NextResponse.json({ records });
+    const stats = records.reduce(
+      (acc, record) => {
+        if (record.status === 'present') acc.present += 1;
+        if (record.status === 'absent') acc.absent += 1;
+        if (record.status === 'late' || record.status === 'timed-in-late' || record.status === 'late-unfinished') acc.late += 1;
+        if (record.status === 'unfinished' || record.status === 'late-unfinished') acc.unfinished += 1;
+        return acc;
+      },
+      { present: 0, absent: 0, late: 0, unfinished: 0 }
+    );
+
+    return NextResponse.json({ records, stats });
   } catch (error: any) {
     console.error('My attendance fetch error:', error);
     return NextResponse.json({ error: 'Failed to fetch attendance' }, { status: 500 });
