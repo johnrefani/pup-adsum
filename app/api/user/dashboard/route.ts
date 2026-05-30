@@ -21,7 +21,7 @@ interface TodaySession {
   title: string;
   startTime: string;
   endTime: string;
-  status: 'present' | 'absent' | null;
+  status: 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
 }
 
 interface DashboardResponse {

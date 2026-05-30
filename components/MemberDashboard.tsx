@@ -18,7 +18,7 @@ interface TodaySession {
   title: string;
   startTime: string;
   endTime: string;
-  status: "present" | "absent" | null;
+  status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
 const formatDate = (dateStr: string) => {
@@ -86,13 +86,28 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
       subtitle = "Be sure to be present during the event!";
     } else if (todaySession.status === null) {
       title = `There is an event today! ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Scan the QR Code now to be marked as Present!";
+      subtitle = "Scan the QR code now to record your time-in.";
+    } else if (todaySession.status === 'timed-in') {
+      title = `You have timed in for ${sessionName}.`;
+      subtitle = "Do not forget to scan again during the allowed time-out window.";
+    } else if (todaySession.status === 'timed-in-late') {
+      title = `You have timed in late for ${sessionName}.`;
+      subtitle = "Scan again during the allowed time-out window so your attendance can be finalized as late.";
     } else if (todaySession.status === 'present') {
-      title = `You were marked as Present on the current event called ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Have a great day!";
+      title = `You completed your attendance for ${sessionName}.`;
+      subtitle = "You were marked as present.";
+    } else if (todaySession.status === 'late') {
+      title = `You completed your attendance for ${sessionName}, but you were late.`;
+      subtitle = "Your time-in was beyond the grace period.";
     } else if (todaySession.status === 'absent') {
-      title = `You were marked as Absent on the recent event called ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Be on time next time!";
+      title = `You were marked as absent for ${sessionName}.`;
+      subtitle = "You missed the allowed time-in window.";
+    } else if (todaySession.status === 'unfinished') {
+      title = `Your attendance for ${sessionName} is unfinished.`;
+      subtitle = "You timed in but did not complete a valid time-out.";
+    } else if (todaySession.status === 'late-unfinished') {
+      title = `Your attendance for ${sessionName} is late and unfinished.`;
+      subtitle = "You timed in late and did not complete a valid time-out.";
     }
   } else {
     title = "There is no event for today!";

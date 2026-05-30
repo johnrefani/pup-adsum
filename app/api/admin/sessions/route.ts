@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       format: 'png',
     });
 
-    const settings = await SystemSettings.findOne({ key: 'academic' }).select('semester');
+    const settings = await SystemSettings.findOne({ key: 'academic' }).select('schoolYear semester');
 
     const session = await Session.create({
       title,
@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       description: description || '',
       department, // <-- store user's department automatically
       semester: settings?.semester || '1st Semester',
+      schoolYear: settings?.schoolYear || '',
       gracePeriodMinutes: timingValues[0],
       absentAfterMinutes: Math.max(timingValues[1], timingValues[0]),
       startTimeOutBeforeEndMinutes: timingValues[2],
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
         endTime: string;
         description?: string;
         semester?: string;
+        schoolYear?: string;
         gracePeriodMinutes?: number;
         absentAfterMinutes?: number;
         startTimeOutBeforeEndMinutes?: number;
@@ -137,6 +139,7 @@ export async function POST(request: NextRequest) {
         endTime: populatedSession.endTime,
         description: populatedSession.description || '',
         semester: populatedSession.semester || '1st Semester',
+        schoolYear: populatedSession.schoolYear || '',
         gracePeriodMinutes: populatedSession.gracePeriodMinutes ?? 15,
         absentAfterMinutes: populatedSession.absentAfterMinutes ?? 30,
         startTimeOutBeforeEndMinutes: populatedSession.startTimeOutBeforeEndMinutes ?? 0,
@@ -183,6 +186,7 @@ export async function GET(request: NextRequest) {
       endTime: s.endTime,
       description: s.description || '',
       semester: s.semester || '1st Semester',
+      schoolYear: s.schoolYear || '',
       gracePeriodMinutes: s.gracePeriodMinutes ?? 15,
       absentAfterMinutes: s.absentAfterMinutes ?? 30,
       startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
