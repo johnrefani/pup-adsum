@@ -61,18 +61,86 @@ export default function StudentList({
   const downloadCSV = () => {
     if (!sessionInfo || students.length === 0) return;
 
-    const headers = ["ID Number", "Full Name", "Time-In", "Time-Out", "Status"];
-    const rows = students.map((s) => [
-      s.idNumber,
-      s.name,
-      s.timeIn,
-      s.timeOut,
-      s.status === null ? "--" : s.status,
-    ]);
+    // Calculate status counts
+    const statusCounts: Record<string, number> = {
+      present: 0,
+      absent: 0,
+      late: 0,
+      unfinished: 0,
+      "timed-in": 0,
+      "timed-in-late": 0,
+      "late-unfinished": 0,
+      "no-status": 0,
+    };
 
-    let csv = headers.join(",") + "\r\n";
-    rows.forEach((row) => {
-      csv += row.map((cell) => `"${cell}"`).join(",") + "\r\n";
+    students.forEach((s) => {
+      if (s.status === null) {
+        statusCounts["no-status"]++;
+      } else {
+        statusCounts[s.status]++;
+      }
+    });
+
+    // Group students by status
+    const studentsByStatus: Record<string, Student[]> = {
+      present: [],
+      absent: [],
+      late: [],
+      unfinished: [],
+      "timed-in": [],
+      "timed-in-late": [],
+      "late-unfinished": [],
+      "no-status": [],
+    };
+
+    students.forEach((s) => {
+      const key = s.status === null ? "no-status" : s.status;
+      studentsByStatus[key].push(s);
+    });
+
+    let csv = "";
+
+    // Add header section
+    csv += `"ATTENDANCE SUMMARY REPORT"\r\n`;
+    csv += `"Session Title","${sessionInfo.title}"\r\n`;
+    csv += `"Date","${sessionInfo.date}"\r\n`;
+    csv += `"Time","${sessionInfo.startTime} - ${sessionInfo.endTime}"\r\n`;
+    csv += `"Program","${courseName}"\r\n`;
+    csv += `"Year Level","${yearLevel}th Year"\r\n`;
+    csv += `"Department","${sessionInfo.departmentAcronym}"\r\n`;
+    csv += `\r\n`;
+
+    // Add status summary
+    csv += `"MEMBER COUNT BY STATUS"\r\n`;
+    csv += `"Status","Count"\r\n`;
+    csv += `"Total Members","${students.length}"\r\n`;
+    Object.entries(statusCounts).forEach(([status, count]) => {
+      const displayStatus = status === "no-status" ? "No Status" : status.charAt(0).toUpperCase() + status.slice(1);
+      csv += `"${displayStatus}","${count}"\r\n`;
+    });
+    csv += `\r\n\r\n`;
+
+    // Add members grouped by status
+    const headers = ["ID Number", "Full Name", "Time-In", "Time-Out", "Status"];
+    
+    Object.entries(studentsByStatus).forEach(([status, statusStudents]) => {
+      if (statusStudents.length === 0) return;
+
+      const displayStatus = status === "no-status" ? "No Status" : status.charAt(0).toUpperCase() + status.slice(1);
+      csv += `"--- ${displayStatus} (${statusStudents.length}) ---"\r\n`;
+      csv += headers.join(",") + "\r\n";
+
+      statusStudents.forEach((s) => {
+        const row = [
+          s.idNumber,
+          s.name,
+          s.timeIn,
+          s.timeOut,
+          s.status === null ? "--" : s.status,
+        ];
+        csv += row.map((cell) => `"${cell}"`).join(",") + "\r\n";
+      });
+      csv += `\r\n`;
     });
 
     const BOM = "\uFEFF";
