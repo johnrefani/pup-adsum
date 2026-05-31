@@ -27,6 +27,8 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
   const router = useRouter();
   const [todaySession, setTodaySession] = useState<TodaySession | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [totalMembers, setTotalMembers] = useState<number | null>(null);
+  const [statusTotals, setStatusTotals] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +67,26 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
           const presentCount = students.filter((s: any) => s.status === 'present').length;
           const absentCount = students.filter((s: any) => s.status === 'absent').length;
 
+          // compute additional status totals and total members
+          const lateCount = students.filter((s: any) => s.status === 'late').length;
+          const unfinishedCount = students.filter((s: any) => s.status === 'unfinished').length;
+          const timedInCount = students.filter((s: any) => s.status === 'timed-in').length;
+          const timedInLateCount = students.filter((s: any) => s.status === 'timed-in-late').length;
+          const lateUnfinishedCount = students.filter((s: any) => s.status === 'late-unfinished').length;
+          const noStatusCount = students.filter((s: any) => !s.status).length;
+
+          setTotalMembers(students.length);
+          setStatusTotals({
+            present: presentCount,
+            absent: absentCount,
+            late: lateCount,
+            unfinished: unfinishedCount,
+            'timed-in': timedInCount,
+            'timed-in-late': timedInLateCount,
+            'late-unfinished': lateUnfinishedCount,
+            none: noStatusCount,
+          });
+
           setTodaySession({
             _id: todayEventRaw._id,
             title: todayEventRaw.title,
@@ -76,6 +98,17 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
           });
         } else {
           setTodaySession(null);
+          // when no today's session, still fetch total members for this admin
+          try {
+            const membersRes = await fetch('/api/admin/attendance-records');
+            const membersData = await membersRes.json();
+            const members = membersData.students || [];
+            setTotalMembers(members.length);
+            setStatusTotals({});
+          } catch (e) {
+            setTotalMembers(null);
+            setStatusTotals({});
+          }
         }
 
         const upcoming = futureAndToday
@@ -155,6 +188,53 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
               </div>
             )}
           </div>
+
+            {/* Members + Status Totals */}
+            <div className="shadow-lg p-4 md:p-5 lg:p-6 bg-white rounded-lg space-y-4 md:space-y-6 lg:space-y-8">
+              <div>
+                <h2 className="font-semibold text-maroon-900 text-base md:text-lg lg:text-xl">Members & Session Status Totals</h2>
+                <p className="font-medium text-xs md:text-sm lg:text-base text-gold-600">Totals for your department / current session</p>
+              </div>
+
+              {loading ? (
+                <div className="text-center text-gray-500">Loading...</div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center">
+                    <CountStat count={(totalMembers ?? 0).toString()} ringColor="border-maroon-900" textColor="text-maroon-900" text="Total Members" />
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Present</p>
+                      <p className="text-gold-600 font-medium">{statusTotals.present ?? 0}</p>
+                    </div>
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Absent</p>
+                      <p className="text-gold-600 font-medium">{statusTotals.absent ?? 0}</p>
+                    </div>
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Late</p>
+                      <p className="text-gold-600 font-medium">{statusTotals.late ?? 0}</p>
+                    </div>
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Unfinished</p>
+                      <p className="text-gold-600 font-medium">{statusTotals.unfinished ?? 0}</p>
+                    </div>
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Timed-in</p>
+                      <p className="text-gold-600 font-medium">{statusTotals['timed-in'] ?? 0}</p>
+                    </div>
+                    <div className="p-2 bg-bg/50 rounded">
+                      <p className="font-semibold text-maroon-900">Timed-in Late</p>
+                      <p className="text-gold-600 font-medium">{statusTotals['timed-in-late'] ?? 0}</p>
+                    </div>
+                  </div>
+
+                  <div className="text-sm text-black/60">No status recorded: {statusTotals.none ?? 0}</div>
+                </div>
+              )}
+            </div>
 
           {/* Quick Shortcuts */}
           <div className="shadow-lg p-4 md:p-5 lg:p-6 bg-white rounded-lg space-y-4 md:space-y-6 lg:space-y-8">
