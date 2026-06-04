@@ -65,11 +65,24 @@ export async function POST(request: NextRequest) {
       color: { dark: '#8B0000', light: '#FFFFFF' },
     });
 
-    const uploadResult = await cloudinary.uploader.upload(qrDataUrl, {
-      folder: 'pup-adsum/attendance-qr',
-      public_id: qrToken,
-      format: 'png',
-    });
+    let qrImageUrl = qrDataUrl;
+    const hasCloudinaryConfig =
+      Boolean(process.env.CLOUDINARY_CLOUD_NAME) &&
+      Boolean(process.env.CLOUDINARY_API_KEY) &&
+      Boolean(process.env.CLOUDINARY_API_SECRET);
+
+    if (hasCloudinaryConfig) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(qrDataUrl, {
+          folder: 'pup-adsum/attendance-qr',
+          public_id: qrToken,
+          format: 'png',
+        });
+        qrImageUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        console.warn('Cloudinary QR upload failed. Using inline QR image instead.', uploadError);
+      }
+    }
 
     const settings = await SystemSettings.findOne({ key: 'academic' }).select('schoolYear semester');
 
@@ -87,7 +100,7 @@ export async function POST(request: NextRequest) {
       startTimeOutBeforeEndMinutes: timingValues[2],
       timeOutLimitMinutes: timingValues[3],
       qrToken,
-      qrImageUrl: uploadResult.secure_url,
+      qrImageUrl,
     });
 
     // Create attendance records for members in the same department
@@ -147,7 +160,7 @@ export async function POST(request: NextRequest) {
         department: populatedSession.department._id.toString(),
         departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
       },
-      qrImageUrl: uploadResult.secure_url,
+      qrImageUrl,
     });
   } catch (error: any) {
     console.error('Session creation error:', error);
