@@ -83,6 +83,8 @@ export async function GET() {
       startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
       timeOutLimitMinutes: s.timeOutLimitMinutes ?? 30,
       department: s.department._id.toString(),
+      departmentAcronym: s.department.acronym,
+      departmentName: s.department.name,
       departmentLabel: `${s.department.acronym} - ${s.department.name}`,
       qrImageUrl: s.qrImageUrl ?? '',
     }));

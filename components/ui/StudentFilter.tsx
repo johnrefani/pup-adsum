@@ -3,7 +3,16 @@ import React, { useState, useEffect } from 'react';
 import { InputField, SearchableSelectField } from '@/lib/imports';
 import { Filter } from '@/lib/icons';
 
-type Option = { value: string; label: string };
+type Option = {
+  value: string;
+  label: string;
+  title?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  departmentAcronym?: string;
+  departmentName?: string;
+};
 
 type SessionInfo = {
   title: string;
@@ -11,6 +20,7 @@ type SessionInfo = {
   startTime: string;
   endTime: string;
   departmentAcronym: string;
+  departmentName: string;
 };
 
 type StudentFilterProps = {
@@ -52,6 +62,12 @@ export default function StudentFilter({
         const opts: Option[] = (data.sessions || []).map((s: any) => ({
           value: s._id,
           label: `${s.title} - ${s.date} (${s.startTime}-${s.endTime})`,
+          title: s.title,
+          date: s.date,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          departmentAcronym: s.departmentAcronym,
+          departmentName: s.departmentName,
         }));
         setSessions(opts);
       });
@@ -74,20 +90,14 @@ export default function StudentFilter({
     setSessionId(value);
     const selected = sessions.find(s => s.value === value);
     if (selected && onSessionChange) {
-      const match = selected.label.match(/^(.*?) - (\d{4}-\d{2}-\d{2}) \(([^)-]+)-([^\)]+)\)/);
-      if (match) {
-        const [, title, date, start, end] = match;
-        const dept = selected.label.match(/\(([^()]+)\)$/)?.[1] || 'DEPT';
-        onSessionChange({
-          title: title.trim(),
-          date,
-          startTime: start.trim(),
-          endTime: end.trim(),
-          departmentAcronym: dept,
-        });
-      } else {
-        onSessionChange(null);
-      }
+      onSessionChange({
+        title: selected.title || '',
+        date: selected.date || '',
+        startTime: selected.startTime || '',
+        endTime: selected.endTime || '',
+        departmentAcronym: selected.departmentAcronym || '',
+        departmentName: selected.departmentName || selected.departmentAcronym || '',
+      });
     } else {
       onSessionChange?.(null);
     }

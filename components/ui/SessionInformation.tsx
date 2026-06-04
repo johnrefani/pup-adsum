@@ -127,6 +127,34 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     setSelectedSession(null);
   };
 
+  const handleDelete = async () => {
+    if (!selectedSession) return;
+    const confirmed = window.confirm(
+      `Delete session "${selectedSession.title}" and all related attendance records? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: selectedSession._id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Delete failed');
+
+      alert('Session deleted successfully.');
+      setSelectedSession(null);
+      handleClear();
+      window.dispatchEvent(new Event('session-updated'));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete session.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handlePrint = () => {
     if (!selectedSession) return;
 
@@ -439,7 +467,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
           </div>
 
           {/* Footer buttons - always visible */}
-      <div className="py-6 border-t border-gray-200 flex justify-end gap-4">
+      <div className="py-6 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-4">
         <Button
           type="button"
           text="Clear"
@@ -448,6 +476,16 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
           onClick={handleClear}
           isDisabled={isSubmitting}
         />
+        {mode === 'edit' && selectedSession && (
+          <Button
+            type="button"
+            text="Delete Session"
+            backgroundColor="bg-red-600"
+            textColor="text-white"
+            onClick={handleDelete}
+            isDisabled={isSubmitting}
+          />
+        )}
         {mode === 'edit' && selectedSession && (
           <Button
             type="button"

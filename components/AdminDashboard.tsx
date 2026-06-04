@@ -5,14 +5,16 @@ import { Button, CountStat } from "@/lib/imports";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface TodaySession {
-  _id: string;
-  title: string;
-  date: string;
-  startTime: string;
-  endTime: string;
+interface TodaySession extends UpcomingEvent {
   presentCount: number;
   absentCount: number;
+  lateCount: number;
+  unfinishedCount: number;
+  timedInCount: number;
+  timedInLateCount: number;
+  lateUnfinishedCount: number;
+  noneCount: number;
+  sessionTotalCount: number;
 }
 
 interface UpcomingEvent {
@@ -26,56 +28,95 @@ interface UpcomingEvent {
 const AdminDashboard = ({ username }: AdminDashboardProps) => {
   const router = useRouter();
   const [todaySession, setTodaySession] = useState<TodaySession | null>(null);
+  const [todaySessions, setTodaySessions] = useState<UpcomingEvent[]>([]);
+  const [previousSession, setPreviousSession] = useState<UpcomingEvent | null>(null);
+  const [nextSession, setNextSession] = useState<UpcomingEvent | null>(null);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
-  const [totalMembers, setTotalMembers] = useState<number | null>(null);
+  const [totalMembers, setTotalMembers] = useState<number>(0);
   const [statusTotals, setStatusTotals] = useState<Record<string, number>>({});
+  const [todaySessionEnded, setTodaySessionEnded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const parseSessionDateTime = (session: UpcomingEvent, timeKey: 'startTime' | 'endTime') => {
+      const [hour, minute] = session[timeKey].split(':');
+      return new Date(`${session.date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`);
+    };
+
     const fetchDashboardData = async () => {
       try {
-        const res = await fetch('/api/admin/my-sessions');
-        const data = await res.json();
+        await fetch('/api/close-expired-sessions');
 
-        if (!res.ok || !data.sessions) {
+        const [sessionsRes, membersRes] = await Promise.all([
+          fetch('/api/admin/my-sessions'),
+          fetch('/api/members'),
+        ]);
+
+        const sessionsData = await sessionsRes.json();
+        const membersData = await membersRes.json();
+
+        if (membersRes.ok && membersData.students) {
+          setTotalMembers(membersData.students.length);
+        }
+
+        if (!sessionsRes.ok || !sessionsData.sessions) {
           setTodaySession(null);
+          setTodaySessions([]);
+          setPreviousSession(null);
+          setNextSession(null);
           setUpcomingEvents([]);
+          setStatusTotals({});
           setLoading(false);
           return;
         }
 
-        const sessions = data.sessions as any[];
+        const sessions = sessionsData.sessions as UpcomingEvent[];
         const today = new Date().toISOString().split('T')[0];
-
         const now = new Date();
-        now.setHours(0, 0, 0, 0);
 
-        const futureAndToday = sessions.filter((s: any) => {
-          const eventDate = new Date(s.date);
-          return eventDate >= now;
+        const todaySessions = sessions
+          .filter((s) => s.date === today)
+          .sort((a, b) => parseSessionDateTime(a, 'startTime').getTime() - parseSessionDateTime(b, 'startTime').getTime());
+
+        setTodaySessions(todaySessions);
+
+        const activeSessionIndex = todaySessions.findIndex((session) => {
+          const start = parseSessionDateTime(session, 'startTime');
+          const end = parseSessionDateTime(session, 'endTime');
+          return now >= start && now <= end;
         });
 
-        futureAndToday.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        if (activeSessionIndex !== -1) {
+          setTodaySessionEnded(false);
 
-        const todayEventRaw = futureAndToday.find((s: any) => s.date === today);
-
-        if (todayEventRaw) {
-          const attRes = await fetch(`/api/admin/attendance-records?sessionId=${todayEventRaw._id}`);
+          const activeSession = todaySessions[activeSessionIndex];
+          const attRes = await fetch(`/api/admin/attendance-records?sessionId=${activeSession._id}`);
           const attData = await attRes.json();
-
           const students = attData.students || [];
+
           const presentCount = students.filter((s: any) => s.status === 'present').length;
           const absentCount = students.filter((s: any) => s.status === 'absent').length;
-
-          // compute additional status totals and total members
           const lateCount = students.filter((s: any) => s.status === 'late').length;
           const unfinishedCount = students.filter((s: any) => s.status === 'unfinished').length;
           const timedInCount = students.filter((s: any) => s.status === 'timed-in').length;
           const timedInLateCount = students.filter((s: any) => s.status === 'timed-in-late').length;
           const lateUnfinishedCount = students.filter((s: any) => s.status === 'late-unfinished').length;
           const noStatusCount = students.filter((s: any) => !s.status).length;
+          const sessionTotalCount = students.filter((s: any) => s.status !== null || s.timeIn !== '---' || s.timeOut !== '---').length;
 
-          setTotalMembers(students.length);
+          setTodaySession({
+            ...activeSession,
+            presentCount,
+            absentCount,
+            lateCount,
+            unfinishedCount,
+            timedInCount,
+            timedInLateCount,
+            lateUnfinishedCount,
+            noneCount: noStatusCount,
+            sessionTotalCount,
+          });
+
           setStatusTotals({
             present: presentCount,
             absent: absentCount,
@@ -87,34 +128,34 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
             none: noStatusCount,
           });
 
-          setTodaySession({
-            _id: todayEventRaw._id,
-            title: todayEventRaw.title,
-            date: todayEventRaw.date,
-            startTime: todayEventRaw.startTime,
-            endTime: todayEventRaw.endTime,
-            presentCount,
-            absentCount,
-          });
+          setPreviousSession(activeSessionIndex > 0 ? todaySessions[activeSessionIndex - 1] : null);
+          setNextSession(activeSessionIndex < todaySessions.length - 1 ? todaySessions[activeSessionIndex + 1] : null);
         } else {
           setTodaySession(null);
-          // when no today's session, still fetch total members for this admin
-          try {
-            const membersRes = await fetch('/api/admin/attendance-records');
-            const membersData = await membersRes.json();
-            const members = membersData.students || [];
-            setTotalMembers(members.length);
-            setStatusTotals({});
-          } catch (e) {
-            setTotalMembers(null);
-            setStatusTotals({});
+          setStatusTotals({});
+
+          const upcomingIndex = todaySessions.findIndex((session) => parseSessionDateTime(session, 'startTime') > now);
+          if (upcomingIndex !== -1) {
+            setPreviousSession(upcomingIndex > 0 ? todaySessions[upcomingIndex - 1] : null);
+            setNextSession(todaySessions[upcomingIndex]);
+            setTodaySessionEnded(false);
+          } else if (todaySessions.length > 0) {
+            setPreviousSession(todaySessions[todaySessions.length - 1]);
+            setNextSession(null);
+            const lastSessionEnd = parseSessionDateTime(todaySessions[todaySessions.length - 1], 'endTime');
+            setTodaySessionEnded(now > lastSessionEnd);
+          } else {
+            setPreviousSession(null);
+            setNextSession(null);
+            setTodaySessionEnded(false);
           }
         }
 
-        const upcoming = futureAndToday
-          .filter((s: any) => s.date > today) 
+        const upcoming = sessions
+          .filter((s) => s.date > today)
+          .sort((a, b) => parseSessionDateTime(a, 'startTime').getTime() - parseSessionDateTime(b, 'startTime').getTime())
           .slice(0, 3)
-          .map((s: any) => ({
+          .map((s) => ({
             _id: s._id,
             title: s.title,
             date: s.date,
@@ -123,11 +164,14 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
           }));
 
         setUpcomingEvents(upcoming);
-
       } catch (err) {
-        console.error("Failed to load dashboard data", err);
+        console.error('Failed to load dashboard data', err);
         setTodaySession(null);
+        setTodaySessions([]);
+        setPreviousSession(null);
+        setNextSession(null);
         setUpcomingEvents([]);
+        setStatusTotals({});
       } finally {
         setLoading(false);
       }
@@ -171,70 +215,100 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
               <div className="text-center text-gray-500">Loading...</div>
             ) : todaySession ? (
               <>
-                <div className="flex justify-center gap-4 md:gap-6 lg:gap-8">
-                  <CountStat count={todaySession.presentCount.toString()} ringColor="border-gold-600" textColor="text-maroon-900" text="Present"/>
-                  <CountStat count={todaySession.absentCount.toString()} ringColor="border-maroon-900" textColor="text-gold-600" text="Absent"/>
-                </div>
-                <div className="text-lg md:text-xl lg:text-2xl text-maroon-900 font-bold text-center">
-                  {todaySession.title}
+                <div className="text-center space-y-2">
+                  <p className="font-semibold text-maroon-900">Current Session</p>
+                  <p className="text-2xl md:text-3xl font-bold text-maroon-900">{todaySession.title}</p>
                   <p className="text-sm md:text-base lg:text-lg text-gold-600 font-medium">
                     {formatTime(todaySession.startTime)} - {formatTime(todaySession.endTime)}
                   </p>
                 </div>
+
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6 lg:gap-8">
+                  <CountStat count={todaySession.presentCount.toString()} ringColor="border-gold-600" textColor="text-maroon-900" text="Present" />
+                  <CountStat count={todaySession.absentCount.toString()} ringColor="border-maroon-900" textColor="text-gold-600" text="Absent" />
+                  <CountStat count={todaySession.sessionTotalCount.toString()} ringColor="border-maroon-900" textColor="text-black" text="Session Members" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-4 text-center">
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Late</p>
+                    <p className="text-xl font-semibold text-maroon-900">{statusTotals.late ?? 0}</p>
+                  </div>
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Unfinished Attendance</p>
+                    <p className="text-xl font-semibold text-maroon-900">{statusTotals.unfinished ?? 0}</p>
+                  </div>
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Timed-in</p>
+                    <p className="text-xl font-semibold text-maroon-900">{statusTotals['timed-in'] ?? 0}</p>
+                  </div>
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Timed-in Late</p>
+                    <p className="text-xl font-semibold text-maroon-900">{statusTotals['timed-in-late'] ?? 0}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Previous session</p>
+                    {previousSession ? (
+                      <>
+                        <p className="font-semibold text-maroon-900">{previousSession.title}</p>
+                        <p className="text-sm text-gold-600">{formatTime(previousSession.startTime)} - {formatTime(previousSession.endTime)}</p>
+                      </>
+                    ) : (
+                      <p className="font-medium text-black/70">None</p>
+                    )}
+                  </div>
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Next session</p>
+                    {nextSession ? (
+                      <>
+                        <p className="font-semibold text-maroon-900">{nextSession.title}</p>
+                        <p className="text-sm text-gold-600">{formatTime(nextSession.startTime)} - {formatTime(nextSession.endTime)}</p>
+                      </>
+                    ) : (
+                      <p className="font-medium text-black/70">None</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : todaySessions.length > 0 ? (
+              <>
+                <div className="text-center text-maroon-900/90 font-semibold text-lg">
+                  {todaySessionEnded ? 'Today’s sessions have ended' : 'No session at this moment'}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Previous session</p>
+                    {previousSession ? (
+                      <>
+                        <p className="font-semibold text-maroon-900">{previousSession.title}</p>
+                        <p className="text-sm text-gold-600">{formatTime(previousSession.startTime)} - {formatTime(previousSession.endTime)}</p>
+                      </>
+                    ) : (
+                      <p className="font-medium text-black/70">None</p>
+                    )}
+                  </div>
+                  <div className="p-3 border border-black/10 rounded-lg bg-bg/60">
+                    <p className="text-sm text-black/70">Next session</p>
+                    {nextSession ? (
+                      <>
+                        <p className="font-semibold text-maroon-900">{nextSession.title}</p>
+                        <p className="text-sm text-gold-600">{formatTime(nextSession.startTime)} - {formatTime(nextSession.endTime)}</p>
+                      </>
+                    ) : (
+                      <p className="font-medium text-black/70">None</p>
+                    )}
+                  </div>
+                </div>
               </>
             ) : (
               <div className="text-center text-maroon-900/80 font-medium text-lg">
-                There are no events for today
+                No session at this moment
               </div>
             )}
           </div>
-
-            {/* Members + Status Totals */}
-            <div className="shadow-lg p-4 md:p-5 lg:p-6 bg-white rounded-lg space-y-4 md:space-y-6 lg:space-y-8">
-              <div>
-                <h2 className="font-semibold text-maroon-900 text-base md:text-lg lg:text-xl">Members & Session Status Totals</h2>
-                <p className="font-medium text-xs md:text-sm lg:text-base text-gold-600">Totals for your department / current session</p>
-              </div>
-
-              {loading ? (
-                <div className="text-center text-gray-500">Loading...</div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center">
-                    <CountStat count={(totalMembers ?? 0).toString()} ringColor="border-maroon-900" textColor="text-maroon-900" text="Total Members" />
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Present</p>
-                      <p className="text-gold-600 font-medium">{statusTotals.present ?? 0}</p>
-                    </div>
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Absent</p>
-                      <p className="text-gold-600 font-medium">{statusTotals.absent ?? 0}</p>
-                    </div>
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Late</p>
-                      <p className="text-gold-600 font-medium">{statusTotals.late ?? 0}</p>
-                    </div>
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Unfinished</p>
-                      <p className="text-gold-600 font-medium">{statusTotals.unfinished ?? 0}</p>
-                    </div>
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Timed-in</p>
-                      <p className="text-gold-600 font-medium">{statusTotals['timed-in'] ?? 0}</p>
-                    </div>
-                    <div className="p-2 bg-bg/50 rounded">
-                      <p className="font-semibold text-maroon-900">Timed-in Late</p>
-                      <p className="text-gold-600 font-medium">{statusTotals['timed-in-late'] ?? 0}</p>
-                    </div>
-                  </div>
-
-                  <div className="text-sm text-black/60">No status recorded: {statusTotals.none ?? 0}</div>
-                </div>
-              )}
-            </div>
 
           {/* Quick Shortcuts */}
           <div className="shadow-lg p-4 md:p-5 lg:p-6 bg-white rounded-lg space-y-4 md:space-y-6 lg:space-y-8">

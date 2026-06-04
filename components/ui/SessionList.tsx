@@ -24,6 +24,7 @@ interface Session {
 const SessionList: React.FC = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { selectedSession, setSelectedSession } = useSelectedSession();
 
   const fetchSessions = async () => {
@@ -44,8 +45,50 @@ const SessionList: React.FC = () => {
     }
   };
 
+  const handleDelete = async (sessionId: string) => {
+    const sessionToDelete = sessions.find((session) => session._id === sessionId);
+    if (!sessionToDelete) return;
+
+    const confirmed = window.confirm(
+      `Delete session "${sessionToDelete.title}" and all related attendance records? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(sessionId);
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Delete failed');
+
+      if (selectedSession?._id === sessionId) {
+        setSelectedSession(null);
+      }
+      window.dispatchEvent(new Event('session-updated'));
+    } catch (err) {
+      console.error('Failed to delete session:', err);
+      alert((err as Error).message || 'Unable to delete session.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   useEffect(() => {
-    fetchSessions();
+    const initialize = async () => {
+      setLoading(true);
+      try {
+        await fetch('/api/admin/sessions/cleanup');
+      } catch (err) {
+        console.error('Old session cleanup failed:', err);
+      } finally {
+        await fetchSessions();
+      }
+    };
+
+    initialize();
   }, []);
 
   useEffect(() => {
@@ -78,12 +121,13 @@ const SessionList: React.FC = () => {
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Session Name</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Time</th>
+              <th className="text-center px-5 py-4 text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {sessions.length === 0 ? (
               <tr>
-                <td colSpan={3} className="text-center py-12 text-gray-500">
+                <td colSpan={4} className="text-center py-12 text-gray-500">
                   No sessions created yet.
                 </td>
               </tr>
@@ -112,6 +156,19 @@ const SessionList: React.FC = () => {
                   </td>
                   <td className="px-5 py-5 text-gray-700 font-medium">
                     {session.startTime} – {session.endTime}
+                  </td>
+                  <td className="px-5 py-5 text-center">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDelete(session._id);
+                      }}
+                      disabled={deletingId === session._id}
+                      className="inline-flex items-center justify-center rounded-lg border border-red-500 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingId === session._id ? 'Deleting...' : 'Delete'}
+                    </button>
                   </td>
                 </tr>
               ))
