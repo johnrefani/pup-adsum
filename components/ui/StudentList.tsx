@@ -58,77 +58,81 @@ export default function StudentList({
       .finally(() => setLoading(false));
   }, [sessionId, courseId, yearLevel, search, ready]);
 
+  const formatTimeToAmPm = (time: string) => {
+    const normalized = time.trim();
+    if (!normalized) return '';
+    if (/\b(am|pm)\b/i.test(normalized)) {
+      return normalized;
+    }
+
+    const [hourPart, minutePart = '00'] = normalized.split(':');
+    const hour = Number(hourPart);
+    const minute = Number((minutePart || '00').slice(0, 2));
+    if (Number.isNaN(hour) || Number.isNaN(minute)) return normalized;
+
+    const suffix = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = ((hour + 11) % 12) + 1;
+    return `${hour12}:${minute.toString().padStart(2, '0')} ${suffix}`;
+  };
+
   const downloadCSV = () => {
     if (!sessionInfo || students.length === 0) return;
 
-    // Calculate status counts
-    const statusCounts: Record<string, number> = {
+    const allowedStatuses = ['present', 'absent', 'late', 'unfinished'] as const;
+    const filteredStudents = students.filter(
+      (s): s is Student & { status: typeof allowedStatuses[number] } =>
+        s.status !== null && allowedStatuses.includes(s.status as any)
+    );
+
+    const statusCounts: Record<typeof allowedStatuses[number], number> = {
       present: 0,
       absent: 0,
       late: 0,
       unfinished: 0,
-      "timed-in": 0,
-      "timed-in-late": 0,
-      "late-unfinished": 0,
-      "no-status": 0,
     };
 
-    students.forEach((s) => {
-      if (s.status === null) {
-        statusCounts["no-status"]++;
-      } else {
-        statusCounts[s.status]++;
-      }
+    filteredStudents.forEach((s) => {
+      statusCounts[s.status]++;
     });
 
-    // Group students by status
-    const studentsByStatus: Record<string, Student[]> = {
+    const studentsByStatus: Record<typeof allowedStatuses[number], Student[]> = {
       present: [],
       absent: [],
       late: [],
       unfinished: [],
-      "timed-in": [],
-      "timed-in-late": [],
-      "late-unfinished": [],
-      "no-status": [],
     };
 
-    students.forEach((s) => {
-      const key = s.status === null ? "no-status" : s.status;
-      studentsByStatus[key].push(s);
+    filteredStudents.forEach((s) => {
+      studentsByStatus[s.status].push(s);
     });
 
-    let csv = "";
+    let csv = '';
 
-    // Add header section
     csv += `"ATTENDANCE SUMMARY REPORT"\r\n`;
     csv += `"Session Title","${sessionInfo.title}"\r\n`;
     csv += `"Date","${sessionInfo.date}"\r\n`;
-    csv += `"Time","${sessionInfo.startTime} - ${sessionInfo.endTime}"\r\n`;
+    csv += `"Time","${formatTimeToAmPm(sessionInfo.startTime)} - ${formatTimeToAmPm(sessionInfo.endTime)}"\r\n`;
     csv += `"Program","${courseName}"\r\n`;
     csv += `"Year Level","${yearLevel}th Year"\r\n`;
-    csv += `"Department","${sessionInfo.departmentAcronym}"\r\n`;
+    csv += `"Department","${sessionInfo.departmentName || sessionInfo.departmentAcronym}"\r\n`;
     csv += `\r\n`;
 
-    // Add status summary
     csv += `"MEMBER COUNT BY STATUS"\r\n`;
     csv += `"Status","Count"\r\n`;
-    csv += `"Total Members","${students.length}"\r\n`;
+    csv += `"Total Members","${filteredStudents.length}"\r\n`;
     Object.entries(statusCounts).forEach(([status, count]) => {
-      const displayStatus = status === "no-status" ? "No Status" : status.charAt(0).toUpperCase() + status.slice(1);
+      const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
       csv += `"${displayStatus}","${count}"\r\n`;
     });
     csv += `\r\n\r\n`;
 
-    // Add members grouped by status
-    const headers = ["ID Number", "Full Name", "Time-In", "Time-Out", "Status"];
-    
+    const headers = ['ID Number', 'Full Name', 'Time-In', 'Time-Out'];
     Object.entries(studentsByStatus).forEach(([status, statusStudents]) => {
       if (statusStudents.length === 0) return;
 
-      const displayStatus = status === "no-status" ? "No Status" : status.charAt(0).toUpperCase() + status.slice(1);
+      const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
       csv += `"--- ${displayStatus} (${statusStudents.length}) ---"\r\n`;
-      csv += headers.join(",") + "\r\n";
+      csv += headers.join(',') + '\r\n';
 
       statusStudents.forEach((s) => {
         const row = [
@@ -136,21 +140,20 @@ export default function StudentList({
           s.name,
           s.timeIn,
           s.timeOut,
-          s.status === null ? "--" : s.status,
         ];
-        csv += row.map((cell) => `"${cell}"`).join(",") + "\r\n";
+        csv += row.map((cell) => `"${cell}"`).join(',') + '\r\n';
       });
       csv += `\r\n`;
     });
 
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+    const BOM = '\uFEFF';
+    const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
-    const safe = (s: string) => s.replace(/[\/\\|*?"<>]/g, "_");
-    const filename = `${safe(sessionInfo.title)}_${sessionInfo.date}(${sessionInfo.startTime}-${sessionInfo.endTime})_${safe(courseName)}_${yearLevel}th_${sessionInfo.departmentAcronym}.csv`;
+    const safe = (s: string) => s.replace(/[\/\\|*?"<>]/g, '_');
+    const filename = `${safe(sessionInfo.title)}_${sessionInfo.date}(${formatTimeToAmPm(sessionInfo.startTime)}-${formatTimeToAmPm(sessionInfo.endTime)})_${safe(courseName)}_${yearLevel}th_${safe(sessionInfo.departmentName || sessionInfo.departmentAcronym)}.csv`;
 
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     a.click();
@@ -249,7 +252,7 @@ export default function StudentList({
 
       {/* Footer with Button */}
       {students.length > 0 && (
-        <div className="px-6 py-4 md:px-8 md:py-5 border-t border-gray-200 flex-shrink-0 flex justify-end bg-white">
+        <div className="px-6 py-4 md:px-8 md:py-5 border-t border-gray-200 shrink-0 flex justify-end bg-white">
           <Button
             type="button"
             text="Download CSV"

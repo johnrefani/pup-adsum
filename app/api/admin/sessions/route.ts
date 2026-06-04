@@ -258,3 +258,48 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: error.message || 'Failed to update' }, { status: 500 });
   }
 }
+
+// ==================== DELETE (Delete session and related attendance + Cloudinary QR) ====================
+export async function DELETE(request: Request) {
+  try {
+    const cookieStore = await cookies();
+    const currentToken = cookieStore.get('sessionToken')?.value;
+    if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    await connectToDatabase();
+
+    const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' })
+      .select('department')
+      .lean<{ department: unknown }>();
+    if (!admin?.department) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const data = await request.json();
+    const { sessionId } = data;
+    if (!sessionId) {
+      return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
+    }
+
+    const session = await Session.findOne({ _id: sessionId, department: admin.department });
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    }
+
+    if (session.qrToken) {
+      try {
+        await cloudinary.uploader.destroy(`pup-adsum/attendance-qr/${session.qrToken}`);
+      } catch (err) {
+        console.error('Failed to delete Cloudinary QR image:', err);
+      }
+    }
+
+    await Attendance.deleteMany({ session: session._id });
+    await Session.findByIdAndDelete(session._id);
+
+    return NextResponse.json({ success: true, deletedSessionId: sessionId });
+  } catch (error: any) {
+    console.error('Session delete error:', error);
+    return NextResponse.json({ error: error.message || 'Failed to delete session' }, { status: 500 });
+  }
+}
