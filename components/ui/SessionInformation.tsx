@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button, InputField, SearchableSelectField } from '@/lib/imports';
+import { Button, InputField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
 
 
@@ -21,12 +21,13 @@ interface FormData {
 export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
   const { selectedSession, setSelectedSession } = useSelectedSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEdit = mode === 'edit';
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors, isDirty }, reset } = useForm<FormData>();
 
 
   useEffect(() => {
-    if (selectedSession) {
+    if (isEdit && selectedSession) {
       reset({
         title: selectedSession.title,
         date: selectedSession.date,
@@ -51,7 +52,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         timeOutLimitMinutes: 30,
       });
     }
-  }, [selectedSession, reset]);
+  }, [isEdit, selectedSession, reset]);
 
   const onCreate = async (data: FormData) => {
     setIsSubmitting(true);
@@ -146,7 +147,17 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
       alert('Session deleted successfully.');
       setSelectedSession(null);
-      handleClear();
+      reset({
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
+      });
       window.dispatchEvent(new Event('session-updated'));
     } catch (err: any) {
       alert(err.message || 'Failed to delete session.');
@@ -401,8 +412,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     }
   };
 
-  const isEdit = mode === 'edit';
-
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col max-h-[90vh] lg:max-h-[75vh]">
       {/* Header - always visible */}
@@ -501,7 +510,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
           text={isSubmitting ? "Saving..." : (mode === 'edit' ? "Update Session" : "Generate QR Code")}
           backgroundColor="bg-maroon-800"
           textColor="text-white"
-          isDisabled={isSubmitting || (mode === 'edit' && !selectedSession)}
+          isDisabled={isSubmitting || (mode === 'edit' && (!selectedSession || !isDirty))}
         />
       </div>
         </form>
