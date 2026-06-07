@@ -9,19 +9,24 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const now = new Date();
-    const today = new Date(now.toISOString().split('T')[0]); // Normalize to midnight
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const todayKey = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const todayDate = new Date(`${todayKey}T00:00:00.000Z`);
 
-    // Find all sessions that have ended (date + endTime < now)
-    const endedSessions = await Session.find({
-      $or: [
-        { date: { $lt: today } }, // Past dates
-        {
-          date: today,
-          endTime: { $lt: now.toTimeString().slice(0, 5) }, // Today, but endTime passed
-        },
-      ],
+    const candidateSessions = await Session.find({
+      date: { $lte: todayDate },
     }).select('_id date endTime title timeOutLimitMinutes');
+
+    const endedSessions = candidateSessions.filter((session) => {
+      const sessionDateKey = session.date.toISOString().split('T')[0];
+      const sessionEnd = new Date(`${sessionDateKey}T${session.endTime}:00`);
+      return sessionEnd < now;
+    });
 
     if (endedSessions.length === 0) {
       return NextResponse.json({
