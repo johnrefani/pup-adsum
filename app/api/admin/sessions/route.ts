@@ -37,6 +37,9 @@ export async function POST(request: NextRequest) {
       absentAfterMinutes = 30,
       startTimeOutBeforeEndMinutes = 0,
       timeOutLimitMinutes = 30,
+      venueLat,
+      venueLng,
+      allowedRadiusMeters = 0,
     } = data;
 
     if (!title || !date || !startTime || !endTime) {
@@ -44,8 +47,25 @@ export async function POST(request: NextRequest) {
     }
 
     const timingValues = [gracePeriodMinutes, absentAfterMinutes, startTimeOutBeforeEndMinutes, timeOutLimitMinutes].map(Number);
+    const venueLatitude = venueLat !== undefined && venueLat !== '' ? Number(venueLat) : undefined;
+    const venueLongitude = venueLng !== undefined && venueLng !== '' ? Number(venueLng) : undefined;
+    const allowedRadius = Number(allowedRadiusMeters ?? 0);
+
     if (timingValues.some((value) => !Number.isFinite(value) || value < 0)) {
       return NextResponse.json({ error: 'Timing limits must be zero or greater' }, { status: 400 });
+    }
+
+    if ((venueLatitude !== undefined && venueLongitude === undefined) ||
+        (venueLatitude === undefined && venueLongitude !== undefined)) {
+      return NextResponse.json({ error: 'Both venue latitude and longitude are required when setting a location' }, { status: 400 });
+    }
+
+    if (venueLatitude !== undefined && venueLongitude !== undefined && (!Number.isFinite(venueLatitude) || !Number.isFinite(venueLongitude))) {
+      return NextResponse.json({ error: 'Venue coordinates must be valid numbers' }, { status: 400 });
+    }
+
+    if (!Number.isFinite(allowedRadius) || allowedRadius < 0) {
+      return NextResponse.json({ error: 'Allowed radius must be zero or greater' }, { status: 400 });
     }
 
     // Use user's department
@@ -86,6 +106,10 @@ export async function POST(request: NextRequest) {
 
     const settings = await SystemSettings.findOne({ key: 'academic' }).select('schoolYear semester');
 
+    const venueLocation = venueLatitude !== undefined && venueLongitude !== undefined
+      ? { lat: venueLatitude, lng: venueLongitude }
+      : undefined;
+
     const session = await Session.create({
       title,
       date: new Date(date),
@@ -99,6 +123,8 @@ export async function POST(request: NextRequest) {
       absentAfterMinutes: Math.max(timingValues[1], timingValues[0]),
       startTimeOutBeforeEndMinutes: timingValues[2],
       timeOutLimitMinutes: timingValues[3],
+      venueLocation,
+      allowedRadiusMeters: allowedRadius,
       qrToken,
       qrImageUrl,
     });
@@ -134,6 +160,8 @@ export async function POST(request: NextRequest) {
         absentAfterMinutes?: number;
         startTimeOutBeforeEndMinutes?: number;
         timeOutLimitMinutes?: number;
+        venueLocation?: { lat: number; lng: number };
+        allowedRadiusMeters?: number;
         department: { _id: string; acronym: string; name: string };
       }>()
       .exec();
@@ -157,6 +185,8 @@ export async function POST(request: NextRequest) {
         absentAfterMinutes: populatedSession.absentAfterMinutes ?? 30,
         startTimeOutBeforeEndMinutes: populatedSession.startTimeOutBeforeEndMinutes ?? 0,
         timeOutLimitMinutes: populatedSession.timeOutLimitMinutes ?? 30,
+        venueLocation: populatedSession.venueLocation || null,
+        allowedRadiusMeters: populatedSession.allowedRadiusMeters ?? 0,
         department: populatedSession.department._id.toString(),
         departmentLabel: `${populatedSession.department.acronym} - ${populatedSession.department.name}`,
       },
@@ -204,6 +234,8 @@ export async function GET(request: NextRequest) {
       absentAfterMinutes: s.absentAfterMinutes ?? 30,
       startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
       timeOutLimitMinutes: s.timeOutLimitMinutes ?? 30,
+      venueLocation: s.venueLocation ?? null,
+      allowedRadiusMeters: s.allowedRadiusMeters ?? 0,
       department: s.department._id.toString(),
       departmentLabel: `${s.department.acronym} - ${s.department.name}`,
       qrImageUrl: s.qrImageUrl,
@@ -231,6 +263,19 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 });
     }
 
+    const venueLatitude = updates.venueLat !== undefined && updates.venueLat !== '' ? Number(updates.venueLat) : undefined;
+    const venueLongitude = updates.venueLng !== undefined && updates.venueLng !== '' ? Number(updates.venueLng) : undefined;
+    const allowedRadius = Number(updates.allowedRadiusMeters ?? 0);
+
+    if ((venueLatitude !== undefined && venueLongitude === undefined) ||
+        (venueLatitude === undefined && venueLongitude !== undefined)) {
+      return NextResponse.json({ error: 'Both venue latitude and longitude are required when setting or clearing a location' }, { status: 400 });
+    }
+
+    const venueLocation = venueLatitude !== undefined && venueLongitude !== undefined
+      ? { lat: venueLatitude, lng: venueLongitude }
+      : (updates.venueLat === '' && updates.venueLng === '' ? null : undefined);
+
     const session = await Session.findByIdAndUpdate(
       sessionId,
       {
@@ -244,6 +289,8 @@ export async function PATCH(request: NextRequest) {
         absentAfterMinutes: Number(updates.absentAfterMinutes ?? 30),
         startTimeOutBeforeEndMinutes: Number(updates.startTimeOutBeforeEndMinutes ?? 0),
         timeOutLimitMinutes: Number(updates.timeOutLimitMinutes ?? 30),
+        venueLocation,
+        allowedRadiusMeters: allowedRadius,
       },
       { new: true }
     ).populate('department', 'acronym name');
