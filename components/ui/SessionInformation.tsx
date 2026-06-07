@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button, InputField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
+import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
 
 
 interface FormData {
@@ -373,7 +374,7 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
 
       <!-- Instructions – now on same page, wider layout -->
       <div class="instructions">
-        <h2>How to be marked as Present</h2>
+        <h2>Attendance Status Guide</h2>
         <ol>
           <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
           <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
@@ -395,6 +396,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     `);
 
     printWindow.document.close();
+    const instructions = printWindow.document.querySelector('.instructions');
+    if (instructions) {
+      instructions.innerHTML = buildAttendancePrintInstructions(selectedSession);
+    }
 
     const img = printWindow.document.querySelector('img');
     if (img) {

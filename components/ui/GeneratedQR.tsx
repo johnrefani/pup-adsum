@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/lib/imports';
 import Image from 'next/image';
+import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
 
 interface QRData {
   qrImageUrl: string;
@@ -13,6 +14,10 @@ interface QRData {
     endTime: string;
     description?: string;
     departmentLabel?: string;
+    gracePeriodMinutes?: number;
+    absentAfterMinutes?: number;
+    startTimeOutBeforeEndMinutes?: number;
+    timeOutLimitMinutes?: number;
   };
 }
 
@@ -235,7 +240,7 @@ export default function GeneratedQR() {
 
       <!-- Instructions – now on same page, wider layout -->
       <div class="instructions">
-        <h2>How to be marked as Present</h2>
+        ${buildAttendancePrintInstructions(qrData.session)}
         <ol>
           <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
           <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
@@ -257,6 +262,10 @@ export default function GeneratedQR() {
     `);
 
     printWindow.document.close();
+    const instructions = printWindow.document.querySelector('.instructions');
+    if (instructions) {
+      instructions.innerHTML = buildAttendancePrintInstructions(qrData.session);
+    }
 
     const img = printWindow.document.querySelector('img');
     if (img) {
