@@ -20,6 +20,8 @@ interface StudentDataProps {
   searchName: string;
 }
 
+const STUDENTS_PER_PAGE = 8;
+
 const StudentData: React.FC<StudentDataProps> = ({
   selectedCourse,
   selectedYear,
@@ -27,6 +29,7 @@ const StudentData: React.FC<StudentDataProps> = ({
 }) => {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -62,6 +65,10 @@ const StudentData: React.FC<StudentDataProps> = ({
 
     fetchStudents();
   }, [selectedCourse, selectedYear, searchName, refreshKey]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCourse, selectedYear, searchName, students.length]);
 
   const handleEdit = (student: Student) => {
     setEditingStudent(student);
@@ -103,6 +110,15 @@ const StudentData: React.FC<StudentDataProps> = ({
   };
 
   const hasFilters = selectedCourse && selectedYear;
+  const totalPages = Math.max(1, Math.ceil(students.length / STUDENTS_PER_PAGE));
+  const pageStartIndex = (currentPage - 1) * STUDENTS_PER_PAGE;
+  const paginatedStudents = students.slice(pageStartIndex, pageStartIndex + STUDENTS_PER_PAGE);
+  const visibleStart = students.length === 0 ? 0 : pageStartIndex + 1;
+  const visibleEnd = Math.min(pageStartIndex + STUDENTS_PER_PAGE, students.length);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.min(Math.max(page, 1), totalPages));
+  };
 
   return (
     <div>
@@ -145,7 +161,7 @@ const StudentData: React.FC<StudentDataProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {students.map((student) => (
+                {paginatedStudents.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-5">
                       <div className="flex flex-col">
@@ -187,6 +203,52 @@ const StudentData: React.FC<StudentDataProps> = ({
                 ))}
               </tbody>
             </table>
+
+            <div className="border-t border-gray-200 px-4 py-3 sm:px-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-gray-600">
+                  Showing {visibleStart}-{visibleEnd} of {students.length} members
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+
+                  <div className="flex flex-wrap items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <button
+                        type="button"
+                        key={page}
+                        onClick={() => goToPage(page)}
+                        className={`h-9 w-9 rounded-lg text-sm font-semibold transition ${
+                          currentPage === page
+                            ? 'bg-red-800 text-white'
+                            : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+                        }`}
+                        aria-current={currentPage === page ? 'page' : undefined}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
