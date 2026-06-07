@@ -82,6 +82,8 @@ export default async function ScanPage({
       absentAfterMinutes?: number;
       startTimeOutBeforeEndMinutes?: number;
       timeOutLimitMinutes?: number;
+      venueLocation?: { lat: number; lng: number } | null;
+      allowedRadiusMeters?: number;
       department: { _id: string; name: string; acronym: string };
     }>();
 

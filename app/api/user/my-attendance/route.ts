@@ -9,14 +9,9 @@ import { Models } from '@/lib/models';
 
 type AttendanceStatus = 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
 
-function schoolYearRange(schoolYear: string) {
+function isValidSchoolYear(schoolYear: string) {
   const match = schoolYear.match(/^(\d{4})-(\d{4})$/);
-  if (!match) return null;
-
-  return {
-    start: new Date(Number(match[1]), 0, 1),
-    end: new Date(Number(match[2]), 11, 31, 23, 59, 59),
-  };
+  return Boolean(match) && Number(match?.[2]) === Number(match?.[1]) + 1;
 }
 
 export async function GET(request: Request) {
@@ -56,73 +51,54 @@ export async function GET(request: Request) {
       });
     }
 
-    const yearRange = schoolYearRange(schoolYear);
-    if (!yearRange) {
+    if (!isValidSchoolYear(schoolYear)) {
       return NextResponse.json({ error: 'Invalid school year' }, { status: 400 });
     }
 
-    const monthIndex = new Date(`${month} 1, ${yearRange.start.getFullYear()}`).getMonth();
-    const possibleYears = [yearRange.start.getFullYear(), yearRange.end.getFullYear()];
-    const monthWindows = possibleYears
-      .map((possibleYear) => {
-        const start = new Date(possibleYear, monthIndex, 1);
-        const end = new Date(possibleYear, monthIndex + 1, 0, 23, 59, 59);
-        return {
-          start: start < cutoff ? cutoff : start,
-          end,
-        };
-      })
-      .filter((window) =>
-        window.end >= cutoff &&
-        window.start >= yearRange.start &&
-        window.start <= yearRange.end
-      );
-
-    if (monthWindows.length === 0) {
-      return NextResponse.json({
-        records: [],
-        stats: { present: 0, absent: 0, late: 0, unfinished: 0 },
-      });
+    const validMonth = new Date(`${month} 1, 2000`).toLocaleString('en-US', { month: 'long' });
+    if (validMonth !== month) {
+      return NextResponse.json({ error: 'Invalid month' }, { status: 400 });
     }
 
-    const sessions = await Session.find({
-      department: user.department,
-      $and: [
-        {
-          $or: monthWindows.map((window) => ({
-            date: { $gte: window.start, $lte: window.end },
-          })),
-        },
-        {
-          $or: [
-            { schoolYear },
-            { schoolYear: { $exists: false } },
-            { schoolYear: '' },
-          ],
-        },
-        {
-          $or: [
-            { semester },
-            { semester: { $exists: false } },
-          ],
-        },
-      ],
-    }).sort({ date: 1, startTime: 1 });
+    const attendances = await Attendance.find({ member: user._id })
+      .populate({
+        path: 'session',
+        model: Session,
+        select: 'title date startTime endTime department schoolYear semester',
+      })
+      .lean();
 
-    const sessionIds = sessions.map(s => s._id);
+    const records = attendances
+      .filter((att: any) => {
+        const session = att.session;
+        if (!session) return false;
 
-    const attendances = await Attendance.find({
-      member: user._id,
-      session: { $in: sessionIds }
-    }).lean();
+        const sessionDepartment = session.department?.toString();
+        if (sessionDepartment && sessionDepartment !== user.department?.toString()) return false;
 
-    const attendanceMap = new Map();
-    attendances.forEach(att => {
-      attendanceMap.set(att.session.toString(), att);
-    });
+        const sessionDate = new Date(session.date);
+        if (sessionDate < cutoff) return false;
 
-    const records = sessions.map(session => {
-      const att = attendanceMap.get(session._id.toString());
+        const sessionMonth = sessionDate.toLocaleString('en-US', {
+          month: 'long',
+          timeZone: 'Asia/Manila',
+        });
+        if (sessionMonth !== month) return false;
+
+        if (session.schoolYear && session.schoolYear !== schoolYear) return false;
+        if (session.semester && session.semester !== semester) return false;
+
+        return true;
+      })
+      .sort((a: any, b: any) => {
+        const sessionA = a.session;
+        const sessionB = b.session;
+        const dateDiff = new Date(sessionA.date).getTime() - new Date(sessionB.date).getTime();
+        if (dateDiff !== 0) return dateDiff;
+        return String(sessionA.startTime || '').localeCompare(String(sessionB.startTime || ''));
+      })
+      .map((att: any) => {
+      const session = att.session;
       const timeIn = att?.timeIn
         ? new Date(att.timeIn).toLocaleTimeString('en-US', {
             hour: 'numeric',
@@ -141,14 +117,15 @@ export async function GET(request: Request) {
         : null;
 
       const sessionName = `${session.title} (${session.startTime} - ${session.endTime})`;
-      const dateStr = session.date.toLocaleDateString('en-US', {
+      const dateStr = new Date(session.date).toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'Asia/Manila',
       });
 
       return {
-        _id: session._id.toString(),
+        _id: att._id.toString(),
         session: sessionName,
         date: dateStr,
         timeIn: timeIn || "Not Attended",
