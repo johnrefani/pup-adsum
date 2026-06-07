@@ -41,11 +41,10 @@ const MyAttendance = () => {
   const today = new Date();
   const currentMonth = today.toLocaleString("default", { month: "long" });
   const currentYear = today.getFullYear();
-  const defaultSchoolYear = `${currentYear}-${currentYear + 1}`;
 
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-  const [selectedSchoolYear, setSelectedSchoolYear] = useState(defaultSchoolYear);
-  const [selectedSemester, setSelectedSemester] = useState("1st Semester");
+  const [selectedSchoolYear, setSelectedSchoolYear] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [stats, setStats] = useState<AttendanceStats>({
     present: 0,
@@ -56,13 +55,39 @@ const MyAttendance = () => {
   const [loading, setLoading] = useState(true);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-  const schoolYears = Array.from({ length: currentYear - 2020 + 2 }, (_, index) => {
+  const generatedSchoolYears = Array.from({ length: currentYear - 2020 + 2 }, (_, index) => {
     const start = currentYear + 1 - index;
     return `${start}-${start + 1}`;
   });
+  const schoolYears = Array.from(
+    new Set([selectedSchoolYear, ...generatedSchoolYears].filter(Boolean))
+  );
+
+  useEffect(() => {
+    const fetchAcademicSettings = async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/user/academic-settings");
+        const data = await res.json();
+
+        setSelectedMonth(data.month || currentMonth);
+        setSelectedSchoolYear(data.schoolYear || `${currentYear}-${currentYear + 1}`);
+        setSelectedSemester(data.semester || "1st Semester");
+      } catch (err) {
+        console.error(err);
+        setSelectedMonth(currentMonth);
+        setSelectedSchoolYear(`${currentYear}-${currentYear + 1}`);
+        setSelectedSemester("1st Semester");
+      }
+    };
+
+    fetchAcademicSettings();
+  }, [currentMonth, currentYear]);
 
   useEffect(() => {
     const fetchAttendance = async () => {
+      if (!selectedSchoolYear || !selectedSemester) return;
+
       setLoading(true);
       try {
         const params = new URLSearchParams({
