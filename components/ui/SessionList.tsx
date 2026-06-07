@@ -16,6 +16,8 @@ interface Session {
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;
   timeOutLimitMinutes?: number;
+  venueLocation?: { lat: number; lng: number } | null;
+  allowedRadiusMeters?: number;
   department: string;
   departmentLabel: string;
   qrImageUrl?: string;

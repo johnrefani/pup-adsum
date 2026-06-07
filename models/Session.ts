@@ -20,6 +20,11 @@ const sessionSchema = new mongoose.Schema({
   timeOutLimitMinutes: { type: Number, min: 0, default: 30 },
   qrToken: { type: String, required: true, unique: true },
   qrImageUrl: { type: String },
+  venueLocation: {
+    lat: Number,
+    lng: Number,
+  },
+  allowedRadiusMeters: { type: Number, min: 0, default: 0 },
 }, { timestamps: true });
 
 const Session = mongoose.models.Session || mongoose.model('Session', sessionSchema);

@@ -12,6 +12,7 @@ import {
   SessionNotStartedYet,
   InvalidQRMessage,
 } from '@/lib/imports';
+import ScanLocationConfirmation from '@/components/scan/ScanLocationConfirmation';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,6 +26,8 @@ export interface SessionForClient {
   endTime: string;
   description?: string;
   departmentName?: string;
+  venueLocation?: { lat: number; lng: number } | null;
+  allowedRadiusMeters?: number;
   gracePeriodMinutes?: number;
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;
@@ -66,7 +69,7 @@ export default async function ScanPage({
   }
 
   const sessionDoc = await Session.findOne({ qrToken: token })
-    .select('title date startTime endTime description department gracePeriodMinutes absentAfterMinutes startTimeOutBeforeEndMinutes timeOutLimitMinutes')
+    .select('title date startTime endTime description department gracePeriodMinutes absentAfterMinutes startTimeOutBeforeEndMinutes timeOutLimitMinutes venueLocation allowedRadiusMeters')
     .populate('department', 'acronym name')
     .lean<{
       _id: string;
@@ -107,6 +110,8 @@ export default async function ScanPage({
     endTime: sessionDoc.endTime,
     description: sessionDoc.description,
     departmentName: sessionDoc.department.acronym || sessionDoc.department.name,
+    venueLocation: sessionDoc.venueLocation || null,
+    allowedRadiusMeters: sessionDoc.allowedRadiusMeters ?? 0,
     gracePeriodMinutes: sessionDoc.gracePeriodMinutes ?? 15,
     absentAfterMinutes: sessionDoc.absentAfterMinutes ?? 30,
     startTimeOutBeforeEndMinutes: sessionDoc.startTimeOutBeforeEndMinutes ?? 0,
@@ -183,20 +188,11 @@ export default async function ScanPage({
       );
     }
 
-    const timeOut = new Date();
-    const finalStatus = existingRecord.status === 'timed-in-late' ? 'late' : 'present';
-    await Attendance.findByIdAndUpdate(existingRecord._id, {
-      timeOut,
-      status: finalStatus,
-    });
-
     return (
-      <ScanSuccess
+      <ScanLocationConfirmation
+        token={token}
         session={session}
-        timeIn={existingRecord.timeIn}
-        timeOut={timeOut}
-        user={user}
-        status={finalStatus}
+        user={{ fullName: user.fullName }}
         action="time-out"
       />
     );
@@ -211,28 +207,11 @@ export default async function ScanPage({
     return <SessionEndedMessage session={session} />;
   }
 
-  const lateCutoff = new Date(sessionStartTime);
-  lateCutoff.setMinutes(lateCutoff.getMinutes() + (session.gracePeriodMinutes ?? 15));
-
-  const absentCutoff = new Date(sessionStartTime);
-  absentCutoff.setMinutes(absentCutoff.getMinutes() + (session.absentAfterMinutes ?? 30));
-
-  const timeIn = new Date();
-  const status: ScanStatus =
-    now > absentCutoff ? 'absent' : now > lateCutoff ? 'timed-in-late' : 'timed-in';
-
-  await Attendance.findOneAndUpdate(
-    { session: sessionDoc._id, member: user._id },
-    { $set: { timeIn, status, timeOut: null } },
-    { upsert: true }
-  );
-
   return (
-    <ScanSuccess
+    <ScanLocationConfirmation
+      token={token}
       session={session}
-      timeIn={timeIn}
-      user={user}
-      status={status}
+      user={{ fullName: user.fullName }}
       action="time-in"
     />
   );

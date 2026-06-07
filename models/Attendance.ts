@@ -5,7 +5,15 @@ const attendanceSchema = new mongoose.Schema({
   session: { type: mongoose.Schema.Types.ObjectId, ref: 'Session', required: true },
   member: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   timeIn: { type: Date, default: null },
+  timeInLocation: {
+    lat: Number,
+    lng: Number,
+  },
   timeOut: { type: Date, default: null },
+  timeOutLocation: {
+    lat: Number,
+    lng: Number,
+  },
   status: { 
     type: String, 
     enum: ['present', 'absent', 'unfinished', 'late', 'timed-in', 'timed-in-late', 'late-unfinished', null], 

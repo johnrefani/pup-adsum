@@ -3,11 +3,16 @@ type PrintableSessionTiming = {
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;
   timeOutLimitMinutes?: number;
+  venueLocation?: { lat: number; lng: number } | null;
+  allowedRadiusMeters?: number;
 };
 
 const minutesLabel = (value: number) => `${value} minute${value === 1 ? '' : 's'}`;
 
 export const buildAttendancePrintInstructions = (session: PrintableSessionTiming) => {
+  const locationLine = session.venueLocation && session.allowedRadiusMeters
+    ? `<li><strong>Venue verification.</strong><br>Members must be within ${session.allowedRadiusMeters} meters of the venue (${session.venueLocation.lat.toFixed(6)}, ${session.venueLocation.lng.toFixed(6)}) to successfully time in or time out.</li>`
+    : '';
   const lateAfter = session.gracePeriodMinutes ?? 15;
   const absentAfter = session.absentAfterMinutes ?? 30;
   const timeOutStart = session.startTimeOutBeforeEndMinutes ?? 0;
@@ -17,6 +22,7 @@ export const buildAttendancePrintInstructions = (session: PrintableSessionTiming
         <h2>Attendance Status Guide</h2>
         <ol>
           <li><strong>Log in before scanning.</strong><br>Use your own member account before opening the QR code link.</li>
+          ${locationLine}
           <li><strong>Scan once to time in.</strong><br>The first successful scan records your time-in.</li>
           <li><strong>Time-in status rules.</strong><br>
             On time: Timed-in when scanned before the late limit.<br>

@@ -14,6 +14,8 @@ interface QRData {
     endTime: string;
     description?: string;
     departmentLabel?: string;
+    venueLocation?: { lat: number; lng: number } | null;
+    allowedRadiusMeters?: number;
     gracePeriodMinutes?: number;
     absentAfterMinutes?: number;
     startTimeOutBeforeEndMinutes?: number;
@@ -236,6 +238,7 @@ export default function GeneratedQR() {
         <div class="time">${format12Hour(qrData.session.startTime)} – ${format12Hour(qrData.session.endTime)}</div>
 
         ${qrData.session.description ? `<div class="small"><strong>Description:</strong> ${qrData.session.description}</div>` : ''}
+        ${qrData.session.venueLocation ? `<div class="small"><strong>Venue:</strong> ${qrData.session.venueLocation.lat.toFixed(6)}, ${qrData.session.venueLocation.lng.toFixed(6)} (${qrData.session.allowedRadiusMeters ?? 0}m radius)</div>` : ''}
       </div>
 
       <!-- Instructions – now on same page, wider layout -->
@@ -312,6 +315,9 @@ export default function GeneratedQR() {
         <p className="text-lg"><strong>Date:</strong> {new Date(qrData.session.date).toLocaleDateString()}</p>
         <p className="text-lg"><strong>Time:</strong> {qrData.session.startTime} - {qrData.session.endTime}</p>
         <p className="text-lg"><strong>Description:</strong> {qrData.session.description || 'N/A'}</p>
+        {qrData.session.venueLocation && (
+          <p className="text-lg"><strong>Venue:</strong> {qrData.session.venueLocation.lat.toFixed(6)}, {qrData.session.venueLocation.lng.toFixed(6)} ({qrData.session.allowedRadiusMeters ?? 0}m radius)</p>
+        )}
         <p className="text-lg"><strong>Organization:</strong> {qrData.session.departmentLabel || 'N/A'}</p>
       </div>
 

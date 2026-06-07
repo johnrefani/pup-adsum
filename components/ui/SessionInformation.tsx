@@ -1,10 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useForm } from 'react-hook-form';
 import { Button, InputField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
 import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
+
+const LocationPicker = dynamic(() => import('@/components/ui/LocationPicker'), { ssr: false });
 
 
 interface FormData {
@@ -13,6 +16,9 @@ interface FormData {
   startTime: string;
   endTime: string;
   description?: string;
+  venueLat?: string | number;
+  venueLng?: string | number;
+  allowedRadiusMeters?: number;
   gracePeriodMinutes: number;
   absentAfterMinutes: number;
   startTimeOutBeforeEndMinutes: number;
@@ -24,7 +30,14 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
   const [isSubmitting, setIsSubmitting] = useState(false);
   const isEdit = mode === 'edit';
 
-  const { register, handleSubmit, formState: { errors, isDirty }, reset } = useForm<FormData>();
+  const { register, handleSubmit, setValue, watch, formState: { errors, isDirty }, reset } = useForm<FormData>();
+
+  const venueLat = watch('venueLat');
+  const venueLng = watch('venueLng');
+  const currentVenueLocation =
+    venueLat !== undefined && venueLat !== '' && venueLng !== undefined && venueLng !== ''
+      ? { lat: Number(venueLat), lng: Number(venueLng) }
+      : null;
 
 
   useEffect(() => {
@@ -35,6 +48,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: selectedSession.startTime,
         endTime: selectedSession.endTime,
         description: selectedSession.description,
+        venueLat: selectedSession.venueLocation?.lat ?? '',
+        venueLng: selectedSession.venueLocation?.lng ?? '',
+        allowedRadiusMeters: selectedSession.allowedRadiusMeters ?? 0,
         gracePeriodMinutes: selectedSession.gracePeriodMinutes ?? 15,
         absentAfterMinutes: selectedSession.absentAfterMinutes ?? 30,
         startTimeOutBeforeEndMinutes: selectedSession.startTimeOutBeforeEndMinutes ?? 0,
@@ -47,6 +63,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
         gracePeriodMinutes: 15,
         absentAfterMinutes: 30,
         startTimeOutBeforeEndMinutes: 0,
@@ -66,7 +85,20 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed");
 
-      reset({ title: '', date: '', startTime: '', endTime: '', description: '', gracePeriodMinutes: 15, absentAfterMinutes: 30, startTimeOutBeforeEndMinutes: 0, timeOutLimitMinutes: 30 });
+      reset({
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
+      });
 
       window.dispatchEvent(new CustomEvent('session-created', {
         detail: { qrImageUrl: result.qrImageUrl, session: result.session }
@@ -101,6 +133,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
         gracePeriodMinutes: 15,
         absentAfterMinutes: 30,
         startTimeOutBeforeEndMinutes: 0,
@@ -121,6 +156,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       startTime: '',
       endTime: '',
       description: '',
+      venueLat: '',
+      venueLng: '',
+      allowedRadiusMeters: 0,
       gracePeriodMinutes: 15,
       absentAfterMinutes: 30,
       startTimeOutBeforeEndMinutes: 0,
@@ -154,6 +192,9 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
         gracePeriodMinutes: 15,
         absentAfterMinutes: 30,
         startTimeOutBeforeEndMinutes: 0,
@@ -470,6 +511,26 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
               min={0}
               {...register('timeOutLimitMinutes', { required: 'Required', min: 0 })}
               error={errors.timeOutLimitMinutes?.message}
+            />
+          </div>
+
+          <div className="space-y-6">
+            <LocationPicker
+              value={currentVenueLocation}
+              onChange={(location) => {
+                setValue('venueLat', location.lat.toString(), { shouldDirty: true });
+                setValue('venueLng', location.lng.toString(), { shouldDirty: true });
+              }}
+            />
+            <input type="hidden" {...register('venueLat')} />
+            <input type="hidden" {...register('venueLng')} />
+            <InputField
+              label="Allowed Radius (meters)"
+              type="number"
+              min={0}
+              step={1}
+              {...register('allowedRadiusMeters', { min: 0, valueAsNumber: true })}
+              error={errors.allowedRadiusMeters?.message}
             />
           </div>
 

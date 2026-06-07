@@ -23,6 +23,11 @@ interface PopulatedSession {
   absentAfterMinutes?: number;
   startTimeOutBeforeEndMinutes?: number;
   timeOutLimitMinutes?: number;
+  venueLocation?: {
+    lat: number;
+    lng: number;
+  };
+  allowedRadiusMeters?: number;
   department: {
     _id: mongoose.Types.ObjectId;
     acronym: string;
@@ -82,6 +87,8 @@ export async function GET() {
       absentAfterMinutes: s.absentAfterMinutes ?? 30,
       startTimeOutBeforeEndMinutes: s.startTimeOutBeforeEndMinutes ?? 0,
       timeOutLimitMinutes: s.timeOutLimitMinutes ?? 30,
+      venueLocation: s.venueLocation ?? null,
+      allowedRadiusMeters: s.allowedRadiusMeters ?? 0,
       department: s.department._id.toString(),
       departmentAcronym: s.department.acronym,
       departmentName: s.department.name,
