@@ -24,7 +24,6 @@ interface Session {
 const SessionList: React.FC = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const { selectedSession, setSelectedSession } = useSelectedSession();
 
   const fetchSessions = async () => {
@@ -42,37 +41,6 @@ const SessionList: React.FC = () => {
       setSessions([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleDelete = async (sessionId: string) => {
-    const sessionToDelete = sessions.find((session) => session._id === sessionId);
-    if (!sessionToDelete) return;
-
-    const confirmed = window.confirm(
-      `Delete session "${sessionToDelete.title}" and all related attendance records? This cannot be undone.`
-    );
-    if (!confirmed) return;
-
-    setDeletingId(sessionId);
-    try {
-      const res = await fetch('/api/admin/sessions', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Delete failed');
-
-      if (selectedSession?._id === sessionId) {
-        setSelectedSession(null);
-      }
-      window.dispatchEvent(new Event('session-updated'));
-    } catch (err) {
-      console.error('Failed to delete session:', err);
-      alert((err as Error).message || 'Unable to delete session.');
-    } finally {
-      setDeletingId(null);
     }
   };
 
@@ -101,19 +69,35 @@ const SessionList: React.FC = () => {
     setSelectedSession(session);
   };
 
+  const formatDate = (date: string) =>
+    new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+
+  const formatTime = (time: string) => {
+    const [hour, minute] = time.split(':');
+    const parsedHour = Number(hour);
+    if (!Number.isFinite(parsedHour) || !minute) return time;
+
+    const period = parsedHour >= 12 ? 'PM' : 'AM';
+    const displayHour = parsedHour % 12 || 12;
+    return `${displayHour}:${minute} ${period}`;
+  };
+
   if (loading) {
     return <div className="text-center py-20 text-gray-600">Loading your sessions...</div>;
   }
 
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col max-h-[90vh] lg:max-h-[75vh]">
-      {/* Fixed header */}
       <div className="border-b border-gray-200 px-6 py-5">
         <h2 className="text-2xl font-bold text-red-800">Your Sessions</h2>
         <p className="text-sm text-amber-600 mt-1">Click a row to edit</p>
       </div>
 
-      {/* Scrollable table body */}
       <div className="flex-1 overflow-y-auto">
         <table className="w-full min-w-full">
           <thead className="sticky top-0 bg-gray-50 z-10">
@@ -121,13 +105,12 @@ const SessionList: React.FC = () => {
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Session Name</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Date</th>
               <th className="text-left px-5 py-4 text-sm font-semibold text-gray-700">Time</th>
-              <th className="text-center px-5 py-4 text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {sessions.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-12 text-gray-500">
+                <td colSpan={3} className="text-center py-12 text-gray-500">
                   No sessions created yet.
                 </td>
               </tr>
@@ -143,32 +126,14 @@ const SessionList: React.FC = () => {
                   <td className="px-5 py-5">
                     <div className="font-medium text-gray-900">{session.title}</div>
                     <div className="text-sm text-gray-500 sm:hidden">
-                      {new Date(session.date).toLocaleDateString()}
+                      {formatDate(session.date)}
                     </div>
                   </td>
                   <td className="px-5 py-5 text-gray-700 hidden sm:table-cell">
-                    {new Date(session.date).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {formatDate(session.date)}
                   </td>
                   <td className="px-5 py-5 text-gray-700 font-medium">
-                    {session.startTime} – {session.endTime}
-                  </td>
-                  <td className="px-5 py-5 text-center">
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        handleDelete(session._id);
-                      }}
-                      disabled={deletingId === session._id}
-                      className="inline-flex items-center justify-center rounded-lg border border-red-500 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {deletingId === session._id ? 'Deleting...' : 'Delete'}
-                    </button>
+                    {formatTime(session.startTime)} - {formatTime(session.endTime)}
                   </td>
                 </tr>
               ))
