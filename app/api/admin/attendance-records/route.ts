@@ -39,6 +39,26 @@ export async function GET(request: Request) {
       .select('member timeIn timeOut status')
       .lean();
 
+    const summary = attendances.reduce(
+      (acc: any, attendance: any) => {
+        const status = attendance.status || 'none';
+        acc.sessionTotalCount += 1;
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {
+        sessionTotalCount: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        unfinished: 0,
+        'timed-in': 0,
+        'timed-in-late': 0,
+        'late-unfinished': 0,
+        none: 0,
+      }
+    );
+
     let result = members.map((member: any) => {
       const att = attendances.find((a: any) => a.member.toString() === member._id.toString());
 
@@ -76,7 +96,7 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json({ students: result });
+    return NextResponse.json({ students: result, summary });
   } catch (error: any) {
     console.error('Attendance records error:', error);
     return NextResponse.json({ error: 'Failed to load records' }, { status: 500 });
