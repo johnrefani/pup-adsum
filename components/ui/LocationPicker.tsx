@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -29,53 +29,90 @@ function MapClickHandler({ onChange }: { onChange: (location: { lat: number; lng
   return null;
 }
 
+function MapPositionUpdater({ position }: { position: { lat: number; lng: number } }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      map.invalidateSize();
+      map.setView(position, map.getZoom());
+    }, 100);
+
+    return () => window.clearTimeout(timeout);
+  }, [map, position]);
+
+  return null;
+}
+
 export default function LocationPicker({ value, onChange }: LocationPickerProps) {
   const [position, setPosition] = useState(value ?? defaultPosition);
-  const [inputLat, setInputLat] = useState((value?.lat ?? defaultPosition.lat).toString());
-  const [inputLng, setInputLng] = useState((value?.lng ?? defaultPosition.lng).toString());
+  const [addressQuery, setAddressQuery] = useState('');
+  const [addressResults, setAddressResults] = useState<Array<{ label: string; lat: number; lng: number }>>([]);
   const [inputError, setInputError] = useState('');
+  const [addressLoading, setAddressLoading] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     if (value) {
       setPosition(value);
-      setInputLat(value.lat.toString());
-      setInputLng(value.lng.toString());
     }
   }, [value]);
 
   const handleSelect = (location: { lat: number; lng: number }) => {
     setPosition(location);
-    setInputLat(location.lat.toString());
-    setInputLng(location.lng.toString());
     setInputError('');
     onChange(location);
   };
 
-  const handleManualInput = () => {
-    const lat = parseFloat(inputLat);
-    const lng = parseFloat(inputLng);
+  const searchAddress = async (query: string) => {
+    if (query.length < 3) return;
 
-    if (isNaN(lat) || isNaN(lng)) {
-      setInputError('Please enter valid latitude and longitude values.');
-      return;
-    }
-
-    if (lat < -90 || lat > 90) {
-      setInputError('Latitude must be between -90 and 90.');
-      return;
-    }
-
-    if (lng < -180 || lng > 180) {
-      setInputError('Longitude must be between -180 and 180.');
-      return;
-    }
-
-    const newLocation = { lat, lng };
-    setPosition(newLocation);
+    setAddressLoading(true);
     setInputError('');
-    onChange(newLocation);
+    try {
+      const params = new URLSearchParams({
+        q: query,
+        format: 'json',
+        limit: '5',
+        countrycodes: 'ph',
+      });
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?${params}`);
+      const data = await res.json();
+      const results = Array.isArray(data)
+        ? data.map((item: any) => ({
+            label: item.display_name as string,
+            lat: Number(item.lat),
+            lng: Number(item.lon),
+          })).filter((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng))
+        : [];
+
+      setAddressResults(results);
+      if (results.length === 0) {
+        setInputError('No matching address found.');
+      }
+    } catch (error) {
+      setInputError('Unable to search address right now.');
+      setAddressResults([]);
+    } finally {
+      setAddressLoading(false);
+    }
   };
+
+  useEffect(() => {
+    const query = addressQuery.trim();
+    if (query.length < 3) {
+      setAddressResults([]);
+      setInputError('');
+      setAddressLoading(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      searchAddress(query);
+    }, 450);
+
+    return () => window.clearTimeout(timeout);
+  }, [addressQuery]);
 
   return (
     <div className="space-y-4">
@@ -84,7 +121,7 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           <div>
             <p className="font-semibold text-gray-800">Session Location</p>
             <p className="text-sm text-gray-600 mt-2">
-              Set the venue location by clicking the map or entering coordinates from Google Maps.
+              Search an address or click the map to place the session venue marker.
             </p>
           </div>
           <button
@@ -99,16 +136,56 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
           <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700">
             <p className="font-medium text-gray-900">Google Maps coordinate help</p>
             <ol className="list-decimal list-inside mt-3 space-y-2">
-              <li>Open Google Maps and locate the venue.</li>
-              <li>Right-click the exact spot and choose <span className="font-semibold">What's here?</span>.</li>
-              <li>Copy the coordinates shown in the pop-up.</li>
-              <li>Paste the latitude and longitude into the fields below, then click <span className="font-semibold">Set Location</span>.</li>
+              <li>Search the venue name or address.</li>
+              <li>Select the closest result to move the marker.</li>
+              <li>You can still click the map to fine-tune the exact venue spot.</li>
             </ol>
           </div>
         )}
       </div>
 
       <div className="space-y-4">
+        <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <label className="block text-sm font-medium text-gray-700">Search Address</label>
+          <div className="relative mt-2">
+            <input
+              type="text"
+              value={addressQuery}
+              onChange={(e) => {
+                setAddressQuery(e.target.value);
+                setInputError('');
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+              placeholder="Search venue or address..."
+              className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900"
+            />
+            {addressLoading && (
+              <p className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-medium text-gray-500">
+                Searching...
+              </p>
+            )}
+          </div>
+
+          {addressResults.length > 0 && (
+            <div className="mt-3 max-h-44 overflow-y-auto rounded-2xl border border-gray-200">
+              {addressResults.map((result, index) => (
+                <button
+                  type="button"
+                  key={`${result.lat}-${result.lng}-${index}`}
+                  onClick={() => {
+                    handleSelect({ lat: result.lat, lng: result.lng });
+                    setAddressResults([]);
+                    setAddressQuery(result.label);
+                  }}
+                  className="block w-full border-b border-gray-100 px-4 py-3 text-left text-sm text-gray-700 transition-colors last:border-b-0 hover:bg-red-50"
+                >
+                  {result.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         <div className="h-[360px] rounded-3xl overflow-hidden border border-gray-200">
           <MapContainer
             center={position}
@@ -121,37 +198,9 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MapClickHandler onChange={handleSelect} />
+            <MapPositionUpdater position={position} />
             <Marker position={position} icon={markerIcon} />
           </MapContainer>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Latitude</label>
-            <input
-              type="text"
-              value={inputLat}
-              onChange={(e) => {
-                setInputLat(e.target.value);
-                setInputError('');
-              }}
-              placeholder="e.g. 14.599500"
-              className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900"
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Longitude</label>
-            <input
-              type="text"
-              value={inputLng}
-              onChange={(e) => {
-                setInputLng(e.target.value);
-                setInputError('');
-              }}
-              placeholder="e.g. 121.011000"
-              className="w-full px-4 py-3 rounded-2xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-900"
-            />
-          </div>
         </div>
 
         {inputError && (
@@ -159,14 +208,6 @@ export default function LocationPicker({ value, onChange }: LocationPickerProps)
             {inputError}
           </div>
         )}
-
-        <button
-          onClick={handleManualInput}
-          className="w-full py-3 px-4 rounded-2xl bg-red-900 text-white font-semibold hover:bg-red-800 transition-colors"
-        >
-          Set Location
-        </button>
-
       </div>
     </div>
   );
