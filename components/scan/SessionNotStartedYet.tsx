@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from '@/lib/imports';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 import { useRouter } from 'next/navigation';
 
 export interface SessionForClient {
@@ -20,11 +21,6 @@ export default function SessionNotStartedYet({ session }: { session: SessionForC
     router.push('/');
   };
 
-  // Format the start date + time nicely
-  const startDateTime = new Date(session.date);
-  const [startHour, startMinute] = session.startTime.split(':');
-  startDateTime.setHours(parseInt(startHour), parseInt(startMinute), 0, 0);
-
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-100 to-gray-300 flex items-center justify-center p-6">
       <div className="bg-white rounded-3xl shadow-2xl p-12 text-center place-items-center">
@@ -41,15 +37,10 @@ export default function SessionNotStartedYet({ session }: { session: SessionForC
 
         <div className="bg-gray-50 rounded-xl p-4 mb-6">
           <p className="text-2xl font-semibold text-maroon-800">
-            {session.startTime}
+            {formatDisplayTime(session.startTime)}
           </p>
           <p className="text-md text-gray-700">
-            {startDateTime.toLocaleDateString('en-US', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            {formatDisplayDate(session.date)}
           </p>
         </div>
 

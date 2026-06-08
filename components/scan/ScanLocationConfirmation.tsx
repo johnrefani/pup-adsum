@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/lib/imports';
 import ScanSuccess from '@/components/scan/ScanSuccess';
 import { SessionForClient } from '@/app/scan/[token]/page';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 
 interface AttendanceResponse {
   success: boolean;
@@ -130,7 +131,7 @@ export default function ScanLocationConfirmation({ token, session, user, action 
         <div className="rounded-3xl border border-gray-200 bg-gray-50 p-5">
           <p className="text-sm font-semibold text-gray-800">Session</p>
           <p className="text-base text-gray-900 mt-1">{session.title}</p>
-          <p className="text-sm text-gray-600 mt-2">{session.startTime} - {session.endTime}</p>
+          <p className="text-sm text-gray-600 mt-2">{formatDisplayTime(session.startTime)} - {formatDisplayTime(session.endTime)}</p>
           <p className="text-sm text-gray-600 mt-2">{venueLabel}</p>
         </div>
 

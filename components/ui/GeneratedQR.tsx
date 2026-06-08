@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/lib/imports';
 import Image from 'next/image';
 import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 
 interface QRData {
   qrImageUrl: string;
@@ -22,27 +23,6 @@ interface QRData {
     timeOutLimitMinutes?: number;
   };
 }
-
-const format12Hour = (time24: string): string => {
-  if (!time24) return '';
-  const [hoursStr, minutesStr] = time24.split(':');
-  const hours = parseInt(hoursStr, 10);
-  const minutes = parseInt(minutesStr, 10);
-
-  if (isNaN(hours) || isNaN(minutes)) return time24;
-
-  const period = hours >= 12 ? 'PM' : 'AM';
-  const hours12 = hours % 12 || 12;
-
-  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-};
-
-const formatDisplayDate = (date: string) =>
-  new Date(`${date.split('T')[0]}T00:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
 export default function GeneratedQR() {
   const [qrData, setQrData] = useState<QRData | null>(null);
@@ -64,20 +44,6 @@ export default function GeneratedQR() {
       alert("Please allow popups for printing");
       return;
     }
-
-    const format12Hour = (time24: string): string => {
-    if (!time24) return '';
-    const [hoursStr, minutesStr] = time24.split(':');
-    const hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-
-    if (isNaN(hours) || isNaN(minutes)) return time24;
-
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-
-    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
 
     printWindow.document.write(`
 <!DOCTYPE html>
@@ -253,10 +219,10 @@ export default function GeneratedQR() {
         </div>
 
         <div class="date-time">
-          ${new Date(qrData.session.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          ${formatDisplayDate(qrData.session.date)}
         </div>
 
-        <div class="time">${format12Hour(qrData.session.startTime)} – ${format12Hour(qrData.session.endTime)}</div>
+        <div class="time">${formatDisplayTime(qrData.session.startTime)} - ${formatDisplayTime(qrData.session.endTime)}</div>
 
         ${qrData.session.description ? `<div class="small"><strong>Description:</strong> ${qrData.session.description}</div>` : ''}
         ${qrData.session.venueLocation ? `<div class="small"><strong>Venue:</strong> ${qrData.session.venueLocation.lat.toFixed(6)}, ${qrData.session.venueLocation.lng.toFixed(6)} (${qrData.session.allowedRadiusMeters ?? 0}m radius)</div>` : ''}
@@ -335,7 +301,7 @@ export default function GeneratedQR() {
         <div className="space-y-3 text-left max-w-2xl mx-auto p-6 rounded-xl">
           <p className="text-lg"><strong>Session:</strong> {qrData.session.title}</p>
           <p className="text-lg"><strong>Date:</strong> {formatDisplayDate(qrData.session.date)}</p>
-          <p className="text-lg"><strong>Time:</strong> {format12Hour(qrData.session.startTime)} - {format12Hour(qrData.session.endTime)}</p>
+          <p className="text-lg"><strong>Time:</strong> {formatDisplayTime(qrData.session.startTime)} - {formatDisplayTime(qrData.session.endTime)}</p>
           <p className="text-lg"><strong>Description:</strong> {qrData.session.description || 'N/A'}</p>
           {qrData.session.venueLocation && (
             <p className="text-lg"><strong>Venue:</strong> {qrData.session.venueLocation.lat.toFixed(6)}, {qrData.session.venueLocation.lng.toFixed(6)} ({qrData.session.allowedRadiusMeters ?? 0}m radius)</p>

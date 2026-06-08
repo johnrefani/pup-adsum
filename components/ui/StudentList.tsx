@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Button, Status } from "@/lib/imports";
+import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
 
 type Student = {
   _id: string;
@@ -58,23 +59,6 @@ export default function StudentList({
       .finally(() => setLoading(false));
   }, [sessionId, courseId, yearLevel, search, ready]);
 
-  const formatTimeToAmPm = (time: string) => {
-    const normalized = time.trim();
-    if (!normalized) return '';
-    if (/\b(am|pm)\b/i.test(normalized)) {
-      return normalized;
-    }
-
-    const [hourPart, minutePart = '00'] = normalized.split(':');
-    const hour = Number(hourPart);
-    const minute = Number((minutePart || '00').slice(0, 2));
-    if (Number.isNaN(hour) || Number.isNaN(minute)) return normalized;
-
-    const suffix = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = ((hour + 11) % 12) + 1;
-    return `${hour12}:${minute.toString().padStart(2, '0')} ${suffix}`;
-  };
-
   const downloadCSV = () => {
     if (!sessionInfo || students.length === 0) return;
 
@@ -110,8 +94,8 @@ export default function StudentList({
 
     csv += `"ATTENDANCE SUMMARY REPORT"\r\n`;
     csv += `"Session Title","${sessionInfo.title}"\r\n`;
-    csv += `"Date","${sessionInfo.date}"\r\n`;
-    csv += `"Time","${formatTimeToAmPm(sessionInfo.startTime)} - ${formatTimeToAmPm(sessionInfo.endTime)}"\r\n`;
+    csv += `"Date","${formatDisplayDate(sessionInfo.date)}"\r\n`;
+    csv += `"Time","${formatDisplayTime(sessionInfo.startTime)} - ${formatDisplayTime(sessionInfo.endTime)}"\r\n`;
     csv += `"Program","${courseName}"\r\n`;
     csv += `"Year Level","${yearLevel}th Year"\r\n`;
     csv += `"Department","${sessionInfo.departmentName || sessionInfo.departmentAcronym}"\r\n`;
@@ -151,7 +135,7 @@ export default function StudentList({
     const url = URL.createObjectURL(blob);
 
     const safe = (s: string) => s.replace(/[\/\\|*?"<>]/g, '_');
-    const filename = `${safe(sessionInfo.title)}_${sessionInfo.date}(${formatTimeToAmPm(sessionInfo.startTime)}-${formatTimeToAmPm(sessionInfo.endTime)})_${safe(courseName)}_${yearLevel}th_${safe(sessionInfo.departmentName || sessionInfo.departmentAcronym)}.csv`;
+    const filename = `${safe(sessionInfo.title)}_${safe(formatDisplayDate(sessionInfo.date))}(${formatDisplayTime(sessionInfo.startTime)}-${formatDisplayTime(sessionInfo.endTime)})_${safe(courseName)}_${yearLevel}th_${safe(sessionInfo.departmentName || sessionInfo.departmentAcronym)}.csv`;
 
     const a = document.createElement('a');
     a.href = url;
