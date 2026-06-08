@@ -6,6 +6,7 @@ import Session from '@/models/Session';
 import User from '@/models/User';
 import { cookies } from 'next/headers';
 import { Models } from '@/lib/models';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 
 type AttendanceStatus = 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
 
@@ -99,30 +100,11 @@ export async function GET(request: Request) {
       })
       .map((att: any) => {
       const session = att.session;
-      const timeIn = att?.timeIn
-        ? new Date(att.timeIn).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Manila',
-          })
-        : null;
-      const timeOut = att?.timeOut
-        ? new Date(att.timeOut).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Manila',
-          })
-        : null;
+      const timeIn = att?.timeIn ? formatDisplayTime(new Date(att.timeIn)) : null;
+      const timeOut = att?.timeOut ? formatDisplayTime(new Date(att.timeOut)) : null;
 
-      const sessionName = `${session.title} (${session.startTime} - ${session.endTime})`;
-      const dateStr = new Date(session.date).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-        timeZone: 'Asia/Manila',
-      });
+      const sessionName = `${session.title} (${formatDisplayTime(session.startTime)} - ${formatDisplayTime(session.endTime)})`;
+      const dateStr = formatDisplayDate(new Date(session.date));
 
       return {
         _id: att._id.toString(),

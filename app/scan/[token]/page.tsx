@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import User from '@/models/User';
 import Attendance from '@/models/Attendance';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 import {
   ScanSuccess,
   ScanAlreadyPresent,
@@ -165,11 +166,7 @@ export default async function ScanPage({
         <ScanAlreadyPresent
           session={session}
           timeIn={existingRecord.timeIn}
-          message={`You can time out starting at ${timeOutStartTime.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          })}.`}
+          message={`You can time out starting at ${formatDisplayTime(timeOutStartTime)}.`}
         />
       );
     }

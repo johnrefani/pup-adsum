@@ -4,6 +4,7 @@ import Attendance from '@/models/Attendance';
 import User from '@/models/User';
 import { cookies } from 'next/headers';
 import { Models } from '@/lib/models';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 
 export async function GET(request: Request) {
   try {
@@ -62,22 +63,8 @@ export async function GET(request: Request) {
     let result = members.map((member: any) => {
       const att = attendances.find((a: any) => a.member.toString() === member._id.toString());
 
-      const timeIn = att?.timeIn
-        ? new Date(att.timeIn).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          timeZone: 'Asia/Manila',
-          })
-        : '---';
-      const timeOut = att?.timeOut
-        ? new Date(att.timeOut).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-            timeZone: 'Asia/Manila',
-          })
-        : '---';
+      const timeIn = att?.timeIn ? formatDisplayTime(new Date(att.timeIn)) : '---';
+      const timeOut = att?.timeOut ? formatDisplayTime(new Date(att.timeOut)) : '---';
 
       return {
         _id: member._id.toString(),

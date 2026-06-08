@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MemberDashboardProps } from "@/lib/types"
 import { Button } from "@/lib/imports";
+import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
 import { useRouter } from "next/navigation";
 
 interface UpcomingEvent {
@@ -20,22 +21,6 @@ interface TodaySession {
   endTime: string;
   status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-};
-
-const formatTime = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  const h = parseInt(hours);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${minutes} ${ampm}`;
-};
 
 const MemberDashboard = ({ username }: MemberDashboardProps) => {
   const router = useRouter();
@@ -67,8 +52,8 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
 
   if (todaySession) {
     const sessionName = todaySession.title;
-    const start = formatTime(todaySession.startTime);
-    const end = formatTime(todaySession.endTime);
+    const start = formatDisplayTime(todaySession.startTime);
+    const end = formatDisplayTime(todaySession.endTime);
 
     const now = new Date();
     const todayDate = now.toISOString().slice(0, 10);
@@ -177,10 +162,10 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
                     {event.title}
                   </p>
                   <p className="text-gold-600 font-medium text-sm md:text-base">
-                    {formatDate(event.date)}
+                    {formatDisplayDate(event.date)}
                   </p>
                   <p className="text-black/65 font-medium text-sm md:text-base">
-                    {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                    {formatDisplayTime(event.startTime)} - {formatDisplayTime(event.endTime)}
                   </p>
                 </div>
               ))}

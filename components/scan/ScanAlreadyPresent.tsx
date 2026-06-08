@@ -4,6 +4,7 @@
 import { AlertCircle } from '@/lib/icons';
 import { SessionForClient } from '@/app/scan/[token]/page';
 import { Button } from '@/lib/imports';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 import { useRouter } from 'next/navigation';
 
 interface Props {
@@ -20,16 +21,8 @@ export default function ScanAlreadyPresent({ session, timeIn, timeOut, message }
     router.push('/'); 
   };
 
-  const formattedTime = new Date(timeIn).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
-  const formattedTimeOut = timeOut ? new Date(timeOut).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  }) : null;
+  const formattedTime = formatDisplayTime(new Date(timeIn));
+  const formattedTimeOut = timeOut ? formatDisplayTime(new Date(timeOut)) : null;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 to-orange-50 flex items-center justify-center p-6">

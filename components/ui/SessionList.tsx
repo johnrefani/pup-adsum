@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useSelectedSession } from '@/components/AdminSessions';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 
 interface Session {
   _id: string;
@@ -78,24 +79,6 @@ const SessionList: React.FC = () => {
     setSelectedSession(session);
   };
 
-  const formatDate = (date: string) =>
-    new Date(`${date}T00:00:00`).toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-
-  const formatTime = (time: string) => {
-    const [hour, minute] = time.split(':');
-    const parsedHour = Number(hour);
-    if (!Number.isFinite(parsedHour) || !minute) return time;
-
-    const period = parsedHour >= 12 ? 'PM' : 'AM';
-    const displayHour = parsedHour % 12 || 12;
-    return `${displayHour}:${minute} ${period}`;
-  };
-
   const totalPages = Math.max(1, Math.ceil(sessions.length / SESSIONS_PER_PAGE));
   const pageStartIndex = (currentPage - 1) * SESSIONS_PER_PAGE;
   const paginatedSessions = sessions.slice(pageStartIndex, pageStartIndex + SESSIONS_PER_PAGE);
@@ -145,14 +128,14 @@ const SessionList: React.FC = () => {
                   <td className="px-5 py-5">
                     <div className="font-medium text-gray-900">{session.title}</div>
                     <div className="text-sm text-gray-500 sm:hidden">
-                      {formatDate(session.date)}
+                      {formatDisplayDate(session.date)}
                     </div>
                   </td>
                   <td className="px-5 py-5 text-gray-700 hidden sm:table-cell">
-                    {formatDate(session.date)}
+                    {formatDisplayDate(session.date)}
                   </td>
                   <td className="px-5 py-5 text-gray-700 font-medium">
-                    {formatTime(session.startTime)} - {formatTime(session.endTime)}
+                    {formatDisplayTime(session.startTime)} - {formatDisplayTime(session.endTime)}
                   </td>
                 </tr>
               ))

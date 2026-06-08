@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { InputField, SearchableSelectField } from '@/lib/imports';
 import { Filter } from '@/lib/icons';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 
 type Option = {
   value: string;
@@ -61,7 +62,7 @@ export default function StudentFilter({
       .then(data => {
         const opts: Option[] = (data.sessions || []).map((s: any) => ({
           value: s._id,
-          label: `${s.title} - ${s.date} (${s.startTime}-${s.endTime})`,
+          label: `${s.title} - ${formatDisplayDate(s.date)} (${formatDisplayTime(s.startTime)} - ${formatDisplayTime(s.endTime)})`,
           title: s.title,
           date: s.date,
           startTime: s.startTime,

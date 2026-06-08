@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Button, InputField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
 import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 
 const LocationPicker = dynamic(() => import('@/components/ui/LocationPicker'), { ssr: false });
 
@@ -242,20 +243,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       return;
     }
 
-    const format12Hour = (time24: string): string => {
-    if (!time24) return '';
-    const [hoursStr, minutesStr] = time24.split(':');
-    const hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-
-    if (isNaN(hours) || isNaN(minutes)) return time24;
-
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-
-    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-
     printWindow.document.write(`
 <!DOCTYPE html>
 <html lang="en">
@@ -430,10 +417,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         </div>
 
         <div class="date-time">
-          ${new Date(selectedSession.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          ${formatDisplayDate(selectedSession.date)}
         </div>
 
-        <div class="time">${format12Hour(selectedSession.startTime)} – ${format12Hour(selectedSession.endTime)}</div>
+        <div class="time">${formatDisplayTime(selectedSession.startTime)} - ${formatDisplayTime(selectedSession.endTime)}</div>
 
         ${selectedSession.description ? `<div class="small"><strong>Description:</strong> ${selectedSession.description}</div>` : ''}
       </div>
