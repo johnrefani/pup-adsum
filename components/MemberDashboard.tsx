@@ -17,6 +17,7 @@ interface UpcomingEvent {
 interface TodaySession {
   _id: string;
   title: string;
+  date: string;
   startTime: string;
   endTime: string;
   status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
@@ -65,16 +66,10 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
     const start = formatDisplayTime(todaySession.startTime);
     const end = formatDisplayTime(todaySession.endTime);
 
-    const now = new Date();
-    const todayDate = now.toISOString().slice(0, 10);
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentMinutes = currentHour * 60 + currentMinute;
-
-    const [startH, startM] = todaySession.startTime.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-
-    const hasStarted = currentMinutes >= startMinutes;
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const sessionDate = todaySession.date.split('T')[0];
+    const sessionStart = new Date(`${sessionDate}T${todaySession.startTime}:00`);
+    const hasStarted = now >= sessionStart;
 
     if (!hasStarted) {
       title = `The event ${sessionName} will start at ${start} until ${end}.`;
