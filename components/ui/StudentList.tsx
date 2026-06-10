@@ -7,6 +7,7 @@ type Student = {
   _id: string;
   name: string;
   idNumber: string;
+  yearLevel: string;
   timeIn: string;
   timeOut: string;
   status:
@@ -40,6 +41,19 @@ export default function StudentList({
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
   const ready = sessionId && courseId && yearLevel;
+
+  const formatYearLevel = (value: string) => {
+    if (value === 'all') return 'All Year Levels';
+    const normalized = value.replace(/\D/g, '') || value;
+    const suffix = normalized === '1'
+      ? 'st'
+      : normalized === '2'
+        ? 'nd'
+        : normalized === '3'
+          ? 'rd'
+          : 'th';
+    return `${normalized}${suffix} Year`;
+  };
 
   useEffect(() => {
     if (!ready) {
@@ -79,17 +93,7 @@ export default function StudentList({
       statusCounts[s.status]++;
     });
 
-    const studentsByStatus: Record<typeof allowedStatuses[number], Student[]> = {
-      present: [],
-      absent: [],
-      late: [],
-      unfinished: [],
-    };
-
-    filteredStudents.forEach((s) => {
-      studentsByStatus[s.status].push(s);
-    });
-
+    const yearLabel = formatYearLevel(yearLevel);
     let csv = '';
 
     csv += `"ATTENDANCE SUMMARY REPORT"\r\n`;
@@ -97,7 +101,7 @@ export default function StudentList({
     csv += `"Date","${formatDisplayDate(sessionInfo.date)}"\r\n`;
     csv += `"Time","${formatDisplayTime(sessionInfo.startTime)} - ${formatDisplayTime(sessionInfo.endTime)}"\r\n`;
     csv += `"Program","${courseName}"\r\n`;
-    csv += `"Year Level","${yearLevel}th Year"\r\n`;
+    csv += `"Year Level","${yearLabel}"\r\n`;
     csv += `"Department","${sessionInfo.departmentName || sessionInfo.departmentAcronym}"\r\n`;
     csv += `\r\n`;
 
@@ -111,31 +115,65 @@ export default function StudentList({
     csv += `\r\n\r\n`;
 
     const headers = ['ID Number', 'Full Name', 'Time-In', 'Time-Out'];
-    Object.entries(studentsByStatus).forEach(([status, statusStudents]) => {
-      if (statusStudents.length === 0) return;
+    const writeStatusGroups = (groupedStudents: Student[]) => {
+      const groupedByStatus: Record<typeof allowedStatuses[number], Student[]> = {
+        present: [],
+        absent: [],
+        late: [],
+        unfinished: [],
+      };
 
-      const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
-      csv += `"--- ${displayStatus} (${statusStudents.length}) ---"\r\n`;
-      csv += headers.join(',') + '\r\n';
-
-      statusStudents.forEach((s) => {
-        const row = [
-          s.idNumber,
-          s.name,
-          s.timeIn,
-          s.timeOut,
-        ];
-        csv += row.map((cell) => `"${cell}"`).join(',') + '\r\n';
+      groupedStudents.forEach((student) => {
+        if (student.status && allowedStatuses.includes(student.status as any)) {
+          groupedByStatus[student.status as typeof allowedStatuses[number]].push(student);
+        }
       });
-      csv += `\r\n`;
-    });
+
+      Object.entries(groupedByStatus).forEach(([status, statusStudents]) => {
+        if (statusStudents.length === 0) return;
+
+        const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+        csv += `"--- ${displayStatus} (${statusStudents.length}) ---"\r\n`;
+        csv += headers.join(',') + '\r\n';
+
+        statusStudents.forEach((s) => {
+          const row = [
+            s.idNumber,
+            s.name,
+            s.timeIn,
+            s.timeOut,
+          ];
+          csv += row.map((cell) => `"${cell}"`).join(',') + '\r\n';
+        });
+        csv += `\r\n`;
+      });
+    };
+
+    if (yearLevel === 'all') {
+      const yearGroups = filteredStudents.reduce<Record<string, Student[]>>((acc, student) => {
+        const key = student.yearLevel || 'Unknown';
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(student);
+        return acc;
+      }, {});
+
+      Object.entries(yearGroups)
+        .sort(([a], [b]) => Number(a) - Number(b))
+        .forEach(([year, yearStudents]) => {
+          csv += `"=== ${formatYearLevel(year)} (${yearStudents.length}) ==="\r\n`;
+          writeStatusGroups(yearStudents);
+          csv += `\r\n`;
+        });
+    } else {
+      writeStatusGroups(filteredStudents);
+    }
 
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
     const safe = (s: string) => s.replace(/[\/\\|*?"<>]/g, '_');
-    const filename = `${safe(sessionInfo.title)}_${safe(formatDisplayDate(sessionInfo.date))}(${formatDisplayTime(sessionInfo.startTime)}-${formatDisplayTime(sessionInfo.endTime)})_${safe(courseName)}_${yearLevel}th_${safe(sessionInfo.departmentName || sessionInfo.departmentAcronym)}.csv`;
+    const filename = `${safe(sessionInfo.title)}_${safe(formatDisplayDate(sessionInfo.date))}(${formatDisplayTime(sessionInfo.startTime)}-${formatDisplayTime(sessionInfo.endTime)})_${safe(courseName)}_${safe(yearLabel.replace(/\s+/g, ''))}_${safe(sessionInfo.departmentName || sessionInfo.departmentAcronym)}.csv`;
 
     const a = document.createElement('a');
     a.href = url;

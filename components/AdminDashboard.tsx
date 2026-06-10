@@ -167,19 +167,17 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
       if (activeIndex !== -1) {
         defaultSession = todaySessionsList[activeIndex];
         defaultStatus = 'current';
-      } else if (todaySessionsList.length > 0) {
-        defaultSession = todaySessionsList[todaySessionsList.length - 1];
-        defaultStatus = 'finished';
       }
 
       if (defaultSession) {
         setSelectedSessionId(defaultSession._id);
         setSessionStatus(defaultStatus);
         await fetchAttendance(defaultSession._id, defaultSession);
-
-        updatePrevNext(defaultSession, todaySessionsList);
       } else {
-        resetStates();
+        setTodaySession(null);
+        setStatusTotals({});
+        setSelectedSessionId(null);
+        setSessionStatus(null);
       }
 
       // Global upcoming & finished
@@ -232,7 +230,27 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
     const status = getSessionStatus(session, new Date());
     setSessionStatus(status);
     await fetchAttendance(session._id, session);
-    updatePrevNext(session, todaySessions);
+  };
+
+  const handleFinishedSessionToggle = async (session: UpcomingEvent) => {
+    if (selectedSessionId !== session._id) {
+      await handleSessionSelect(session);
+      return;
+    }
+
+    const now = new Date();
+    const currentSession = todaySessions.find((item) => getSessionStatus(item, now) === 'current');
+    if (currentSession) {
+      setSelectedSessionId(currentSession._id);
+      setSessionStatus('current');
+      await fetchAttendance(currentSession._id, currentSession);
+      return;
+    }
+
+    setSelectedSessionId(null);
+    setSessionStatus(null);
+    setTodaySession(null);
+    setStatusTotals({});
   };
 
   useEffect(() => {
@@ -310,43 +328,6 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
                     <p className="text-xl font-semibold text-maroon-900">{statusTotals['late-unfinished'] ?? 0}</p>
                   </div>
                 </div>
-
-                {/* Previous / Next - Only for same day sessions */}
-                {(previousSession || nextSession) && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                    <button
-                      onClick={() => previousSession && handleSessionSelect(previousSession)}
-                      disabled={!previousSession}
-                      className="p-3 border border-black/10 rounded-lg bg-bg/60 hover:bg-maroon-50 hover:border-maroon-900 transition-all text-left disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <p className="text-sm text-black/70">Previous session</p>
-                      {previousSession && (
-                        <>
-                          <p className="font-semibold text-maroon-900">{previousSession.title}</p>
-                          <p className="text-sm text-gold-600">
-                            {formatDisplayTime(previousSession.startTime)} - {formatDisplayTime(previousSession.endTime)}
-                          </p>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => nextSession && handleSessionSelect(nextSession)}
-                      disabled={!nextSession}
-                      className="p-3 border border-black/10 rounded-lg bg-bg/60 hover:bg-maroon-50 hover:border-maroon-900 transition-all text-left disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <p className="text-sm text-black/70">Next session</p>
-                      {nextSession && (
-                        <>
-                          <p className="font-semibold text-maroon-900">{nextSession.title}</p>
-                          <p className="text-sm text-gold-600">
-                            {formatDisplayTime(nextSession.startTime)} - {formatDisplayTime(nextSession.endTime)}
-                          </p>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
               </>
             ) : (
               <div className="text-center text-maroon-900/90 font-semibold text-lg py-12">
@@ -374,10 +355,19 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
                   <button
                     type="button"
                     key={event._id}
-                    onClick={() => handleSessionSelect(event)}
+                    onClick={() => handleFinishedSessionToggle(event)}
                     disabled={loading}
-                    className="w-full border border-black/25 bg-bg/50 p-2 md:p-3 lg:p-4 rounded-lg space-y-1 text-left transition hover:border-maroon-900 hover:bg-bg focus:outline-none focus:ring-2 focus:ring-maroon-900/40 disabled:cursor-wait disabled:opacity-70"
+                    className={`w-full border p-2 md:p-3 lg:p-4 rounded-lg space-y-2 text-left transition hover:border-maroon-900 hover:bg-bg focus:outline-none focus:ring-2 focus:ring-maroon-900/40 disabled:cursor-wait disabled:opacity-70 ${
+                      selectedSessionId === event._id
+                        ? 'border-maroon-900 bg-maroon-50'
+                        : 'border-black/25 bg-bg/50'
+                    }`}
                   >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="rounded-md border border-maroon-900/20 px-2 py-1 text-xs font-semibold text-maroon-900">
+                        {selectedSessionId === event._id ? 'Unselect' : 'Select'}
+                      </span>
+                    </div>
                     <p className="text-maroon-900 font-semibold text-base md:text-lg lg:text-xl">
                       {event.title}
                     </p>

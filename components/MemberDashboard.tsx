@@ -22,6 +22,16 @@ interface TodaySession {
   status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
+const statusLabels: Record<NonNullable<TodaySession['status']>, string> = {
+  present: 'Present',
+  absent: 'Absent',
+  unfinished: 'Unfinished Attendance',
+  late: 'Late',
+  'timed-in': 'Timed-in',
+  'timed-in-late': 'Timed-in Late',
+  'late-unfinished': 'Late & Unfinished Attendance',
+};
+
 const MemberDashboard = ({ username }: MemberDashboardProps) => {
   const router = useRouter();
 
@@ -110,6 +120,11 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
         <div className="space-y-4 md:space-y-6 lg:space-y-8">
           <div className="flex flex-col items-center text-center shadow-lg p-4 md:p-6 lg:p-8 bg-white rounded-lg space-y-1 md:space-y-2 lg:space-y-3">
+            {todaySession && (
+              <span className="rounded-full border border-maroon-900/20 bg-maroon-50 px-3 py-1 text-sm font-semibold text-maroon-900">
+                {todaySession.status ? statusLabels[todaySession.status] : 'Not Timed-in'}
+              </span>
+            )}
             <h2 className="font-semibold text-maroon-900 text-2xl md:text-[28px] lg:text-[32px] max-w-full">
               {title}
             </h2>

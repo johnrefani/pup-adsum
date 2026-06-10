@@ -54,6 +54,7 @@ export default function ScanLocationConfirmation({ token, session, user, action 
   const [message, setMessage] = useState('');
   const [distance, setDistance] = useState<number | null>(null);
   const [currentLocation, setCurrentLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [isOutsideRadius, setIsOutsideRadius] = useState(false);
   const [attendanceResult, setAttendanceResult] = useState<AttendanceResponse | null>(null);
 
   const requiresGeofence =
@@ -69,17 +70,21 @@ export default function ScanLocationConfirmation({ token, session, user, action 
   const handleConfirm = async () => {
     setIsLoading(true);
     setMessage('Checking your current location...');
+    setIsOutsideRadius(false);
+    setDistance(null);
+    setCurrentLocation(null);
 
     try {
       const position = await getCurrentPosition();
       const { latitude, longitude } = position.coords;
-      setCurrentLocation({ lat: latitude, lng: longitude });
 
       if (requiresGeofence && session.venueLocation) {
         const currentDistance = getDistance(latitude, longitude, session.venueLocation.lat, session.venueLocation.lng);
-        setDistance(currentDistance);
 
         if (currentDistance > session.allowedRadiusMeters!) {
+          setCurrentLocation({ lat: latitude, lng: longitude });
+          setDistance(currentDistance);
+          setIsOutsideRadius(true);
           setMessage(`You are outside the allowed area. ${formatDistance(currentDistance)} away from the venue.`);
           setIsLoading(false);
           return;
@@ -135,7 +140,7 @@ export default function ScanLocationConfirmation({ token, session, user, action 
           <p className="text-sm text-gray-600 mt-2">{venueLabel}</p>
         </div>
 
-        {requiresGeofence && currentLocation && (
+        {requiresGeofence && currentLocation && isOutsideRadius && (
           <div className="rounded-3xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             Current location: {currentLocation.lat.toFixed(6)}, {currentLocation.lng.toFixed(6)}
             <br />Distance from venue: {distance !== null ? formatDistance(distance) : 'Calculating...'}
