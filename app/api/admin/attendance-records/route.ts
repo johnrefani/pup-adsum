@@ -25,10 +25,10 @@ export async function GET(request: Request) {
 
     const memberFilter: any = { role: 'member', department: admin.department };
     if (courseId) memberFilter.course = courseId;
-    if (yearLevel) memberFilter.yearLevel = yearLevel;
+    if (yearLevel && yearLevel !== 'all') memberFilter.yearLevel = yearLevel;
 
     const members = await User.find(memberFilter)
-      .select('fullName idNumber')
+      .select('fullName idNumber yearLevel')
       .lean();
 
     const memberIds = members.map((m: any) => m._id);
@@ -70,6 +70,7 @@ export async function GET(request: Request) {
         _id: member._id.toString(),
         name: member.fullName,
         idNumber: member.idNumber || 'N/A',
+        yearLevel: member.yearLevel || '',
         timeIn,
         timeOut,
         status: att?.status || null,

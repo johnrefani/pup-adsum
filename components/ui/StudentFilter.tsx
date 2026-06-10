@@ -49,6 +49,7 @@ export default function StudentFilter({
   const [search, setSearch] = useState('');
 
   const yearLevelOptions: Option[] = [
+    { value: 'all', label: 'All Year Levels' },
     { value: '1', label: '1st Year' },
     { value: '2', label: '2nd Year' },
     { value: '3', label: '3rd Year' },

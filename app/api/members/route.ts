@@ -29,9 +29,11 @@ export async function GET(request: Request) {
       department: admin.department,
     };
 
-    if (courseId && yearLevelRaw) {
+    if (courseId) {
       query.course = courseId;
+    }
 
+    if (yearLevelRaw && yearLevelRaw !== 'All' && yearLevelRaw !== 'all') {
       const yearMap: Record<string, string> = {
         '1st Year': '1',
         '2nd Year': '2',
