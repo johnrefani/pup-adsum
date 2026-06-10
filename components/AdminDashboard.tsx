@@ -84,28 +84,41 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
         sessionTotalCount: students.length,
       };
 
+      const presentCount = summary.present ?? 0;
+      const absentCount = summary.absent ?? 0;
+      const lateCount = summary.late ?? 0;
+      const unfinishedCount = summary.unfinished ?? 0;
+      const rawTimedInCount = summary['timed-in'] ?? 0;
+      const rawTimedInLateCount = summary['timed-in-late'] ?? 0;
+      const lateUnfinishedCount = summary['late-unfinished'] ?? 0;
+      const noneCount = summary.none ?? 0;
+      const sessionTotalCount = summary.sessionTotalCount ?? 0;
+
+      const timedInCount = rawTimedInCount + presentCount + unfinishedCount;
+      const timedInLateCount = rawTimedInLateCount + lateCount + lateUnfinishedCount;
+
       setTodaySession({
         ...session,
-        presentCount: summary.present ?? 0,
-        absentCount: summary.absent ?? 0,
-        lateCount: summary.late ?? 0,
-        unfinishedCount: summary.unfinished ?? 0,
-        timedInCount: summary['timed-in'] ?? 0,
-        timedInLateCount: summary['timed-in-late'] ?? 0,
-        lateUnfinishedCount: summary['late-unfinished'] ?? 0,
-        noneCount: summary.none ?? 0,
-        sessionTotalCount: summary.sessionTotalCount ?? 0,
+        presentCount,
+        absentCount,
+        lateCount,
+        unfinishedCount,
+        timedInCount,
+        timedInLateCount,
+        lateUnfinishedCount,
+        noneCount,
+        sessionTotalCount,
       });
 
       setStatusTotals({
-        present: summary.present ?? 0,
-        absent: summary.absent ?? 0,
-        late: summary.late ?? 0,
-        unfinished: summary.unfinished ?? 0,
-        'timed-in': summary['timed-in'] ?? 0,
-        'timed-in-late': summary['timed-in-late'] ?? 0,
-        'late-unfinished': summary['late-unfinished'] ?? 0,
-        none: summary.none ?? 0,
+        present: presentCount,
+        absent: absentCount,
+        late: lateCount,
+        unfinished: unfinishedCount,
+        'timed-in': timedInCount,
+        'timed-in-late': timedInLateCount,
+        'late-unfinished': lateUnfinishedCount,
+        none: noneCount,
       });
     } catch (err) {
       console.error('Failed to fetch attendance', err);
