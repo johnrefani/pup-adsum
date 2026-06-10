@@ -23,16 +23,6 @@ interface TodaySession {
   status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
-const statusLabels: Record<NonNullable<TodaySession['status']>, string> = {
-  present: 'Present',
-  absent: 'Absent',
-  unfinished: 'Unfinished Attendance',
-  late: 'Late',
-  'timed-in': 'Timed-in',
-  'timed-in-late': 'Timed-in Late',
-  'late-unfinished': 'Late & Unfinished Attendance',
-};
-
 const MemberDashboard = ({ username }: MemberDashboardProps) => {
   const router = useRouter();
 
@@ -60,6 +50,7 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
 
   let title = "";
   let subtitle = "";
+  let statusBadge = "";
 
   if (todaySession) {
     const sessionName = todaySession.title;
@@ -72,31 +63,40 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
     const hasStarted = now >= sessionStart;
 
     if (!hasStarted) {
-      title = `The event ${sessionName} will start at ${start} until ${end}.`;
-      subtitle = "Be sure to be present during the event!";
+      statusBadge = "Upcoming";
+      title = `Upcoming event: ${sessionName}`;
+      subtitle = `${formatDisplayDate(todaySession.date)} • ${start} - ${end}. Be ready to scan when the session starts.`;
     } else if (todaySession.status === null) {
-      title = `There is an event today! ${sessionName} that starts at ${start} until ${end}!`;
+      statusBadge = "Time-in Needed";
+      title = `Time-in is open for ${sessionName}.`;
       subtitle = "Scan the QR code now to record your time-in.";
     } else if (todaySession.status === 'timed-in') {
-      title = `You have timed in for ${sessionName}.`;
-      subtitle = "Do not forget to scan again during the allowed time-out window.";
+      statusBadge = "Timed-in";
+      title = `Time-in recorded for ${sessionName}.`;
+      subtitle = "Scan again during the time-out window to complete your attendance as Present.";
     } else if (todaySession.status === 'timed-in-late') {
-      title = `You have timed in late for ${sessionName}.`;
-      subtitle = "Scan again during the allowed time-out window so your attendance can be finalized as late.";
+      statusBadge = "Timed-in Late";
+      title = `Late time-in recorded for ${sessionName}.`;
+      subtitle = "Scan again during the time-out window to complete your attendance as Late.";
     } else if (todaySession.status === 'present') {
-      title = `You completed your attendance for ${sessionName}.`;
-      subtitle = "You were marked as present.";
+      statusBadge = "Present";
+      title = `Attendance completed for ${sessionName}.`;
+      subtitle = "You successfully timed in and timed out.";
     } else if (todaySession.status === 'late') {
-      title = `You completed your attendance for ${sessionName}, but you were late.`;
-      subtitle = "Your time-in was beyond the grace period.";
+      statusBadge = "Late";
+      title = `Attendance completed as Late for ${sessionName}.`;
+      subtitle = "You timed in after the grace period and completed your time-out.";
     } else if (todaySession.status === 'absent') {
-      title = `You were marked as absent for ${sessionName}.`;
-      subtitle = "You missed the allowed time-in window.";
+      statusBadge = "Absent";
+      title = `Marked Absent for ${sessionName}.`;
+      subtitle = "No valid time-in was completed within the allowed window.";
     } else if (todaySession.status === 'unfinished') {
-      title = `Your attendance for ${sessionName} is unfinished.`;
+      statusBadge = "Unfinished Attendance";
+      title = `Attendance unfinished for ${sessionName}.`;
       subtitle = "You timed in but did not complete a valid time-out.";
     } else if (todaySession.status === 'late-unfinished') {
-      title = `Your attendance for ${sessionName} is late and unfinished.`;
+      statusBadge = "Late & Unfinished Attendance";
+      title = `Late and unfinished attendance for ${sessionName}.`;
       subtitle = "You timed in late and did not complete a valid time-out.";
     }
   } else {
@@ -115,9 +115,9 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
         <div className="space-y-4 md:space-y-6 lg:space-y-8">
           <div className="flex flex-col items-center text-center shadow-lg p-4 md:p-6 lg:p-8 bg-white rounded-lg space-y-1 md:space-y-2 lg:space-y-3">
-            {todaySession && (
+            {statusBadge && (
               <span className="rounded-full border border-maroon-900/20 bg-maroon-50 px-3 py-1 text-sm font-semibold text-maroon-900">
-                {todaySession.status ? statusLabels[todaySession.status] : 'Not Timed-in'}
+                {statusBadge}
               </span>
             )}
             <h2 className="font-semibold text-maroon-900 text-2xl md:text-[28px] lg:text-[32px] max-w-full">
