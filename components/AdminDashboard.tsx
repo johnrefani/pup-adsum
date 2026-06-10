@@ -232,7 +232,7 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
     await fetchAttendance(session._id, session);
   };
 
-  const handleFinishedSessionToggle = async (session: UpcomingEvent) => {
+  const handleSessionToggle = async (session: UpcomingEvent) => {
     if (selectedSessionId !== session._id) {
       await handleSessionSelect(session);
       return;
@@ -355,10 +355,19 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
                   <button
                     type="button"
                     key={event._id}
-                    onClick={() => handleSessionSelect(event)}
+                    onClick={() => handleSessionToggle(event)}
                     disabled={loading}
-                    className="w-full border border-black/25 bg-bg/50 p-2 md:p-3 lg:p-4 rounded-lg space-y-1 text-left transition hover:border-maroon-900 hover:bg-bg focus:outline-none focus:ring-2 focus:ring-maroon-900/40 disabled:cursor-wait disabled:opacity-70"
+                    className={`w-full border p-2 md:p-3 lg:p-4 rounded-lg space-y-2 text-left transition hover:border-maroon-900 hover:bg-bg focus:outline-none focus:ring-2 focus:ring-maroon-900/40 disabled:cursor-wait disabled:opacity-70 ${
+                      selectedSessionId === event._id
+                        ? 'border-maroon-900 bg-maroon-50'
+                        : 'border-black/25 bg-bg/50'
+                    }`}
                   >
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="rounded-md border border-maroon-900/20 px-2 py-1 text-xs font-semibold text-maroon-900">
+                        {selectedSessionId === event._id ? 'Unselect' : 'Select'}
+                      </span>
+                    </div>
                     <p className="text-maroon-900 font-semibold text-base md:text-lg lg:text-xl">
                       {event.title}
                     </p>
@@ -393,7 +402,7 @@ const AdminDashboard = ({ username }: AdminDashboardProps) => {
                   <button
                     type="button"
                     key={event._id}
-                    onClick={() => handleFinishedSessionToggle(event)}
+                    onClick={() => handleSessionToggle(event)}
                     disabled={loading}
                     className={`w-full border p-2 md:p-3 lg:p-4 rounded-lg space-y-2 text-left transition hover:border-maroon-900 hover:bg-bg focus:outline-none focus:ring-2 focus:ring-maroon-900/40 disabled:cursor-wait disabled:opacity-70 ${
                       selectedSessionId === event._id

@@ -42,6 +42,16 @@ export default function StudentList({
   const [loading, setLoading] = useState(false);
   const ready = sessionId && courseId && yearLevel;
 
+  const hasSessionEnded = (() => {
+    if (!sessionInfo?.date || !sessionInfo?.endTime) return false;
+
+    const sessionDate = String(sessionInfo.date).split('T')[0];
+    const sessionEnd = new Date(`${sessionDate}T${sessionInfo.endTime}:00`);
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+
+    return now > sessionEnd;
+  })();
+
   const formatYearLevel = (value: string) => {
     if (value === 'all') return 'All Year Levels';
     const normalized = value.replace(/\D/g, '') || value;
@@ -273,7 +283,7 @@ export default function StudentList({
       </div>
 
       {/* Footer with Button */}
-      {students.length > 0 && (
+      {students.length > 0 && hasSessionEnded && (
         <div className="px-6 py-4 md:px-8 md:py-5 border-t border-gray-200 shrink-0 flex justify-end bg-white">
           <Button
             type="button"
