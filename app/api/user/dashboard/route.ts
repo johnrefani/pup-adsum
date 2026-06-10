@@ -19,15 +19,33 @@ interface UpcomingEvent {
 interface TodaySession {
   _id: string;
   title: string;
+  date: string;
   startTime: string;
   endTime: string;
-  status: 'present' | 'absent' | null;
+  status: 'present' | 'absent' | 'unfinished' | 'late' | 'timed-in' | 'timed-in-late' | 'late-unfinished' | null;
 }
 
 interface DashboardResponse {
   todaySession: TodaySession | null;
   upcomingEvents: UpcomingEvent[];
 }
+
+const getManilaDateKey = (date: Date) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+
+const getManilaNow = () =>
+  new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+
+const parseSessionDateTime = (session: { date: Date; startTime: string; endTime: string }, timeKey: 'startTime' | 'endTime') => {
+  const sessionDate = session.date.toISOString().split('T')[0];
+  const [hour, minute] = session[timeKey].split(':');
+  return new Date(`${sessionDate}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`);
+};
 
 export async function GET(): Promise<NextResponse<DashboardResponse | { error: string }>> {
   try {
@@ -45,16 +63,36 @@ export async function GET(): Promise<NextResponse<DashboardResponse | { error: s
       return NextResponse.json({ error: 'User not found or not a member' }, { status: 404 });
     }
 
-    const now = new Date();
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
+    const now = getManilaNow();
+    const todayKey = getManilaDateKey(new Date());
+    const todayDate = new Date(`${todayKey}T00:00:00.000Z`);
 
-    const todaySessionDoc = await Session.findOne({
+    const candidateSessions = await Session.find({
       department: user.department,
-      date: { $gte: todayStart, $lte: todayEnd },
-    }).sort({ date: 1 });
+      date: { $gte: todayDate },
+    })
+      .sort({ date: 1, startTime: 1 })
+      .select('title date startTime endTime')
+      .lean();
+
+    const activeSessionDoc = candidateSessions.find((session: any) => {
+      const start = parseSessionDateTime(session, 'startTime');
+      const end = parseSessionDateTime(session, 'endTime');
+      return now >= start && now <= end;
+    });
+
+    const nextUpcomingSessionDoc = candidateSessions.find((session: any) =>
+      parseSessionDateTime(session, 'startTime') > now
+    );
+
+    const latestEndedTodaySessionDoc = [...candidateSessions]
+      .filter((session: any) =>
+        session.date.toISOString().split('T')[0] === todayKey &&
+        parseSessionDateTime(session, 'endTime') < now
+      )
+      .sort((a: any, b: any) => parseSessionDateTime(b, 'endTime').getTime() - parseSessionDateTime(a, 'endTime').getTime())[0];
+
+    const todaySessionDoc = activeSessionDoc || nextUpcomingSessionDoc || latestEndedTodaySessionDoc || null;
 
     let todaySession: TodaySession | null = null;
 
@@ -65,22 +103,19 @@ export async function GET(): Promise<NextResponse<DashboardResponse | { error: s
       });
 
       todaySession = {
-        _id: todaySessionDoc._id.toString(),
+        _id: String(todaySessionDoc._id),
         title: todaySessionDoc.title,
+        date: todaySessionDoc.date.toISOString().split('T')[0],
         startTime: todaySessionDoc.startTime,
         endTime: todaySessionDoc.endTime,
         status: attendance?.status ?? null,
       };
     }
 
-    const upcomingSessions = await Session.find({
-      department: user.department,
-      date: { $gt: todayEnd },
-    })
-      .sort({ date: 1, startTime: 1 })
-      .limit(3)
-      .select('title date startTime endTime')
-      .lean();
+    const upcomingSessions = candidateSessions
+      .filter((session: any) => parseSessionDateTime(session, 'startTime') > now)
+      .sort((a: any, b: any) => parseSessionDateTime(a, 'startTime').getTime() - parseSessionDateTime(b, 'startTime').getTime())
+      .slice(0, 3);
 
     const upcomingEvents: UpcomingEvent[] = upcomingSessions.map((s: any) => ({
       _id: (s._id as mongoose.Types.ObjectId).toString(),

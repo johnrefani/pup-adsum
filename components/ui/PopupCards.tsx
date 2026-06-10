@@ -105,11 +105,13 @@ export interface CoursePopupProps {
     acronym: string;
     completeName: string;
     department: string;
+    yearRange?: number;
   };
   onSubmit: (
     acronym: string,
     completeName: string,
     departmentName: string,
+    yearRange: number,
     id?: string
   ) => Promise<void>;
 }
@@ -125,6 +127,7 @@ export const CoursePopup = ({
   const [acronym, setAcronym] = useState("");
   const [completeName, setCompleteName] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [yearRange, setYearRange] = useState("4");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -133,10 +136,12 @@ export const CoursePopup = ({
         setAcronym(initialData.acronym || "");
         setCompleteName(initialData.completeName || "");
         setSelectedDepartment(initialData.department || "");
+        setYearRange(String(initialData.yearRange || 4));
       } else {
         setAcronym("");
         setCompleteName("");
         setSelectedDepartment("");
+        setYearRange("4");
       }
     }
   }, [isOpen, isEdit, initialData]);
@@ -144,7 +149,9 @@ export const CoursePopup = ({
   const isFormValid =
     acronym.trim().length > 0 &&
     completeName.trim().length > 0 &&
-    selectedDepartment.trim().length > 0;
+    selectedDepartment.trim().length > 0 &&
+    Number(yearRange) >= 1 &&
+    Number(yearRange) <= 5;
 
   const handleSubmit = async () => {
     if (!isFormValid || isSubmitting) return;
@@ -155,11 +162,12 @@ export const CoursePopup = ({
         acronym.trim(),
         completeName.trim(),
         selectedDepartment.trim(),
+        Number(yearRange),
         isEdit ? initialData?.id : undefined
       );
       // Form closes via parent callback — no need to call onClose() here
-    } catch (error: any) {
-      alert(error.message || `Failed to ${isEdit ? "update" : "add"} course`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "add"} course`);
     } finally {
       setIsSubmitting(false);
     }
@@ -212,6 +220,18 @@ export const CoursePopup = ({
             placeholder="Select an organization"
             value={selectedDepartment}
             onChange={setSelectedDepartment}
+            disabled={isSubmitting}
+          />
+
+          <SearchableSelectField
+            label="Year Range"
+            options={[1, 2, 3, 4, 5].map((year) => ({
+              value: String(year),
+              label: `${year} year${year === 1 ? '' : 's'}`,
+            }))}
+            placeholder="Select year range"
+            value={yearRange}
+            onChange={setYearRange}
             disabled={isSubmitting}
           />
         </div>
@@ -320,8 +340,8 @@ export const ManageAdmin = ({
         adminId
       );
       setShowSuccess(true);
-    } catch (error: any) {
-      alert(error.message || `Failed to ${isEdit ? "update" : "add"} admin`);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : `Failed to ${isEdit ? "update" : "add"} admin`);
     } finally {
       setIsLoading(false);
     }
@@ -403,6 +423,22 @@ interface Student {
   yearLevel: string;
 }
 
+interface CourseOption {
+  value: string;
+  label: string;
+  yearRange?: number;
+}
+
+interface MemberPayload {
+  id?: string;
+  fullName: string;
+  idNumber: string;
+  username: string;
+  course: string;
+  yearLevel: string;
+  password?: string;
+}
+
 interface ManageMemberProps {
   isOpen: boolean;
   onClose: () => void;
@@ -417,11 +453,14 @@ export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemb
   const [password, setPassword] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYearLevel, setSelectedYearLevel] = useState("");
-  const [courses, setCourses] = useState<{ value: string; label: string }[]>([]);
+  const [courses, setCourses] = useState<CourseOption[]>([]);
   const [loading, setLoading] = useState(false);
 
   const isEdit = !!student;
-  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
+  const selectedCourseInfo = courses.find((course) => course.value === selectedCourse);
+  const selectedCourseYearRange = Number(selectedCourseInfo?.yearRange || 5);
+  const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"]
+    .slice(0, selectedCourseYearRange);
 
   useEffect(() => {
     if (isOpen) {
@@ -451,7 +490,7 @@ export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemb
     if (!canSubmit || loading) return;
     setLoading(true);
 
-    const payload: any = {
+    const payload: MemberPayload = {
       fullName: fullname.trim(),
       idNumber: idNumber.trim(),
       username: username.trim(),
@@ -479,8 +518,8 @@ export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemb
       }
 
       onSuccess?.();
-    } catch (e: any) {
-      alert(e.message || 'Operation failed');
+    } catch (e) {
+      alert(e instanceof Error ? e.message : 'Operation failed');
     } finally {
       setLoading(false);
     }
@@ -871,8 +910,8 @@ export const UpdateMyAccount = ({
         username.trim(),
         password.trim()
       );
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Update failed');
     } finally {
       setIsLoading(false);
     }

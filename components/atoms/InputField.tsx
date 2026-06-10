@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Eye, EyeOff } from "@/lib/icons";
 
 interface InputFieldProps {
@@ -39,14 +39,8 @@ const InputField: React.FC<InputFieldProps> = ({
   ...rest
 }) => {
   const [showPassword, setShowPassword] = useState(false);
-  const [internalValue, setInternalValue] = useState(value || defaultValue || "");
-
-  useEffect(() => {
-    setInternalValue(value || "");
-  }, [value]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInternalValue(e.target.value);
     onChange?.(e);
   };
 
@@ -82,8 +76,6 @@ const InputField: React.FC<InputFieldProps> = ({
           {...(register ? register(name) : {})}
           type={effectiveType}
           name={name}
-          value={value !== undefined ? value : internalValue}
-          defaultValue={defaultValue}
           onChange={!isReadOnly ? handleChange : undefined}
           disabled={isDisabled}
           readOnly={isReadOnly && !isDisabled}   // readOnly + not disabled = classic readonly style
@@ -107,6 +99,8 @@ const InputField: React.FC<InputFieldProps> = ({
                 : "bg-white text-gray-900 cursor-text"
             }
           `}
+          {...(value !== undefined ? { value } : {})}
+          {...(value === undefined && defaultValue !== undefined ? { defaultValue } : {})}
           {...rest}
         />
 

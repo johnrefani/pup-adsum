@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MemberDashboardProps } from "@/lib/types"
 import { Button } from "@/lib/imports";
+import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
 import { useRouter } from "next/navigation";
 
 interface UpcomingEvent {
@@ -16,26 +17,11 @@ interface UpcomingEvent {
 interface TodaySession {
   _id: string;
   title: string;
+  date: string;
   startTime: string;
   endTime: string;
-  status: "present" | "absent" | null;
+  status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
-
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  });
-};
-
-const formatTime = (time: string) => {
-  const [hours, minutes] = time.split(':');
-  const h = parseInt(hours);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${minutes} ${ampm}`;
-};
 
 const MemberDashboard = ({ username }: MemberDashboardProps) => {
   const router = useRouter();
@@ -64,35 +50,54 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
 
   let title = "";
   let subtitle = "";
+  let statusBadge = "";
 
   if (todaySession) {
     const sessionName = todaySession.title;
-    const start = formatTime(todaySession.startTime);
-    const end = formatTime(todaySession.endTime);
+    const start = formatDisplayTime(todaySession.startTime);
+    const end = formatDisplayTime(todaySession.endTime);
 
-    const now = new Date();
-    const todayDate = now.toISOString().slice(0, 10);
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentMinutes = currentHour * 60 + currentMinute;
-
-    const [startH, startM] = todaySession.startTime.split(':').map(Number);
-    const startMinutes = startH * 60 + startM;
-
-    const hasStarted = currentMinutes >= startMinutes;
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const sessionDate = todaySession.date.split('T')[0];
+    const sessionStart = new Date(`${sessionDate}T${todaySession.startTime}:00`);
+    const hasStarted = now >= sessionStart;
 
     if (!hasStarted) {
-      title = `The event ${sessionName} will start at ${start} until ${end}.`;
-      subtitle = "Be sure to be present during the event!";
+      statusBadge = "Upcoming";
+      title = `Upcoming event: ${sessionName}`;
+      subtitle = `${formatDisplayDate(todaySession.date)} • ${start} - ${end}. Be ready to scan when the session starts.`;
     } else if (todaySession.status === null) {
-      title = `There is an event today! ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Scan the QR Code now to be marked as Present!";
+      statusBadge = "Time-in Needed";
+      title = `Time-in is open for ${sessionName}.`;
+      subtitle = "Scan the QR code now to record your time-in.";
+    } else if (todaySession.status === 'timed-in') {
+      statusBadge = "Timed-in";
+      title = `Time-in recorded for ${sessionName}.`;
+      subtitle = "Scan again during the time-out window to complete your attendance as Present.";
+    } else if (todaySession.status === 'timed-in-late') {
+      statusBadge = "Timed-in Late";
+      title = `Late time-in recorded for ${sessionName}.`;
+      subtitle = "Scan again during the time-out window to complete your attendance as Late.";
     } else if (todaySession.status === 'present') {
-      title = `You were marked as Present on the current event called ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Have a great day!";
+      statusBadge = "Present";
+      title = `Attendance completed for ${sessionName}.`;
+      subtitle = "You successfully timed in and timed out.";
+    } else if (todaySession.status === 'late') {
+      statusBadge = "Late";
+      title = `Attendance completed as Late for ${sessionName}.`;
+      subtitle = "You timed in after the grace period and completed your time-out.";
     } else if (todaySession.status === 'absent') {
-      title = `You were marked as Absent on the recent event called ${sessionName} that starts at ${start} until ${end}!`;
-      subtitle = "Be on time next time!";
+      statusBadge = "Absent";
+      title = `Marked Absent for ${sessionName}.`;
+      subtitle = "No valid time-in was completed within the allowed window.";
+    } else if (todaySession.status === 'unfinished') {
+      statusBadge = "Unfinished Attendance";
+      title = `Attendance unfinished for ${sessionName}.`;
+      subtitle = "You timed in but did not complete a valid time-out.";
+    } else if (todaySession.status === 'late-unfinished') {
+      statusBadge = "Late & Unfinished Attendance";
+      title = `Late and unfinished attendance for ${sessionName}.`;
+      subtitle = "You timed in late and did not complete a valid time-out.";
     }
   } else {
     title = "There is no event for today!";
@@ -110,6 +115,11 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 lg:gap-8">
         <div className="space-y-4 md:space-y-6 lg:space-y-8">
           <div className="flex flex-col items-center text-center shadow-lg p-4 md:p-6 lg:p-8 bg-white rounded-lg space-y-1 md:space-y-2 lg:space-y-3">
+            {statusBadge && (
+              <span className="rounded-full border border-maroon-900/20 bg-maroon-50 px-3 py-1 text-sm font-semibold text-maroon-900">
+                {statusBadge}
+              </span>
+            )}
             <h2 className="font-semibold text-maroon-900 text-2xl md:text-[28px] lg:text-[32px] max-w-full">
               {title}
             </h2>
@@ -162,10 +172,10 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
                     {event.title}
                   </p>
                   <p className="text-gold-600 font-medium text-sm md:text-base">
-                    {formatDate(event.date)}
+                    {formatDisplayDate(event.date)}
                   </p>
                   <p className="text-black/65 font-medium text-sm md:text-base">
-                    {formatTime(event.startTime)} - {formatTime(event.endTime)}
+                    {formatDisplayTime(event.startTime)} - {formatDisplayTime(event.endTime)}
                   </p>
                 </div>
               ))}

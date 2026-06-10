@@ -4,6 +4,7 @@ import Attendance from '@/models/Attendance';
 import User from '@/models/User';
 import { cookies } from 'next/headers';
 import { Models } from '@/lib/models';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 
 export async function GET(request: Request) {
   try {
@@ -24,10 +25,10 @@ export async function GET(request: Request) {
 
     const memberFilter: any = { role: 'member', department: admin.department };
     if (courseId) memberFilter.course = courseId;
-    if (yearLevel) memberFilter.yearLevel = yearLevel;
+    if (yearLevel && yearLevel !== 'all') memberFilter.yearLevel = yearLevel;
 
     const members = await User.find(memberFilter)
-      .select('fullName idNumber')
+      .select('fullName idNumber yearLevel')
       .lean();
 
     const memberIds = members.map((m: any) => m._id);
@@ -36,26 +37,42 @@ export async function GET(request: Request) {
     if (sessionId) attendanceFilter.session = sessionId;
 
     const attendances = await Attendance.find(attendanceFilter)
-      .select('member timeIn status')
+      .select('member timeIn timeOut status')
       .lean();
+
+    const summary = attendances.reduce(
+      (acc: any, attendance: any) => {
+        const status = attendance.status || 'none';
+        acc.sessionTotalCount += 1;
+        acc[status] = (acc[status] || 0) + 1;
+        return acc;
+      },
+      {
+        sessionTotalCount: 0,
+        present: 0,
+        absent: 0,
+        late: 0,
+        unfinished: 0,
+        'timed-in': 0,
+        'timed-in-late': 0,
+        'late-unfinished': 0,
+        none: 0,
+      }
+    );
 
     let result = members.map((member: any) => {
       const att = attendances.find((a: any) => a.member.toString() === member._id.toString());
 
-      const timeIn = att?.timeIn
-        ? new Date(att.timeIn).toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-          timeZone: 'Asia/Manila',
-          })
-        : '---';
+      const timeIn = att?.timeIn ? formatDisplayTime(new Date(att.timeIn)) : '---';
+      const timeOut = att?.timeOut ? formatDisplayTime(new Date(att.timeOut)) : '---';
 
       return {
         _id: member._id.toString(),
         name: member.fullName,
         idNumber: member.idNumber || 'N/A',
+        yearLevel: member.yearLevel || '',
         timeIn,
+        timeOut,
         status: att?.status || null,
       };
     });
@@ -67,7 +84,7 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json({ students: result });
+    return NextResponse.json({ students: result, summary });
   } catch (error: any) {
     console.error('Attendance records error:', error);
     return NextResponse.json({ error: 'Failed to load records' }, { status: 500 });

@@ -70,8 +70,9 @@ export interface CoursePopupProps {
     acronym: string;
     completeName: string;
     department: string;
+    yearRange?: number;
   };
-  onSubmit: (acronym: string, completeName: string, department: string, id?: number) => Promise<void>;
+  onSubmit: (acronym: string, completeName: string, department: string, yearRange: number, id?: number) => Promise<void>;
 }
 
 export interface SearchableSelectFieldProps {
@@ -152,7 +153,7 @@ export interface CountStatProps {
 }
 
 export interface StatusProps {
-    status: "present" | "absent" | null;
+    status: "present" | "absent" | "unfinished" | "late" | "timed-in" | "timed-in-late" | "late-unfinished" | null;
 }
 
 

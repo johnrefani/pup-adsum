@@ -28,9 +28,10 @@ const userSchema = new mongoose.Schema({
   },
   yearLevel: {
     type: String,
-    enum: ['1', '2', '3', '4'],
-    required: function(this: any) { return this.role === 'member'; },
+    enum: ['1', '2', '3', '4', '5', null],
+    default: null,
   },
+  graduatedAt: { type: Date, default: null },
   profilePicture: { type: String, default: null },
 }, { timestamps: true });
 

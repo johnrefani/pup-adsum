@@ -16,6 +16,14 @@ type SelectedSession = {
   startTime: string;
   endTime: string;
   description: string;
+  semester?: string;
+  schoolYear?: string;
+  gracePeriodMinutes?: number;
+  absentAfterMinutes?: number;
+  startTimeOutBeforeEndMinutes?: number;
+  timeOutLimitMinutes?: number;
+  venueLocation?: { lat: number; lng: number } | null;
+  allowedRadiusMeters?: number;
   department: string;
   departmentLabel: string;
   qrImageUrl?: string;
@@ -35,6 +43,11 @@ const AdminSessions = () => {
   const [activeTab, setActiveTab] = useState<"generate" | "list">("generate");
   const [selectedSession, setSelectedSession] = useState<SelectedSession>(null);
 
+  const showGenerateTab = () => {
+    setSelectedSession(null);
+    setActiveTab("generate");
+  };
+
   return (
     <SelectedSessionContext.Provider value={{ selectedSession, setSelectedSession }}>
       <section className="py-4 md:py-6 lg:py-8 space-y-4 md:space-y-6 lg:space-y-8 overflow-hidden">
@@ -53,7 +66,7 @@ const AdminSessions = () => {
               label1="Generate QR"
               label2="Session List"
               initialTab={activeTab === "generate" ? "tab1" : "tab2"}
-              onTab1Click={() => setActiveTab("generate")}
+              onTab1Click={showGenerateTab}
               onTab2Click={() => setActiveTab("list")}
               className="w-full lg:w-auto"
             />

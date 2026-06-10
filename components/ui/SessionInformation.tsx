@@ -1,9 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useForm } from 'react-hook-form';
-import { Button, InputField, SearchableSelectField } from '@/lib/imports';
+import { Button, InputField } from '@/lib/imports';
 import { useSelectedSession } from '@/components/AdminSessions';
+import { buildAttendancePrintInstructions } from '@/lib/attendancePrint';
+import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
+
+const LocationPicker = dynamic(() => import('@/components/ui/LocationPicker'), { ssr: false });
 
 
 interface FormData {
@@ -12,36 +17,86 @@ interface FormData {
   startTime: string;
   endTime: string;
   description?: string;
+  venueLat?: string | number;
+  venueLng?: string | number;
+  allowedRadiusMeters?: number;
+  gracePeriodMinutes: number;
+  absentAfterMinutes: number;
+  startTimeOutBeforeEndMinutes: number;
+  timeOutLimitMinutes: number;
 }
 
 export default function SessionInformation({ mode }: { mode: 'create' | 'edit' | 'view' }) {
   const { selectedSession, setSelectedSession } = useSelectedSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createStep, setCreateStep] = useState<1 | 2>(1);
+  const isEdit = mode === 'edit';
 
-  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<FormData>();
+  const { register, handleSubmit, setValue, watch, trigger, formState: { errors, isDirty }, reset } = useForm<FormData>();
+
+  const venueLat = watch('venueLat');
+  const venueLng = watch('venueLng');
+  const currentVenueLocation =
+    venueLat !== undefined && venueLat !== '' && venueLng !== undefined && venueLng !== ''
+      ? { lat: Number(venueLat), lng: Number(venueLng) }
+      : null;
 
 
   useEffect(() => {
-    if (selectedSession) {
+    if (isEdit && selectedSession) {
+      setCreateStep(1);
       reset({
         title: selectedSession.title,
         date: selectedSession.date,
         startTime: selectedSession.startTime,
         endTime: selectedSession.endTime,
         description: selectedSession.description,
+        venueLat: selectedSession.venueLocation?.lat ?? '',
+        venueLng: selectedSession.venueLocation?.lng ?? '',
+        allowedRadiusMeters: selectedSession.allowedRadiusMeters ?? 0,
+        gracePeriodMinutes: selectedSession.gracePeriodMinutes ?? 15,
+        absentAfterMinutes: selectedSession.absentAfterMinutes ?? 30,
+        startTimeOutBeforeEndMinutes: selectedSession.startTimeOutBeforeEndMinutes ?? 0,
+        timeOutLimitMinutes: selectedSession.timeOutLimitMinutes ?? 30,
       });
     } else {
+      setCreateStep(1);
       reset({
         title: '',
         date: '',
         startTime: '',
         endTime: '',
         description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
       });
     }
-  }, [selectedSession, reset]);
+  }, [isEdit, selectedSession, reset]);
+
+  const handleNextStep = async () => {
+    const canProceed = await trigger([
+      'title',
+      'date',
+      'startTime',
+      'endTime',
+      'gracePeriodMinutes',
+      'absentAfterMinutes',
+      'startTimeOutBeforeEndMinutes',
+      'timeOutLimitMinutes',
+    ]);
+
+    if (canProceed) {
+      setCreateStep(2);
+    }
+  };
 
   const onCreate = async (data: FormData) => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const res = await fetch('/api/admin/sessions', {
@@ -52,7 +107,21 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "Failed");
 
-      reset({ title: '', date: '', startTime: '', endTime: '', description: ''});
+      reset({
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
+      });
+      setCreateStep(1);
 
       window.dispatchEvent(new CustomEvent('session-created', {
         detail: { qrImageUrl: result.qrImageUrl, session: result.session }
@@ -87,7 +156,15 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         startTime: '',
         endTime: '',
         description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
       });
+      setCreateStep(1);
       window.dispatchEvent(new Event('session-updated'));
     } catch (err: any) {
       alert(err.message);
@@ -103,8 +180,58 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       startTime: '',
       endTime: '',
       description: '',
+      venueLat: '',
+      venueLng: '',
+      allowedRadiusMeters: 0,
+      gracePeriodMinutes: 15,
+      absentAfterMinutes: 30,
+      startTimeOutBeforeEndMinutes: 0,
+      timeOutLimitMinutes: 30,
     });
+    setCreateStep(1);
     setSelectedSession(null);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSession) return;
+    const confirmed = window.confirm(
+      `Delete session "${selectedSession.title}" and all related attendance records? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/admin/sessions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: selectedSession._id }),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Delete failed');
+
+      alert('Session deleted successfully.');
+      setSelectedSession(null);
+      reset({
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+        venueLat: '',
+        venueLng: '',
+        allowedRadiusMeters: 0,
+        gracePeriodMinutes: 15,
+        absentAfterMinutes: 30,
+        startTimeOutBeforeEndMinutes: 0,
+        timeOutLimitMinutes: 30,
+      });
+      setCreateStep(1);
+      window.dispatchEvent(new Event('session-updated'));
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete session.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handlePrint = () => {
@@ -115,20 +242,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       alert("Please allow popups to print the QR code");
       return;
     }
-
-    const format12Hour = (time24: string): string => {
-    if (!time24) return '';
-    const [hoursStr, minutesStr] = time24.split(':');
-    const hours = parseInt(hoursStr, 10);
-    const minutes = parseInt(minutesStr, 10);
-
-    if (isNaN(hours) || isNaN(minutes)) return time24;
-
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hours12 = hours % 12 || 12;
-
-    return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
 
     printWindow.document.write(`
 <!DOCTYPE html>
@@ -304,17 +417,17 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         </div>
 
         <div class="date-time">
-          ${new Date(selectedSession.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          ${formatDisplayDate(selectedSession.date)}
         </div>
 
-        <div class="time">${format12Hour(selectedSession.startTime)} – ${format12Hour(selectedSession.endTime)}</div>
+        <div class="time">${formatDisplayTime(selectedSession.startTime)} - ${formatDisplayTime(selectedSession.endTime)}</div>
 
         ${selectedSession.description ? `<div class="small"><strong>Description:</strong> ${selectedSession.description}</div>` : ''}
       </div>
 
       <!-- Instructions – now on same page, wider layout -->
       <div class="instructions">
-        <h2>How to be marked as Present</h2>
+        <h2>Attendance Status Guide</h2>
         <ol>
           <li><strong>Scan the QR code</strong><br>Use your phone’s built-in QR scanner. (If unavailable, download a trusted QR scanner app from Google Play.)</li>
           <li><strong>Log in first</strong><br>Make sure you are logged in to your account before scanning.</li>
@@ -336,6 +449,10 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     `);
 
     printWindow.document.close();
+    const instructions = printWindow.document.querySelector('.instructions');
+    if (instructions) {
+      instructions.innerHTML = buildAttendancePrintInstructions(selectedSession);
+    }
 
     const img = printWindow.document.querySelector('img');
     if (img) {
@@ -353,8 +470,6 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
     }
   };
 
-  const isEdit = mode === 'edit';
-
   return (
     <div className="bg-white rounded-2xl shadow-xl border border-gray-200 flex flex-col max-h-[90vh] lg:max-h-[75vh]">
       {/* Header - always visible */}
@@ -365,30 +480,121 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
       </div>
 
       {/* Scrollable form content */}
-      <div className="flex-1 px-8 py-6">
-        <form onSubmit={handleSubmit(mode === 'edit' ? onUpdate : onCreate)} className="space-y-6">
-          <div className='overflow-y-auto max-h-[50vh] md:max-h-[45vh] lg:max-h-auto'>
-          <div className="grid md:grid-cols-2 gap-6">
-            <InputField label="Session Title" placeholder="e.g. Web Programming"
-              {...register('title', { required: 'Required' })} error={errors.title?.message} />
-            <InputField label="Date" type="date"
-              {...register('date', { required: 'Required' })} error={errors.date?.message} />
-          </div>
+      <div className="flex-1 min-h-0 px-8 py-6">
+        <form
+          onSubmit={(event) => {
+            if (mode === 'create' && createStep === 1) {
+              event.preventDefault();
+              handleNextStep();
+              return;
+            }
+            handleSubmit(mode === 'edit' ? onUpdate : onCreate)(event);
+          }}
+          className="flex h-full min-h-0 flex-col space-y-6"
+        >
+          {mode === 'create' && (
+            <div className="grid grid-cols-2 gap-3 rounded-lg border border-gray-200 bg-gray-50 p-2">
+              <div className={`rounded-md px-3 py-2 text-center text-sm font-semibold ${
+                createStep === 1 ? 'bg-red-800 text-white shadow-sm' : 'text-gray-600'
+              }`}>
+                1. Basic Information
+              </div>
+              <div className={`rounded-md px-3 py-2 text-center text-sm font-semibold ${
+                createStep === 2 ? 'bg-red-800 text-white shadow-sm' : 'text-gray-600'
+              }`}>
+                2. Location Setup
+              </div>
+            </div>
+          )}
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
-            <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
-          </div>
+          <div className='min-h-0 flex-1 overflow-y-auto space-y-4 md:space-y-5 lg:space-y-6 pr-1'>
+            <div className={`space-y-4 md:space-y-5 lg:space-y-6 ${mode === 'create' && createStep !== 1 ? 'hidden' : ''}`}>
+              <div>
+                <h3 className="text-base font-semibold text-red-800">Basic Information</h3>
+                <p className="text-sm text-gray-500">Enter the session details and attendance timing rules.</p>
+              </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
-            <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
-              {...register('description')} />
-          </div>
+              <div className="grid md:grid-cols-2 gap-4 md:gap-5 lg:gap-6">
+                <InputField label="Session Title" placeholder="e.g. Web Programming"
+                  {...register('title', { required: 'Required' })} error={errors.title?.message} />
+                <InputField label="Date" type="date"
+                  {...register('date', { required: 'Required' })} error={errors.date?.message} />
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 md:gap-5 lg:gap-6">
+                <InputField label="Start Time" type="time" {...register('startTime', { required: 'Required' })} error={errors.startTime?.message} />
+                <InputField label="End Time" type="time" {...register('endTime', { required: 'Required' })} error={errors.endTime?.message} />
+              </div>
+
+              <div className="grid md:grid-cols-2 xl:grid-cols-4 items-end gap-4 md:gap-5 lg:gap-6">
+                <InputField
+                  label="Late After (minutes)"
+                  type="number"
+                  min={0}
+                  {...register('gracePeriodMinutes', { required: 'Required', min: 0 })}
+                  error={errors.gracePeriodMinutes?.message}
+                />
+                <InputField
+                  label="Absent After (minutes)"
+                  type="number"
+                  min={0}
+                  {...register('absentAfterMinutes', { required: 'Required', min: 0 })}
+                  error={errors.absentAfterMinutes?.message}
+                />
+                <InputField
+                  label="Start Time-out Before End (minutes)"
+                  type="number"
+                  min={0}
+                  {...register('startTimeOutBeforeEndMinutes', { required: 'Required', min: 0 })}
+                  error={errors.startTimeOutBeforeEndMinutes?.message}
+                />
+                <InputField
+                  label="Time-out Limit After End (minutes)"
+                  type="number"
+                  min={0}
+                  {...register('timeOutLimitMinutes', { required: 'Required', min: 0 })}
+                  error={errors.timeOutLimitMinutes?.message}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+                <textarea rows={4} className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-red-500"
+                  {...register('description')} />
+              </div>
+            </div>
+
+            <input type="hidden" {...register('venueLat')} />
+            <input type="hidden" {...register('venueLng')} />
+
+            {(mode !== 'create' || createStep === 2) && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-base font-semibold text-red-800">Location Setup</h3>
+                  <p className="text-sm text-gray-500">Set the event location and allowed scan radius.</p>
+                </div>
+
+                <LocationPicker
+                  value={currentVenueLocation}
+                  onChange={(location) => {
+                    setValue('venueLat', location.lat.toString(), { shouldDirty: true });
+                    setValue('venueLng', location.lng.toString(), { shouldDirty: true });
+                  }}
+                />
+                <InputField
+                  label="Allowed Radius (meters)"
+                  type="number"
+                  min={0}
+                  step={1}
+                  {...register('allowedRadiusMeters', { min: 0, valueAsNumber: true })}
+                  error={errors.allowedRadiusMeters?.message}
+                />
+              </div>
+            )}
           </div>
 
           {/* Footer buttons - always visible */}
-      <div className="py-6 border-t border-gray-200 flex justify-end gap-4">
+      <div className="shrink-0 py-4 border-t border-gray-200 flex flex-col sm:flex-row sm:flex-wrap justify-end gap-3">
         <Button
           type="button"
           text="Clear"
@@ -400,6 +606,16 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
         {mode === 'edit' && selectedSession && (
           <Button
             type="button"
+            text="Delete Session"
+            backgroundColor="bg-red-600"
+            textColor="text-white"
+            onClick={handleDelete}
+            isDisabled={isSubmitting}
+          />
+        )}
+        {mode === 'edit' && selectedSession && (
+          <Button
+            type="button"
             text="Print QR"
             backgroundColor="bg-yellow-500"
             textColor="text-white"
@@ -407,13 +623,36 @@ export default function SessionInformation({ mode }: { mode: 'create' | 'edit' |
             isDisabled={isSubmitting}
           />
         )}
-        <Button
-          type="submit"
-          text={isSubmitting ? "Saving..." : (mode === 'edit' ? "Update Session" : "Generate QR Code")}
-          backgroundColor="bg-maroon-800"
-          textColor="text-white"
-          isDisabled={isSubmitting || (mode === 'edit' && !selectedSession)}
-        />
+        {mode === 'create' && createStep === 1 ? (
+          <Button
+            type="button"
+            text="Next"
+            backgroundColor="bg-maroon-800"
+            textColor="text-white"
+            onClick={handleNextStep}
+            isDisabled={isSubmitting}
+          />
+        ) : (
+          <>
+            {mode === 'create' && createStep === 2 && (
+              <Button
+                type="button"
+                text="Back"
+                backgroundColor="bg-white border border-gray-300"
+                textColor="text-gray-700"
+                onClick={() => setCreateStep(1)}
+                isDisabled={isSubmitting}
+              />
+            )}
+            <Button
+              type="submit"
+              text={isSubmitting ? "Saving..." : (mode === 'edit' ? "Update Session" : "Generate QR Code")}
+              backgroundColor="bg-maroon-800"
+              textColor="text-white"
+              isDisabled={isSubmitting || (mode === 'edit' && (!selectedSession || !isDirty))}
+            />
+          </>
+        )}
       </div>
         </form>
       </div>

@@ -9,19 +9,24 @@ export async function GET() {
   try {
     await connectToDatabase();
 
-    const now = new Date();
-    const today = new Date(now.toISOString().split('T')[0]); // Normalize to midnight
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const todayKey = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const todayDate = new Date(`${todayKey}T00:00:00.000Z`);
 
-    // Find all sessions that have ended (date + endTime < now)
-    const endedSessions = await Session.find({
-      $or: [
-        { date: { $lt: today } }, // Past dates
-        {
-          date: today,
-          endTime: { $lt: now.toTimeString().slice(0, 5) }, // Today, but endTime passed
-        },
-      ],
-    }).select('_id date endTime title');
+    const candidateSessions = await Session.find({
+      date: { $lte: todayDate },
+    }).select('_id date endTime title timeOutLimitMinutes');
+
+    const endedSessions = candidateSessions.filter((session) => {
+      const sessionDateKey = session.date.toISOString().split('T')[0];
+      const sessionEnd = new Date(`${sessionDateKey}T${session.endTime}:00`);
+      return sessionEnd < now;
+    });
 
     if (endedSessions.length === 0) {
       return NextResponse.json({
@@ -33,7 +38,7 @@ export async function GET() {
     const sessionIds = endedSessions.map(s => s._id);
 
     // Update all attendance records where status is null → 'absent'
-    const result = await Attendance.updateMany(
+    const absentResult = await Attendance.updateMany(
       {
         session: { $in: sessionIds },
         status: null,
@@ -42,6 +47,40 @@ export async function GET() {
         $set: { status: 'absent' },
       }
     );
+
+    let unfinishedCount = 0;
+    for (const session of endedSessions) {
+      const deadline = new Date(`${session.date.toISOString().split('T')[0]}T${session.endTime}:00`);
+      deadline.setMinutes(deadline.getMinutes() + (session.timeOutLimitMinutes ?? 30));
+
+      if (now <= deadline) continue;
+
+      const unfinishedResult = await Attendance.updateMany(
+        {
+          session: session._id,
+          timeIn: { $ne: null },
+          timeOut: null,
+          status: 'timed-in',
+        },
+        {
+          $set: { status: 'unfinished' },
+        }
+      );
+
+      const lateUnfinishedResult = await Attendance.updateMany(
+        {
+          session: session._id,
+          timeIn: { $ne: null },
+          timeOut: null,
+          status: 'timed-in-late',
+        },
+        {
+          $set: { status: 'late-unfinished' },
+        }
+      );
+
+      unfinishedCount += unfinishedResult.modifiedCount + lateUnfinishedResult.modifiedCount;
+    }
 
     const details = endedSessions.map(s => ({
       sessionId: s._id.toString(),
@@ -53,7 +92,7 @@ export async function GET() {
     return NextResponse.json({
       message: 'Absent marking completed.',
       endedSessionsCount: endedSessions.length,
-      updatedRecords: result.modifiedCount,
+      updatedRecords: absentResult.modifiedCount + unfinishedCount,
       sessions: details,
     });
 

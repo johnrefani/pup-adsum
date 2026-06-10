@@ -4,25 +4,25 @@
 import { AlertCircle } from '@/lib/icons';
 import { SessionForClient } from '@/app/scan/[token]/page';
 import { Button } from '@/lib/imports';
+import { formatDisplayTime } from '@/lib/dateTimeFormat';
 import { useRouter } from 'next/navigation';
 
 interface Props {
   session: SessionForClient;
   timeIn: Date;
+  timeOut?: Date;
+  message?: string;
 }
 
-export default function ScanAlreadyPresent({ session, timeIn }: Props) {
+export default function ScanAlreadyPresent({ session, timeIn, timeOut, message }: Props) {
   const router = useRouter();
     
     const handleGoHome = () => {
     router.push('/'); 
   };
 
-  const formattedTime = new Date(timeIn).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  const formattedTime = formatDisplayTime(new Date(timeIn));
+  const formattedTimeOut = timeOut ? formatDisplayTime(new Date(timeOut)) : null;
 
   return (
     <div className="min-h-screen bg-linear-to-br from-amber-50 to-orange-50 flex items-center justify-center p-6">
@@ -32,11 +32,11 @@ export default function ScanAlreadyPresent({ session, timeIn }: Props) {
         </div>
 
         <h1 className="text-4xl md:text-5xl font-bold text-amber-800 mb-6">
-          Already Present
+          Attendance Recorded
         </h1>
 
         <p className="text-xl text-gray-700 mb-10">
-          You have already scanned this session.
+          {message || 'You have already completed this session attendance.'}
         </p>
 
         <div className="bg-amber-50 rounded-2xl p-8 border-2 border-amber-200">
@@ -44,6 +44,11 @@ export default function ScanAlreadyPresent({ session, timeIn }: Props) {
           <p className="text-lg text-gray-700">
             <strong>Time In:</strong> {formattedTime}
           </p>
+          {formattedTimeOut && (
+            <p className="text-lg text-gray-700 mt-2">
+              <strong>Time Out:</strong> {formattedTimeOut}
+            </p>
+          )}
         </div>
 
         <div className="flex justify-center items-center mt-8">

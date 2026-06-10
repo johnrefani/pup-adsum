@@ -10,7 +10,6 @@ interface Admin {
   id: string;
   fullName: string;
   username: string;
-  password: string;
   department: string;
 }
 
@@ -159,7 +158,6 @@ const AdminList: React.FC = () => {
                 <tr className="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">Full Name</th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden md:table-cell">Username</th>
-                  <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden sm:table-cell">Password</th>
                   <th className="text-left px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700 hidden lg:table-cell">Organization</th>
                   <th className="text-center px-4 py-2 md:px-6 md:py-4 text-sm font-semibold text-gray-700">Controls</th>
                 </tr>
@@ -172,13 +170,11 @@ const AdminList: React.FC = () => {
                         <span className="text-base font-medium text-gray-900">{admin.fullName}</span>
                         <div className="text-sm text-gray-500 md:hidden space-y-1 mt-1">
                           <div><span className="font-medium">Username:</span> {admin.username}</div>
-                          <div><span className="font-medium">Password:</span> {admin.password}</div>
                           <div><span className="font-medium">Organization:</span> {admin.department}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden md:table-cell">{admin.username}</td>
-                    <td className="px-4 py-2 md:px-6 md:py-4 text-gray-700 hidden sm:table-cell">{admin.password}</td>
                     <td className="px-4 py-2 md:px-6 md:py-4 text-gray-700 font-medium hidden lg:table-cell">{admin.department}</td>
                     <td className="px-4 py-2 md:px-6 md:py-4">
                       <div className="flex items-center justify-center gap-2">

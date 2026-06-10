@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { ChevronDown } from "@/lib/icons";
 
 interface Option {
   value: string;
@@ -29,6 +30,7 @@ export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
 }) => {
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [showAllOptions, setShowAllOptions] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
     setQuery(selected?.label ?? "");
   }, [value, options]);
 
-  const filteredOptions = options.filter((opt) => {
+  const filteredOptions = showAllOptions ? options : options.filter((opt) => {
     const label = opt?.label ?? "";
     return label.toLowerCase().includes(query.toLowerCase());
   });
@@ -45,6 +47,7 @@ export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
+        setShowAllOptions(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -55,6 +58,13 @@ export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
     setQuery(option.label ?? "");
     onChange?.(option.value);
     setIsOpen(false);
+    setShowAllOptions(false);
+  };
+
+  const openAllOptions = () => {
+    if (disabled) return;
+    setShowAllOptions(true);
+    setIsOpen((current) => !current || !showAllOptions);
   };
 
   return (
@@ -71,18 +81,38 @@ export const SearchableSelectField: React.FC<SearchableSelectFieldProps> = ({
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
+            setShowAllOptions(false);
             setIsOpen(true);
           }}
-          onFocus={() => !disabled && setIsOpen(true)}
+          onFocus={() => {
+            if (!disabled) {
+              setShowAllOptions(false);
+              setIsOpen(true);
+            }
+          }}
           placeholder={placeholder}
           disabled={disabled}
           className={`
-            w-full px-4 py-3 rounded-xl border transition-all text-sm md:text-base
+            w-full px-4 py-3 pr-11 rounded-xl border transition-all text-sm md:text-base
             focus:outline-none focus:ring-2 focus:ring-red-500
             ${error ? "border-red-500 ring-2 ring-red-200" : "border-gray-300"}
             ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}
           `}
         />
+
+        <button
+          type="button"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={openAllOptions}
+          disabled={disabled}
+          aria-label={`Open ${label || "select"} options`}
+          className={`
+            absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-gray-500 transition
+            ${disabled ? "cursor-not-allowed opacity-50" : "hover:bg-gray-100 hover:text-gray-700"}
+          `}
+        >
+          <ChevronDown className={`h-5 w-5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        </button>
 
         {/* Dropdown */}
         {isOpen && (

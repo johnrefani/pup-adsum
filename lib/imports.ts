@@ -7,6 +7,9 @@ export { default as UserManagement } from '@/components/UserManagement';
 export { default as UserAccount } from '@/components/UserAccount';
 export { default as UserAttendance } from '@/components/UserAttendance';
 export { default as AdminManagement } from '@/components/AdminManagement';
+export { default as MasterDashboard } from '@/components/MasterDashboard';
+export { default as CoursesProgramsManagement } from '@/components/CoursesProgramsManagement';
+export { default as MemberArchive } from '@/components/MemberArchive';
 
 //UI Components
 export { default as Header } from '@/components/ui/Header';
