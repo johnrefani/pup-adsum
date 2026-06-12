@@ -14,7 +14,7 @@ export const memberLinks = [
 export const mainLinks = [
   { title: "Dashboard", href: "/manage-admin" },
   { title: "Admin Management", href: "/manage-admin/admins" },
-  { title: "Courses & Programs", href: "/manage-admin/courses-programs" },
+  { title: "Organizations & Programs", href: "/manage-admin/organizations-and-programs" },
   { title: "Member Archive", href: "/manage-admin/member-archive" },
 ];
 

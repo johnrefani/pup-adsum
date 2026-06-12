@@ -7,10 +7,12 @@ import { formatDisplayDate, formatDisplayTime } from '@/lib/dateTimeFormat';
 type Option = {
   value: string;
   label: string;
+  yearRange?: number;
   title?: string;
   date?: string;
   startTime?: string;
   endTime?: string;
+  timeOutLimitMinutes?: number;
   departmentAcronym?: string;
   departmentName?: string;
 };
@@ -20,6 +22,7 @@ type SessionInfo = {
   date: string;
   startTime: string;
   endTime: string;
+  timeOutLimitMinutes?: number;
   departmentAcronym: string;
   departmentName: string;
 };
@@ -48,13 +51,15 @@ export default function StudentFilter({
   const [yearLevel, setYearLevel] = useState('');
   const [search, setSearch] = useState('');
 
+  const selectedCourseInfo = courses.find((course) => course.value === courseId);
+  const selectedCourseYearRange = Number(selectedCourseInfo?.yearRange || 5);
   const yearLevelOptions: Option[] = [
     { value: 'all', label: 'All Year Levels' },
-    { value: '1', label: '1st Year' },
-    { value: '2', label: '2nd Year' },
-    { value: '3', label: '3rd Year' },
-    { value: '4', label: '4th Year' },
-    { value: '5', label: '5th Year' },
+    ...Array.from({ length: selectedCourseYearRange }, (_, index) => {
+      const year = index + 1;
+      const suffix = year === 1 ? 'st' : year === 2 ? 'nd' : year === 3 ? 'rd' : 'th';
+      return { value: String(year), label: `${year}${suffix} Year` };
+    }),
   ];
 
   useEffect(() => {
@@ -68,6 +73,7 @@ export default function StudentFilter({
           date: s.date,
           startTime: s.startTime,
           endTime: s.endTime,
+          timeOutLimitMinutes: s.timeOutLimitMinutes,
           departmentAcronym: s.departmentAcronym,
           departmentName: s.departmentName,
         }));
@@ -88,6 +94,13 @@ export default function StudentFilter({
     onFiltersChange({ sessionId, courseId, yearLevel, search });
   }, [sessionId, courseId, yearLevel, search]);
 
+  useEffect(() => {
+    if (!yearLevel || yearLevel === 'all') return;
+    if (!yearLevelOptions.some((option) => option.value === yearLevel)) {
+      setYearLevel('');
+    }
+  }, [yearLevel, yearLevelOptions]);
+
   const handleSessionChange = (value: string) => {
     setSessionId(value);
     const selected = sessions.find(s => s.value === value);
@@ -97,6 +110,7 @@ export default function StudentFilter({
         date: selected.date || '',
         startTime: selected.startTime || '',
         endTime: selected.endTime || '',
+        timeOutLimitMinutes: selected.timeOutLimitMinutes,
         departmentAcronym: selected.departmentAcronym || '',
         departmentName: selected.departmentName || selected.departmentAcronym || '',
       });

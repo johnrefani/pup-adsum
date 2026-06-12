@@ -1,11 +1,31 @@
 import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
+import Course from '@/models/Course';
 import { getCurrentAdmin } from '@/lib/auth';
 import mongoose from 'mongoose';
-import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
 import { hashPassword } from '@/lib/password';
+
+async function validateCourseYearLevel(courseId: string, yearLevel: string, departmentId: unknown) {
+  if (!mongoose.Types.ObjectId.isValid(courseId)) {
+    return { error: 'Invalid program' };
+  }
+
+  const course = await Course.findOne({ _id: courseId, department: departmentId }).select('yearRange');
+  if (!course) {
+    return { error: 'Program not found or not assigned to your organization' };
+  }
+
+  const parsedYearLevel = Number(yearLevel);
+  const maxYear = Number(course.yearRange || 4);
+
+  if (!Number.isInteger(parsedYearLevel) || parsedYearLevel < 1 || parsedYearLevel > maxYear) {
+    return { error: `Year level must be between 1 and ${maxYear} for this program` };
+  }
+
+  return { course };
+}
 
 export async function GET(request: Request) {
   try {
@@ -105,6 +125,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
+    const validation = await validateCourseYearLevel(course, yearLevel, admin.department);
+    if (validation.error) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
     const existing = await User.findOne({ username }, { idNumber });
     if (existing) {
       return NextResponse.json({ error: 'Username or ID Number already exists' }, { status: 409 });
@@ -143,6 +168,14 @@ export async function PATCH(request: Request) {
     const { id, fullName, idNumber, username, password, course, yearLevel } = await request.json();
 
     if (!id) return NextResponse.json({ error: 'Member ID required' }, { status: 400 });
+    if (!fullName || !idNumber || !username || !course || !yearLevel) {
+      return NextResponse.json({ error: 'All required fields must be filled' }, { status: 400 });
+    }
+
+    const validation = await validateCourseYearLevel(course, yearLevel, admin.department);
+    if (validation.error) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
 
     const updateData: any = {
       fullName: fullName.trim(),

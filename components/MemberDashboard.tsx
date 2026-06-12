@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { MemberDashboardProps } from "@/lib/types"
 import { Button } from "@/lib/imports";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
+import { getSessionDateTime } from "@/lib/sessionTime";
 import { useRouter } from "next/navigation";
 
 interface UpcomingEvent {
@@ -57,9 +58,8 @@ const MemberDashboard = ({ username }: MemberDashboardProps) => {
     const start = formatDisplayTime(todaySession.startTime);
     const end = formatDisplayTime(todaySession.endTime);
 
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const sessionDate = todaySession.date.split('T')[0];
-    const sessionStart = new Date(`${sessionDate}T${todaySession.startTime}:00`);
+    const now = new Date();
+    const sessionStart = getSessionDateTime(todaySession.date, todaySession.startTime);
     const hasStarted = now >= sessionStart;
 
     if (!hasStarted) {
