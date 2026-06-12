@@ -3,6 +3,7 @@
 import { AdminDashboardProps } from "@/lib/types"
 import { Button, CountStat } from "@/lib/imports";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
+import { getManilaDateKey, getSessionDateTime } from "@/lib/sessionTime";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -38,17 +39,8 @@ interface UpcomingEvent {
   endTime: string;
 }
 
-const getManilaDateKey = (date: Date) =>
-  new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Manila',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-
 const parseSessionDateTime = (session: UpcomingEvent, timeKey: 'startTime' | 'endTime') => {
-  const [hour, minute] = session[timeKey].split(':');
-  return new Date(`${session.date}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`);
+  return getSessionDateTime(session.date, session[timeKey]);
 };
 
 const AdminDashboard = ({ username }: AdminDashboardProps) => {

@@ -483,6 +483,13 @@ export const ManageMember = ({ isOpen, onClose, onSuccess, student }: ManageMemb
     }
   }, [isOpen, student]);
 
+  useEffect(() => {
+    if (!selectedYearLevel) return;
+    if (!yearLevels.includes(selectedYearLevel)) {
+      setSelectedYearLevel("");
+    }
+  }, [selectedYearLevel, yearLevels]);
+
   const requiredFilled = fullname && idNumber && username && selectedCourse && selectedYearLevel;
   const canSubmit = isEdit ? requiredFilled : requiredFilled && password;
 

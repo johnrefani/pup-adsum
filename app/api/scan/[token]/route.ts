@@ -4,6 +4,7 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import Attendance from '@/models/Attendance';
 import User from '@/models/User';
+import { getSessionWindow } from '@/lib/sessionTime';
 
 const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
   const R = 6371000;
@@ -76,18 +77,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ error: 'You are not authorized for this session.' }, { status: 403 });
     }
 
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const sessionDate = sessionDoc.date.toISOString().split('T')[0];
-    const sessionStartTime = new Date(`${sessionDate}T${sessionDoc.startTime}:00`);
-    const sessionEndTime = new Date(`${sessionDate}T${sessionDoc.endTime}:00`);
-    const lateCutoff = new Date(sessionStartTime);
-    lateCutoff.setMinutes(lateCutoff.getMinutes() + (sessionDoc.gracePeriodMinutes ?? 15));
-    const absentCutoff = new Date(sessionStartTime);
-    absentCutoff.setMinutes(absentCutoff.getMinutes() + (sessionDoc.absentAfterMinutes ?? 30));
-    const timeOutStart = new Date(sessionEndTime);
-    timeOutStart.setMinutes(timeOutStart.getMinutes() - (sessionDoc.startTimeOutBeforeEndMinutes ?? 0));
-    const timeOutDeadline = new Date(sessionEndTime);
-    timeOutDeadline.setMinutes(timeOutDeadline.getMinutes() + (sessionDoc.timeOutLimitMinutes ?? 30));
+    const now = new Date();
+    const {
+      end: sessionEndTime,
+      lateCutoff,
+      absentCutoff,
+      timeOutStart,
+      timeOutDeadline,
+    } = getSessionWindow(sessionDoc);
 
     const distance = sessionDoc.venueLocation?.lat != null && sessionDoc.venueLocation?.lng != null
       ? getDistance(lat, lng, sessionDoc.venueLocation.lat, sessionDoc.venueLocation.lng)
@@ -101,6 +98,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     const existingRecord = await Attendance.findOne({ session: sessionDoc._id, member: user._id });
     const isTimeOutAttempt = Boolean(existingRecord?.timeIn && !existingRecord?.timeOut);
+
+    if (existingRecord?.status === 'absent') {
+      return NextResponse.json({
+        success: true,
+        action: 'time-in',
+        status: 'absent',
+        timeIn: existingRecord.timeIn?.toISOString() ?? now.toISOString(),
+      });
+    }
 
     if (!existingRecord?.timeIn) {
       if (now > sessionEndTime) {
