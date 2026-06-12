@@ -4,18 +4,14 @@ import { connectToDatabase } from '@/lib/mongodb';
 import Session from '@/models/Session';
 import Attendance from '@/models/Attendance';
 import { Models } from '@/lib/models';
+import { getManilaDateKey, getSessionDateTime } from '@/lib/sessionTime';
 
 export async function GET() {
   try {
     await connectToDatabase();
 
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-    const todayKey = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Manila',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(new Date());
+    const now = new Date();
+    const todayKey = getManilaDateKey(now);
     const todayDate = new Date(`${todayKey}T00:00:00.000Z`);
 
     const candidateSessions = await Session.find({
@@ -23,8 +19,7 @@ export async function GET() {
     }).select('_id date endTime title timeOutLimitMinutes');
 
     const endedSessions = candidateSessions.filter((session) => {
-      const sessionDateKey = session.date.toISOString().split('T')[0];
-      const sessionEnd = new Date(`${sessionDateKey}T${session.endTime}:00`);
+      const sessionEnd = getSessionDateTime(session.date, session.endTime);
       return sessionEnd < now;
     });
 
@@ -50,7 +45,7 @@ export async function GET() {
 
     let unfinishedCount = 0;
     for (const session of endedSessions) {
-      const deadline = new Date(`${session.date.toISOString().split('T')[0]}T${session.endTime}:00`);
+      const deadline = getSessionDateTime(session.date, session.endTime);
       deadline.setMinutes(deadline.getMinutes() + (session.timeOutLimitMinutes ?? 30));
 
       if (now <= deadline) continue;

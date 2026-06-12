@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Status } from "@/lib/imports";
 import { formatDisplayDate, formatDisplayTime } from "@/lib/dateTimeFormat";
+import { getSessionDateTime } from "@/lib/sessionTime";
 
 type Student = {
   _id: string;
@@ -45,11 +46,12 @@ export default function StudentList({
   const hasSessionEnded = (() => {
     if (!sessionInfo?.date || !sessionInfo?.endTime) return false;
 
-    const sessionDate = String(sessionInfo.date).split('T')[0];
-    const sessionEnd = new Date(`${sessionDate}T${sessionInfo.endTime}:00`);
-    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    const sessionEnd = getSessionDateTime(sessionInfo.date, sessionInfo.endTime);
+    const timeOutDeadline = new Date(sessionEnd);
+    timeOutDeadline.setMinutes(timeOutDeadline.getMinutes() + (sessionInfo.timeOutLimitMinutes ?? 30));
+    const now = new Date();
 
-    return now > sessionEnd;
+    return now > timeOutDeadline;
   })();
 
   const formatYearLevel = (value: string) => {
@@ -86,7 +88,7 @@ export default function StudentList({
   const downloadCSV = () => {
     if (!sessionInfo || students.length === 0) return;
 
-    const allowedStatuses = ['present', 'absent', 'late', 'unfinished'] as const;
+    const allowedStatuses = ['present', 'absent', 'late', 'unfinished', 'late-unfinished'] as const;
     const filteredStudents = students.filter(
       (s): s is Student & { status: typeof allowedStatuses[number] } =>
         s.status !== null && allowedStatuses.includes(s.status as any)
@@ -97,6 +99,7 @@ export default function StudentList({
       absent: 0,
       late: 0,
       unfinished: 0,
+      'late-unfinished': 0,
     };
 
     filteredStudents.forEach((s) => {
@@ -119,7 +122,9 @@ export default function StudentList({
     csv += `"Status","Count"\r\n`;
     csv += `"Total Members","${filteredStudents.length}"\r\n`;
     Object.entries(statusCounts).forEach(([status, count]) => {
-      const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+      const displayStatus = status === 'late-unfinished'
+        ? 'Late & Unfinished Attendance'
+        : status.charAt(0).toUpperCase() + status.slice(1);
       csv += `"${displayStatus}","${count}"\r\n`;
     });
     csv += `\r\n\r\n`;
@@ -131,6 +136,7 @@ export default function StudentList({
         absent: [],
         late: [],
         unfinished: [],
+        'late-unfinished': [],
       };
 
       groupedStudents.forEach((student) => {
@@ -142,7 +148,9 @@ export default function StudentList({
       Object.entries(groupedByStatus).forEach(([status, statusStudents]) => {
         if (statusStudents.length === 0) return;
 
-        const displayStatus = status.charAt(0).toUpperCase() + status.slice(1);
+        const displayStatus = status === 'late-unfinished'
+          ? 'Late & Unfinished Attendance'
+          : status.charAt(0).toUpperCase() + status.slice(1);
         csv += `"--- ${displayStatus} (${statusStudents.length}) ---"\r\n`;
         csv += headers.join(',') + '\r\n';
 

@@ -26,23 +26,29 @@ export default function ScanSuccess({ session, timeIn, timeOut, user, status = '
   const formattedTime = formatDisplayTime(timeIn);
   const formattedTimeOut = timeOut ? formatDisplayTime(timeOut) : undefined;
 
-  const heading = action === 'time-out'
-    ? 'Timed Out!'
-    : status === 'timed-in-late'
-      ? 'Timed-in Late'
-      : status === 'absent'
-        ? 'Marked Absent'
-        : 'Timed In!';
+  const statusLabelMap: Record<NonNullable<Props['status']>, string> = {
+    present: 'PRESENT',
+    absent: 'ABSENT',
+    unfinished: 'UNFINISHED ATTENDANCE',
+    late: 'LATE',
+    'timed-in': 'TIMED-IN',
+    'timed-in-late': 'TIMED-IN LATE',
+    'late-unfinished': 'LATE & UNFINISHED ATTENDANCE',
+  };
 
-  const statusLabel = status === 'timed-in'
-    ? 'TIMED-IN'
-    : status === 'timed-in-late'
-      ? 'TIMED-IN LATE'
-      : status === 'late'
-      ? 'LATE'
-      : status === 'absent'
-        ? 'ABSENT'
-        : 'PRESENT';
+  const heading = status === 'unfinished'
+    ? 'Attendance Unfinished'
+    : status === 'late-unfinished'
+      ? 'Late & Unfinished'
+      : action === 'time-out'
+        ? 'Timed Out!'
+        : status === 'timed-in-late'
+          ? 'Timed-in Late'
+          : status === 'absent'
+            ? 'Marked Absent'
+            : 'Timed In!';
+
+  const statusLabel = statusLabelMap[status];
 
   const formattedDate = formatDisplayDate(session.date);
 

@@ -10,7 +10,10 @@ import { Models } from '@/lib/models';
 import { cookies } from 'next/headers';
 import SystemSettings from '@/models/SystemSettings';
 
-const BASE_URL = 'https://pup-adsum.vercel.app';
+const getBaseUrl = (request: NextRequest) =>
+  process.env.NEXT_PUBLIC_APP_URL ||
+  process.env.APP_URL ||
+  request.nextUrl.origin;
 
 // ==================== POST (Create Session + QR) ====================
 export async function POST(request: NextRequest) {
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     await connectToDatabase();
 
     // Get logged-in user
-    const user = await User.findOne({ currentSessionToken: currentToken });
+    const user = await User.findOne({ currentSessionToken: currentToken, role: 'admin' });
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const data = await request.json();
@@ -77,7 +80,7 @@ export async function POST(request: NextRequest) {
     // Generate QR token
     const tokenPart = uuidv4().replace(/-/g, '').slice(0, 20);
     const qrToken = `sess_${tokenPart}`;
-    const scanUrl = `${BASE_URL}/scan/${qrToken}`;
+    const scanUrl = `${getBaseUrl(request)}/scan/${qrToken}`;
 
     const qrDataUrl = await QRCode.toDataURL(scanUrl, {
       width: 1000,
@@ -211,12 +214,14 @@ export async function GET(request: NextRequest) {
 
     await connectToDatabase();
 
-    const url = new URL(request.url);
-    const adminDeptId = url.searchParams.get('department');
+    const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' })
+      .select('department')
+      .lean<{ department: unknown }>();
+    if (!admin?.department) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
-    const sessions = await Session.find(
-      adminDeptId ? { department: adminDeptId } : {}
-    )
+    const sessions = await Session.find({ department: admin.department })
       .populate('department', 'acronym name')
       .sort({ date: -1, createdAt: -1 })
       .lean();
@@ -256,6 +261,13 @@ export async function PATCH(request: NextRequest) {
     if (!currentToken) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     await connectToDatabase();
+    const admin = await User.findOne({ currentSessionToken: currentToken, role: 'admin' })
+      .select('department')
+      .lean<{ department: unknown }>();
+    if (!admin?.department) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const data = await request.json();
     const { sessionId, ...updates } = data;
 
@@ -276,19 +288,34 @@ export async function PATCH(request: NextRequest) {
       ? { lat: venueLatitude, lng: venueLongitude }
       : (updates.venueLat === '' && updates.venueLng === '' ? null : undefined);
 
-    const session = await Session.findByIdAndUpdate(
-      sessionId,
+    const timingValues = [
+      updates.gracePeriodMinutes ?? 15,
+      updates.absentAfterMinutes ?? 30,
+      updates.startTimeOutBeforeEndMinutes ?? 0,
+      updates.timeOutLimitMinutes ?? 30,
+    ].map(Number);
+
+    if (timingValues.some((value) => !Number.isFinite(value) || value < 0)) {
+      return NextResponse.json({ error: 'Timing limits must be zero or greater' }, { status: 400 });
+    }
+
+    if (!Number.isFinite(allowedRadius) || allowedRadius < 0) {
+      return NextResponse.json({ error: 'Allowed radius must be zero or greater' }, { status: 400 });
+    }
+
+    const session = await Session.findOneAndUpdate(
+      { _id: sessionId, department: admin.department },
       {
         title: updates.title,
         date: new Date(updates.date),
         startTime: updates.startTime,
         endTime: updates.endTime,
         description: updates.description || '',
-        department: updates.department,
-        gracePeriodMinutes: Number(updates.gracePeriodMinutes ?? 15),
-        absentAfterMinutes: Number(updates.absentAfterMinutes ?? 30),
-        startTimeOutBeforeEndMinutes: Number(updates.startTimeOutBeforeEndMinutes ?? 0),
-        timeOutLimitMinutes: Number(updates.timeOutLimitMinutes ?? 30),
+        department: admin.department,
+        gracePeriodMinutes: timingValues[0],
+        absentAfterMinutes: Math.max(timingValues[1], timingValues[0]),
+        startTimeOutBeforeEndMinutes: timingValues[2],
+        timeOutLimitMinutes: timingValues[3],
         venueLocation,
         allowedRadiusMeters: allowedRadius,
       },

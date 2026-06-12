@@ -7,6 +7,7 @@ import User from '@/models/User';
 import { cookies } from 'next/headers';
 import mongoose from 'mongoose';
 import { Models } from '@/lib/models';
+import { getManilaDateKey, getSessionDateTime } from '@/lib/sessionTime';
 
 interface UpcomingEvent {
   _id: string;
@@ -30,21 +31,8 @@ interface DashboardResponse {
   upcomingEvents: UpcomingEvent[];
 }
 
-const getManilaDateKey = (date: Date) =>
-  new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Manila',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(date);
-
-const getManilaNow = () =>
-  new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-
 const parseSessionDateTime = (session: { date: Date; startTime: string; endTime: string }, timeKey: 'startTime' | 'endTime') => {
-  const sessionDate = session.date.toISOString().split('T')[0];
-  const [hour, minute] = session[timeKey].split(':');
-  return new Date(`${sessionDate}T${hour.padStart(2, '0')}:${minute.padStart(2, '0')}:00`);
+  return getSessionDateTime(session.date, session[timeKey]);
 };
 
 export async function GET(): Promise<NextResponse<DashboardResponse | { error: string }>> {
@@ -63,8 +51,8 @@ export async function GET(): Promise<NextResponse<DashboardResponse | { error: s
       return NextResponse.json({ error: 'User not found or not a member' }, { status: 404 });
     }
 
-    const now = getManilaNow();
-    const todayKey = getManilaDateKey(new Date());
+    const now = new Date();
+    const todayKey = getManilaDateKey(now);
     const todayDate = new Date(`${todayKey}T00:00:00.000Z`);
 
     const candidateSessions = await Session.find({

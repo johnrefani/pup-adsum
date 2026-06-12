@@ -75,12 +75,13 @@ async function adjustMemberYears(delta: number) {
     .flatMap((member) => {
       const currentYear = Number(member.yearLevel);
       const maxYear = Number(member.course?.yearRange || 4);
+      const promotedYear = currentYear + delta;
       const nextYear =
         delta > 0
-          ? currentYear >= maxYear
+          ? promotedYear > maxYear
             ? null
-            : Math.min(currentYear + delta, maxYear)
-          : Math.max(currentYear + delta, 1);
+            : promotedYear
+          : Math.max(promotedYear, 1);
 
       if (!currentYear || nextYear === currentYear) return [];
 

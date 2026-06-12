@@ -7,18 +7,34 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [searchName, setSearchName] = useState("");
-  const [courses, setCourses] = useState<{ value: string; label: string }[]>([]);
+  const [courses, setCourses] = useState<{ value: string; label: string; yearRange?: number }[]>([]);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  const yearLevels = ["All", "1st Year", "2nd Year", "3rd Year", "4th Year", "5th Year"] as const;
+  const selectedCourseInfo = courses.find((course) => course.value === selectedCourse);
+  const selectedCourseYearRange = Number(selectedCourseInfo?.yearRange || 5);
+  const yearLevels = [
+    { value: "All", label: "All" },
+    ...Array.from({ length: selectedCourseYearRange }, (_, index) => {
+      const year = index + 1;
+      const suffix = year === 1 ? "st" : year === 2 ? "nd" : year === 3 ? "rd" : "th";
+      return { value: `${year}${suffix} Year`, label: `${year}${suffix} Year` };
+    }),
+  ];
 
   useEffect(() => {
     fetch('/api/admin/courses')
       .then((res) => res.json())
       .then((data) => setCourses(data.courses || []));
   }, []);
+
+  useEffect(() => {
+    if (!selectedYear || selectedYear === "All") return;
+    if (!yearLevels.some((year) => year.value === selectedYear)) {
+      setSelectedYear("");
+    }
+  }, [selectedYear, yearLevels]);
 
   useEffect(() => {
     onFilterChange({
@@ -60,7 +76,7 @@ const UserFilter: React.FC<{ onFilterChange: (filters: any) => void }> = ({ onFi
               <SearchableSelectField
                 placeholder="Select year..."
                 label='Year'
-                options={yearLevels.map((y) => ({ value: y, label: y }))}
+                options={yearLevels}
                 value={selectedYear}
                 onChange={setSelectedYear}
               />

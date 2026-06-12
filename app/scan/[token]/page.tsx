@@ -5,6 +5,7 @@ import Session from '@/models/Session';
 import User from '@/models/User';
 import Attendance from '@/models/Attendance';
 import { formatDisplayTime } from '@/lib/dateTimeFormat';
+import { getSessionWindow } from '@/lib/sessionTime';
 import {
   ScanSuccess,
   ScanAlreadyPresent,
@@ -121,10 +122,13 @@ export default async function ScanPage({
     timeOutLimitMinutes: sessionDoc.timeOutLimitMinutes ?? 30,
   };
 
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-  const sessionDate = session.date.split('T')[0];
-  const sessionStartTime = new Date(`${sessionDate}T${session.startTime}:00`);
-  const sessionEndTime = new Date(`${sessionDate}T${session.endTime}:00`);
+  const now = new Date();
+  const {
+    start: sessionStartTime,
+    end: sessionEndTime,
+    timeOutStart: timeOutStartTime,
+    timeOutDeadline,
+  } = getSessionWindow(session);
 
   if (now < sessionStartTime) {
     return <SessionNotStartedYet session={session} />;
@@ -134,11 +138,6 @@ export default async function ScanPage({
     session: sessionDoc._id,
     member: user._id,
   });
-
-  const timeOutDeadline = new Date(sessionEndTime);
-  timeOutDeadline.setMinutes(timeOutDeadline.getMinutes() + (session.timeOutLimitMinutes ?? 30));
-  const timeOutStartTime = new Date(sessionEndTime);
-  timeOutStartTime.setMinutes(timeOutStartTime.getMinutes() - (session.startTimeOutBeforeEndMinutes ?? 0));
 
   if (existingRecord?.timeIn && existingRecord?.timeOut) {
     return (
